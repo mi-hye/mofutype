@@ -46,6 +46,15 @@ function findPair(
   return null;
 }
 
+function normalizeRoutePairKey(pairKey: string): string {
+  if (pairKey.includes(":")) return pairKey;
+  try {
+    return decodeURIComponent(pairKey);
+  } catch {
+    return pairKey;
+  }
+}
+
 function pairIsUnlocked(
   unlocks: readonly RelationUnlock[],
   members: readonly [GroupMember, GroupMember],
@@ -84,6 +93,7 @@ function RelationRouteGateForPair({
   navigate = (path) => window.location.assign(path),
 }: RelationRouteGateProps) {
   const validInvite = INVITE_TOKEN_PATTERN.test(inviteToken);
+  const normalizedPairKey = normalizeRoutePairKey(pairKey);
   const [repository, setRepository] = useState<RelationRepository | null>(null);
   const [pair, setPair] = useState<PairData | null>(null);
   const [status, setStatus] = useState<"loading" | "member" | "pair" | "error">("loading");
@@ -103,7 +113,7 @@ function RelationRouteGateForPair({
           setStatus("member");
           return;
         }
-        const members = findPair(aggregate.members, pairKey);
+        const members = findPair(aggregate.members, normalizedPairKey);
         if (!members) {
           setStatus("pair");
           return;
@@ -128,7 +138,7 @@ function RelationRouteGateForPair({
         });
         const fresh = await activeRepository.loadGroup(aggregate.group.id);
         if (!active) return;
-        const freshMembers = findPair(fresh.members, pairKey);
+        const freshMembers = findPair(fresh.members, normalizedPairKey);
         if (!freshMembers) {
           setPair(null);
           setStatus("pair");
@@ -148,7 +158,7 @@ function RelationRouteGateForPair({
       active = false;
       if (cleanup) void cleanup();
     };
-  }, [inviteToken, pairKey, repositoryFactory, validInvite]);
+  }, [inviteToken, normalizedPairKey, repositoryFactory, validInvite]);
 
   if (!validInvite) {
     return <main className="group-gate-message"><h1>関係ページを開けません</h1></main>;
@@ -179,7 +189,7 @@ function RelationRouteGateForPair({
   const [memberA, memberB] = pair.members;
   const relationship = createRelationship({ memberA, memberB });
   const unlocked = pairIsUnlocked(pair.unlocks, pair.members);
-  const encodedPairKey = encodeURIComponent(pairKey);
+  const encodedPairKey = encodeURIComponent(normalizedPairKey);
   const encodedInvite = encodeURIComponent(inviteToken);
   const detailHref = `/g/${encodedInvite}/relation/${encodedPairKey}`;
 

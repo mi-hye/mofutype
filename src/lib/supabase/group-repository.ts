@@ -188,6 +188,7 @@ function invokeSafely<TArgs extends unknown[]>(
 
 export function createGroupRepository(client: GroupRepositoryClient) {
   let anonymousSessionPromise: Promise<string> | null = null;
+  let subscriptionSequence = 0;
 
   async function callOperation(
     operation: () => Promise<ClientResult>,
@@ -401,7 +402,8 @@ export function createGroupRepository(client: GroupRepositoryClient) {
       invokeSafely(callbacks.onError, error);
     };
     try {
-      const channel = client.channel(`group:${groupId}`);
+      subscriptionSequence += 1;
+      const channel = client.channel(`group:${groupId}:${subscriptionSequence}`);
       partialChannel = channel;
       const filter = `group_id=eq.${groupId}`;
       const register = <T>(

@@ -89,6 +89,20 @@ describe("RelationRouteGate", () => {
     expect(repo.api.subscribeToGroup).toHaveBeenCalledWith("g1", expect.any(Object));
   });
 
+  it("accepts a whole-pair route segment that Next leaves percent encoded", async () => {
+    const repo = repository();
+    render(
+      <RelationRouteGate
+        inviteToken={token}
+        pairKey="a%3Ab"
+        mode="checkout"
+        repositoryFactory={() => repo.api as never}
+      />,
+    );
+
+    expect(await screen.findByRole("button", { name: "モック決済を完了" })).toBeInTheDocument();
+  });
+
   it("rejects malformed invitations and pairs outside the joined group", async () => {
     const repositoryFactory = vi.fn(() => repository().api as never);
     const invalid = render(

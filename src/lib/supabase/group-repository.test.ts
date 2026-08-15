@@ -182,6 +182,7 @@ class FakeSupabaseClient implements GroupRepositoryClient {
   rejectedTables = new Map<string, unknown>();
   queries = new Map<string, FakeQuery>();
   channels: FakeChannel[] = [];
+  channelNames: string[] = [];
   removedChannels: FakeChannel[] = [];
   removeChannelCalls = 0;
   channelRegistrationError?: unknown;
@@ -266,7 +267,7 @@ class FakeSupabaseClient implements GroupRepositoryClient {
   }
 
   channel(name: string): FakeChannel {
-    void name;
+    this.channelNames.push(name);
     const channel = new FakeChannel();
     channel.registrationError = this.channelRegistrationError;
     channel.subscriptionError = this.channelSubscriptionError;
@@ -757,6 +758,21 @@ describe("group repository", () => {
     await cleanup();
     expect(client.removedChannels).toEqual([channel]);
     expect(errors).not.toHaveBeenCalled();
+  });
+
+  it("uses a unique realtime topic for overlapping subscriptions to one group", async () => {
+    const client = new FakeSupabaseClient();
+    const repository = createGroupRepository(client);
+
+    const cleanupFirst = repository.subscribeToGroup("group-1", {});
+    const cleanupSecond = repository.subscribeToGroup("group-1", {});
+
+    expect(client.channelNames).toHaveLength(2);
+    expect(new Set(client.channelNames).size).toBe(2);
+    expect(client.channelNames.every((name) => name.startsWith("group:group-1:"))).toBe(true);
+
+    await cleanupFirst();
+    await cleanupSecond();
   });
 
   it("surfaces malformed realtime payloads and subscription failures safely", () => {

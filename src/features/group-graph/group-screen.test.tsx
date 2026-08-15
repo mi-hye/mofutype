@@ -173,6 +173,58 @@ describe("GroupScreen", () => {
     expect(repo.subscribeToGroup).toHaveBeenCalledTimes(2);
   });
 
+  it("periodically reconciles the snapshot while realtime is connected", async () => {
+    vi.useFakeTimers();
+    try {
+      const initial = aggregate("g1", [member("a")]);
+      const repo = repository(initial);
+      const reconciled = aggregate("g1", [member("a"), member("b")]);
+      repo.loadGroup
+        .mockResolvedValueOnce(initial)
+        .mockResolvedValueOnce(reconciled)
+        .mockResolvedValueOnce(reconciled);
+      render(<GroupScreen initialAggregate={initial} repository={repo.api} />);
+
+      await act(async () => repo.callbacks()?.onConnectionStatus?.("SUBSCRIBED"));
+      expect(repo.loadGroup).toHaveBeenCalledTimes(2);
+      await act(async () => vi.advanceTimersByTimeAsync(5_000));
+
+      expect(repo.loadGroup).toHaveBeenCalledTimes(3);
+      expect(screen.getByTestId("graph-state")).toHaveTextContent(/members:a:a,b:b;\s*pairs:1/);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("serializes periodic reconciliation and clears a recovered load error", async () => {
+    vi.useFakeTimers();
+    try {
+      let resolveReconciliation!: (value: GroupAggregate) => void;
+      const initial = aggregate("g1", [member("a")]);
+      const repo = repository(initial);
+      repo.loadGroup
+        .mockRejectedValueOnce(new Error("temporary"))
+        .mockImplementationOnce(() => new Promise<GroupAggregate>((resolve) => {
+          resolveReconciliation = resolve;
+        }))
+        .mockResolvedValue(initial);
+      render(<GroupScreen initialAggregate={initial} repository={repo.api} />);
+      await act(async () => Promise.resolve());
+      expect(screen.getByText("グループを更新できませんでした。通信環境を確認してください。")).toBeInTheDocument();
+
+      act(() => repo.callbacks()?.onConnectionStatus?.("SUBSCRIBED"));
+      await act(async () => vi.advanceTimersByTimeAsync(5_000));
+      expect(repo.loadGroup).toHaveBeenCalledTimes(2);
+
+      await act(async () => resolveReconciliation(initial));
+      expect(screen.queryByText("グループを更新できませんでした。通信環境を確認してください。")).not.toBeInTheDocument();
+      await act(async () => vi.advanceTimersByTimeAsync(30_000));
+      expect(repo.loadGroup).toHaveBeenCalledTimes(3);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("offers manual refresh and hides raw load failures", async () => {
     const user = userEvent.setup();
     const initial = aggregate();

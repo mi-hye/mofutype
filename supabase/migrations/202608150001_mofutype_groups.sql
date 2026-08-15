@@ -117,6 +117,8 @@ to authenticated
 using (public.is_group_member(group_id));
 
 grant select on public.groups, public.group_members, public.relation_unlocks to authenticated;
+grant select on public.groups to service_role;
+grant insert on public.group_members to service_role;
 revoke insert, update, delete, truncate, references, trigger
   on public.groups, public.group_members, public.relation_unlocks
   from anon, authenticated;

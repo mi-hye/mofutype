@@ -99,6 +99,7 @@ function GroupGraphComponent({
       <div ref={hideCanvasFromKeyboard} className="group-graph__canvas"
         data-testid="group-graph-canvas" aria-hidden="true">
         <ReactFlow<AnimalGraphNode, RelationshipGraphEdge>
+          key={membersVersion}
           nodes={graph.nodes}
           edges={graph.edges}
           nodeTypes={nodeTypes}
