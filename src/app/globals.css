@@ -111,7 +111,7 @@ button, input, textarea, select { font: inherit; }
   transition: border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
 }
 .ui-button::after { position: absolute; inset: 0; background: linear-gradient(105deg, transparent 32%, rgb(255 255 255 / 16%) 50%, transparent 68%); content: ""; transform: translateX(-140%); transition: transform 320ms ease; pointer-events: none; }
-.ui-button[data-variant="primary"] { border-color: var(--accent-navy); outline: 1px solid rgb(255 255 255 / 24%); outline-offset: -4px; background: linear-gradient(145deg, #194968, var(--accent-navy)); box-shadow: 3px 5px 0 rgb(18 59 93 / 15%), 0 14px 28px rgb(18 59 93 / 18%); color: #fffaf1; }
+.ui-button[data-variant="primary"] { border-color: var(--accent-navy); outline: 1px solid rgb(255 255 255 / 18%); outline-offset: -4px; background: var(--accent-navy); box-shadow: 3px 5px 0 rgb(18 59 93 / 13%), 0 10px 22px rgb(18 59 93 / 14%); color: #fffaf1; }
 .ui-button[data-variant="secondary"] { border-color: rgb(18 59 93 / 62%); background: linear-gradient(145deg, #edf6f1, #dcece4); color: var(--ink); }
 .ui-button[data-variant="ghost"] { border-color: rgb(18 59 93 / 38%); background: rgb(255 253 249 / 84%); color: var(--ink); }
 .ui-button[data-size="sm"] { min-height: 42px; padding-inline: 0.82rem; font-size: 0.875rem; }
@@ -175,7 +175,7 @@ button, input, textarea, select { font: inherit; }
 .create-section__intro { position: relative; max-width: 40rem; padding: 0; }
 .create-section__intro h2 { margin: 0.55rem 0 0; color: var(--accent-navy); font-family: var(--font-display); font-size: clamp(2rem, 6vw, 3.2rem); font-weight: 700; letter-spacing: -0.025em; line-height: 1.15; }
 .create-section__intro p:last-child { color: var(--text-muted); }
-.create-section > .ui-card { border-radius: var(--radius-18); background: radial-gradient(circle at 94% 8%, #fae4dd 0 7rem, transparent 15rem), #fffdf9; }
+.create-section > .ui-card { border-radius: var(--radius-18); background: #fffdf9; }
 
 .onboarding-form, .profile-fields { display: grid; min-width: 0; gap: 1.15rem; }
 .onboarding-form > .ui-button { width: 100%; margin-top: 0.25rem; }
@@ -188,10 +188,12 @@ button, input, textarea, select { font: inherit; }
 .unknown-toggle:has(input:checked) { border-color: var(--accent-navy); background: var(--surface-mint); color: var(--ink); box-shadow: 0 5px 12px rgb(41 75 99 / 10%); }
 .unknown-toggle input { width: 1.2rem; height: 1.2rem; margin: 0; accent-color: var(--accent-vermilion); }
 .field-error, .form-error { width: fit-content; max-width: 100%; margin: 0; border: 1px solid #d98c86; border-left: 5px solid var(--accent-coral); border-radius: 0.55rem; padding: 0.34rem 0.62rem; background: var(--surface-error); color: var(--text-error); font-size: 0.82rem; font-weight: 700; overflow-wrap: anywhere; animation: nudge-in 220ms ease-out both; }
-.start-group-form { align-content: start; }
+.start-group-form { align-content: start; gap: 0.9rem; }
 .start-group-form > .ui-button { width: fit-content; min-width: 7rem; justify-self: end; padding-inline: 1.4rem; }
-.start-group-form .form-field input { min-height: 56px; font-size: 1.05rem; font-weight: 650; }
-.start-group-form__note { margin: 0; color: var(--text-muted); font-size: 0.8rem; text-align: center; }
+.start-group-form > .ui-button::after { display: none; }
+.start-group-form .form-field { width: min(100%, 28rem); }
+.start-group-form .form-field input { min-height: 44px; padding-block: 0.45rem; font-size: 0.96rem; font-weight: 600; }
+.start-group-form__note { margin: 0; color: var(--text-muted); font-size: 0.78rem; text-align: left; }
 
 .profile-step-shell { width: min(calc(100% - 1.5rem), var(--content-wide)); margin-inline: auto; padding: 0.9rem 0 5rem; }
 .profile-step { display: grid; max-width: 68rem; gap: 2rem; margin-inline: auto; padding-top: clamp(2rem, 6vw, 4.5rem); }
@@ -377,7 +379,7 @@ button, input, textarea, select { font: inherit; }
 @media (hover: hover) and (pointer: fine) {
   .ui-button:not(:disabled):hover { transform: translateY(-2px); }
   .ui-button:not(:disabled):hover::after { transform: translateX(140%); }
-  .ui-button[data-variant="primary"]:not(:disabled):hover { border-color: var(--accent-navy); background: linear-gradient(145deg, #235777, #194563); box-shadow: 3px 7px 0 rgb(18 59 93 / 15%), 0 15px 30px rgb(18 59 93 / 20%); }
+  .ui-button[data-variant="primary"]:not(:disabled):hover { border-color: var(--accent-navy); background: #194968; box-shadow: 3px 6px 0 rgb(18 59 93 / 14%), 0 12px 24px rgb(18 59 93 / 16%); }
   .ui-card:hover { box-shadow: 0 22px 48px rgb(34 45 55 / 13%); transform: translateY(-3px); }
   .form-field input:hover, .form-field select:hover { border-color: var(--accent-blue); }
   .unknown-toggle:hover { transform: translateY(-1px); }
