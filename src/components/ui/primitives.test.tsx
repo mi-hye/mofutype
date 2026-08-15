@@ -66,8 +66,19 @@ describe("StatusBanner", () => {
     },
   );
 
-  it("uses an accessible Japanese label", () => {
-    render(<StatusBanner status="offline" />);
-    expect(screen.getByRole("alert", { name: "オフライン" })).toBeInTheDocument();
-  });
+  it.each([
+    ["connecting", "status", "接続中", "グループに接続しています"],
+    ["reconnecting", "status", "再接続中", "もう一度つないでいます"],
+    ["offline", "alert", "オフライン", "通信環境を確認してください"],
+    ["error", "alert", "エラー", "接続できませんでした"],
+    ["success", "status", "接続完了", "グループにつながりました"],
+  ] as const)(
+    "announces the %s Japanese label and guidance",
+    (status, role, label, message) => {
+      render(<StatusBanner status={status} />);
+      const banner = screen.getByRole(role, { name: label });
+
+      expect(banner).toHaveAccessibleDescription(message);
+    },
+  );
 });

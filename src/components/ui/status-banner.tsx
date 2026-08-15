@@ -1,4 +1,6 @@
-import type { HTMLAttributes } from "react";
+"use client";
+
+import { useId, type HTMLAttributes } from "react";
 
 export type ConnectionStatus =
   | "connecting"
@@ -48,19 +50,23 @@ export function StatusBanner({
   ...props
 }: StatusBannerProps) {
   const content = STATUS_CONTENT[status];
+  const accessibleId = useId();
+  const labelId = `${accessibleId}-label`;
+  const messageId = `${accessibleId}-message`;
 
   return (
     <div
       className={`status-banner ${className}`.trim()}
       data-status={status}
       role={content.urgent ? "alert" : "status"}
-      aria-label={content.label}
+      aria-labelledby={labelId}
+      aria-describedby={messageId}
       {...props}
     >
       <span className="status-banner__mark" aria-hidden="true" />
       <span>
-        <strong>{content.label}</strong>
-        <span>{children ?? content.message}</span>
+        <strong id={labelId}>{content.label}</strong>
+        <span id={messageId}>{children ?? content.message}</span>
       </span>
     </div>
   );
