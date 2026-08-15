@@ -23,6 +23,7 @@ describe("GroupShareControls", () => {
     );
 
     await user.click(screen.getByRole("button", { name: "招待リンクを共有" }));
+    await user.click(screen.getByRole("button", { name: "アプリで共有" }));
     expect(shareApi).toHaveBeenCalledWith({
       title: "MofuType",
       text: "なかよしの関係マップに参加しよう。",
@@ -32,7 +33,7 @@ describe("GroupShareControls", () => {
     expect(screen.getByRole("status")).toHaveTextContent("共有しました");
   });
 
-  it("falls back to clipboard and renders only one share action", async () => {
+  it("offers link copy without rendering a separate X action", async () => {
     const user = userEvent.setup();
     const writeClipboard = vi.fn(async () => undefined);
     render(
@@ -47,6 +48,7 @@ describe("GroupShareControls", () => {
     );
 
     await user.click(screen.getByRole("button", { name: "招待リンクを共有" }));
+    await user.click(screen.getByRole("button", { name: "リンクをコピー" }));
     expect(writeClipboard).toHaveBeenCalledWith(
       `https://mofu.example/g/${token}?name=${encodeURIComponent("なかよし")}&count=3`,
     );
@@ -73,12 +75,14 @@ describe("GroupShareControls", () => {
     );
 
     await user.click(screen.getByRole("button", { name: "招待リンクを共有" }));
+    await user.click(screen.getByRole("button", { name: "アプリで共有" }));
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "共有できませんでした。もう一度お試しください。",
     );
     expect(screen.queryByText(/private platform details/)).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "招待リンクを共有" }));
+    await user.click(screen.getByRole("button", { name: "アプリで共有" }));
     expect(screen.getByRole("status")).toHaveTextContent("共有しました");
   });
 });

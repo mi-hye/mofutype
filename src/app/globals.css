@@ -315,11 +315,12 @@ select {
 .group-member-header p { margin-block: 0.5rem 0; }
 .group-member-actions { position: relative; z-index: 1; display: flex; min-width: 0; flex-wrap: wrap; align-items: flex-start; gap: var(--space-12); }
 .group-member-actions > * { max-width: 100%; }
-.group-share-controls { display: flex; min-width: 0; align-items: center; gap: 0.55rem; }
+.group-share-controls { display: grid; min-width: 0; justify-items: end; gap: 0.55rem; }
 .group-share-controls p { margin: 0; font-size: 0.75rem; font-weight: 850; }
 .group-share-button { width: 44px; min-width: 44px; min-height: 44px; padding: 0 !important; }
 .group-share-button > span:first-child { display: grid; place-items: center; }
 .group-share-button svg { width: 1.25rem; height: 1.25rem; overflow: visible; fill: none; stroke: var(--ink); }
+.group-share-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.45rem; }
 .group-graph { display: grid; gap: var(--space-18); }
 .group-graph__canvas {
   width: 100%;
@@ -453,6 +454,7 @@ select {
   .group-member-header { box-shadow: 4px 4px 0 var(--ink); }
   .group-member-actions { display: grid; }
   .group-member-actions .ui-button { width: 100%; }
+  .group-member-actions .group-share-button { width: 44px; justify-self: end; }
   .group-graph__canvas { min-height: 27rem; height: 68svh; box-shadow: 4px 4px 0 var(--hot-pink); }
   .group-graph__accessible { padding: 0.85rem; box-shadow: 4px 4px 0 var(--mint-pop); }
   .group-graph__member-list,
