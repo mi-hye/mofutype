@@ -10,17 +10,18 @@ import {
   type ZodiacId,
 } from "./types";
 
-export type EtoRelationshipCategory =
+export type RelationshipCategory =
   | "NATURAL_INTERLOCK"
   | "EXPANDING_POSSIBILITIES"
   | "POSITIVE_STIMULATION"
   | "LEARNING_EACH_OTHERS_PACE";
 
+export type EtoRelationshipCategory = RelationshipCategory;
+
 export type ZodiacRelationship =
   | "LIUHE"
   | "SANHE"
   | "LIUCHONG"
-  | "SAME_ZODIAC"
   | "GENERAL";
 
 export type FiveElementRelationship =
@@ -42,20 +43,20 @@ export interface CreateEtoRelationshipInput {
 
 export interface ZodiacRelationshipInsight {
   relation: ZodiacRelationship;
-  category: EtoRelationshipCategory;
+  category: RelationshipCategory;
   title: string;
   summary: string;
 }
 
 export interface FiveElementRelationshipInsight {
   relation: FiveElementRelationship;
-  category: EtoRelationshipCategory;
+  category: RelationshipCategory;
   title: string;
   summary: string;
 }
 
 export interface MbtiRelationshipInsight {
-  category: EtoRelationshipCategory;
+  category: RelationshipCategory;
   title: string;
   summary: string;
   axes: {
@@ -68,7 +69,7 @@ export interface MbtiRelationshipInsight {
 
 export interface EtoRelationshipResult {
   pairKey: string;
-  category: EtoRelationshipCategory;
+  category: RelationshipCategory;
   categoryLabelJa: string;
   headlineJa: string;
   zodiacInsight: ZodiacRelationshipInsight;
@@ -90,7 +91,7 @@ export class RelationshipValidationError extends Error {
   }
 }
 
-const CATEGORY_LABELS: Readonly<Record<EtoRelationshipCategory, string>> = {
+const CATEGORY_LABELS: Readonly<Record<RelationshipCategory, string>> = {
   NATURAL_INTERLOCK: "自然にかみ合う関係",
   EXPANDING_POSSIBILITIES: "一緒に可能性を広げる関係",
   POSITIVE_STIMULATION: "違いがよい刺激になる関係",
@@ -102,6 +103,18 @@ const POLARITIES = ["YIN", "YANG"] as const;
 const CALCULATION_MODES = ["date-time", "date-only"] as const;
 const BOUNDARY_STATES = ["exact", "solar-term-ambiguous"] as const;
 const ENGINE_VERSION = "mofu-eto-four-pillars-v1";
+const PROFILE_KEYS = [
+  "version",
+  "zodiacId",
+  "mbti",
+  "dayMaster",
+  "fiveElements",
+  "yinYang",
+  "calculationMode",
+  "boundaryState",
+  "engineVersion",
+] as const;
+const DAY_MASTER_KEYS = ["element", "polarity"] as const;
 
 const ELEMENT_NAMES: Readonly<Record<FiveElement, string>> = {
   WOOD: "木",
@@ -178,8 +191,18 @@ function isOneOf<T extends string>(
   return typeof value === "string" && values.includes(value as T);
 }
 
-function hasExactKeys(value: Record<string, unknown>, keys: readonly string[]) {
-  const actual = Object.keys(value).sort();
+function isPlainObjectWithExactKeys(
+  value: unknown,
+  keys: readonly string[],
+): value is Record<string, unknown> {
+  if (!isObject(value) || Object.getPrototypeOf(value) !== Object.prototype) {
+    return false;
+  }
+
+  const ownKeys = Reflect.ownKeys(value);
+  if (ownKeys.some((field) => typeof field !== "string")) return false;
+
+  const actual = (ownKeys as string[]).sort();
   const expected = [...keys].sort();
   return (
     actual.length === expected.length &&
@@ -192,8 +215,7 @@ function isCounts(
   keys: readonly string[],
 ): value is Record<string, number> {
   return (
-    isObject(value) &&
-    hasExactKeys(value, keys) &&
+    isPlainObjectWithExactKeys(value, keys) &&
     keys.every(
       (field) =>
         Number.isInteger(value[field]) && (value[field] as number) >= 0,
@@ -201,15 +223,24 @@ function isCounts(
   );
 }
 
+function total(counts: Record<string, number>, keys: readonly string[]) {
+  return keys.reduce((sum, field) => sum + counts[field], 0);
+}
+
 function isProfile(value: unknown): value is DerivedEtoProfile {
-  if (!isObject(value) || !isObject(value.dayMaster)) return false;
+  if (
+    !isPlainObjectWithExactKeys(value, PROFILE_KEYS) ||
+    !isPlainObjectWithExactKeys(value.dayMaster, DAY_MASTER_KEYS)
+  ) {
+    return false;
+  }
 
   const fiveElementsValid =
     value.fiveElements === null || isCounts(value.fiveElements, ELEMENTS);
   const yinYangValid =
     value.yinYang === null || isCounts(value.yinYang, POLARITIES);
 
-  return (
+  const fieldsValid =
     value.version === 1 &&
     isOneOf(value.zodiacId, ZODIAC_IDS) &&
     (value.mbti === null || isOneOf(value.mbti, MBTI_TYPES)) &&
@@ -219,8 +250,37 @@ function isProfile(value: unknown): value is DerivedEtoProfile {
     yinYangValid &&
     isOneOf(value.calculationMode, CALCULATION_MODES) &&
     isOneOf(value.boundaryState, BOUNDARY_STATES) &&
-    value.engineVersion === ENGINE_VERSION
+    value.engineVersion === ENGINE_VERSION;
+  if (!fieldsValid) return false;
+
+  if (value.boundaryState === "solar-term-ambiguous") {
+    return (
+      value.calculationMode === "date-only" &&
+      value.fiveElements === null &&
+      value.yinYang === null
+    );
+  }
+
+  if (
+    !isCounts(value.fiveElements, ELEMENTS) ||
+    !isCounts(value.yinYang, POLARITIES)
+  ) {
+    return false;
+  }
+  const expectedTotal = value.calculationMode === "date-time" ? 8 : 6;
+  return (
+    total(value.fiveElements, ELEMENTS) === expectedTotal &&
+    total(value.yinYang, POLARITIES) === expectedTotal
   );
+}
+
+function isUriEncodable(value: string) {
+  try {
+    encodeURIComponent(value);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function assertInput(
@@ -232,8 +292,10 @@ function assertInput(
     !isObject(input.memberB) ||
     typeof input.memberA.id !== "string" ||
     input.memberA.id.trim() === "" ||
+    !isUriEncodable(input.memberA.id) ||
     typeof input.memberB.id !== "string" ||
     input.memberB.id.trim() === "" ||
+    !isUriEncodable(input.memberB.id) ||
     input.memberA.id === input.memberB.id ||
     !isProfile(input.memberA.profile) ||
     !isProfile(input.memberB.profile)
@@ -249,7 +311,7 @@ function zodiacInsight(
   const identity = pair(zodiacA, zodiacB);
   if (zodiacA === zodiacB) {
     return {
-      relation: "SAME_ZODIAC",
+      relation: "GENERAL",
       category: "LEARNING_EACH_OTHERS_PACE",
       title: "似た感覚を持つ十二支",
       summary: "共通する感覚を大切にしながら、それぞれの歩幅も確かめ合える関係です。",
@@ -291,6 +353,9 @@ function extremes(counts: ElementCounts) {
   const values = ELEMENTS.map((element) => counts[element]);
   const maximum = Math.max(...values);
   const minimum = Math.min(...values);
+  if (maximum === minimum) {
+    return { dominant: [], deficient: [] };
+  }
   return {
     dominant: ELEMENTS.filter((element) => counts[element] === maximum),
     deficient: ELEMENTS.filter((element) => counts[element] === minimum),
@@ -364,7 +429,7 @@ function fiveElementInsight(
   };
 }
 
-function mbtiCategory(a: MbtiType, b: MbtiType): EtoRelationshipCategory {
+function mbtiCategory(a: MbtiType, b: MbtiType): RelationshipCategory {
   const matching = [...a].filter((letter, index) => letter === b[index]).length;
   if (matching === 4) return "NATURAL_INTERLOCK";
   if (matching === 3) return "EXPANDING_POSSIBILITIES";
@@ -426,9 +491,9 @@ function mbtiInsight(
 }
 
 function balancedCategory(
-  zodiac: EtoRelationshipCategory,
-  element: EtoRelationshipCategory,
-  mbti: EtoRelationshipCategory | null,
+  zodiac: RelationshipCategory,
+  element: RelationshipCategory,
+  mbti: RelationshipCategory | null,
 ) {
   if (zodiac === element) return zodiac;
   if (mbti !== null && (mbti === zodiac || mbti === element)) return mbti;

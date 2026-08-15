@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   createEtoRelationship,
   RelationshipValidationError,
-  type EtoRelationshipCategory,
+  type RelationshipCategory,
 } from "./relationship";
 import {
   MBTI_TYPES,
@@ -27,6 +27,17 @@ function profile(overrides: Partial<DerivedEtoProfile> = {}): DerivedEtoProfile 
     engineVersion: "mofu-eto-four-pillars-v1",
     ...overrides,
   };
+}
+
+function exactProfile(
+  overrides: Partial<DerivedEtoProfile> = {},
+): DerivedEtoProfile {
+  return profile({
+    fiveElements: { WOOD: 2, FIRE: 1, EARTH: 1, METAL: 1, WATER: 1 },
+    yinYang: { YIN: 3, YANG: 3 },
+    boundaryState: "exact",
+    ...overrides,
+  });
 }
 
 function relationship(
@@ -76,59 +87,72 @@ describe("zodiac relationship layer", () => {
     ["snake", "boar"],
   ] as const;
 
-  const expected = new Map<string, EtoRelationshipCategory>();
-  for (const [a, b] of natural) expected.set(key(a, b), "NATURAL_INTERLOCK");
+  const expected = new Map<
+    string,
+    { relation: "LIUHE" | "SANHE" | "LIUCHONG"; category: RelationshipCategory }
+  >();
+  for (const [a, b] of natural) {
+    expected.set(key(a, b), {
+      relation: "LIUHE",
+      category: "NATURAL_INTERLOCK",
+    });
+  }
   for (const group of expandingGroups) {
     for (let a = 0; a < group.length; a += 1) {
       for (let b = a + 1; b < group.length; b += 1) {
-        expected.set(key(group[a], group[b]), "EXPANDING_POSSIBILITIES");
+        expected.set(key(group[a], group[b]), {
+          relation: "SANHE",
+          category: "EXPANDING_POSSIBILITIES",
+        });
       }
     }
   }
   for (const [a, b] of stimulation) {
-    expected.set(key(a, b), "POSITIVE_STIMULATION");
+    expected.set(key(a, b), {
+      relation: "LIUCHONG",
+      category: "POSITIVE_STIMULATION",
+    });
   }
 
-  it("classifies all 66 unordered distinct pairs without reverse duplicates", () => {
+  it("classifies all 78 unordered pairs with exact relation totals", () => {
     const seen = new Set<string>();
-    let pairCount = 0;
+    const relationTotals = {
+      LIUHE: 0,
+      SANHE: 0,
+      LIUCHONG: 0,
+      GENERAL: 0,
+    };
 
     for (let a = 0; a < ZODIAC_IDS.length; a += 1) {
-      for (let b = a + 1; b < ZODIAC_IDS.length; b += 1) {
+      for (let b = a; b < ZODIAC_IDS.length; b += 1) {
         const zodiacA = ZODIAC_IDS[a];
         const zodiacB = ZODIAC_IDS[b];
         const identity = key(zodiacA, zodiacB);
-        const result = relationship(
+        const insight = relationship(
           profile({ zodiacId: zodiacA }),
           profile({ zodiacId: zodiacB }),
-        );
+        ).zodiacInsight;
+        const expectedInsight = expected.get(identity) ?? {
+          relation: "GENERAL",
+          category: "LEARNING_EACH_OTHERS_PACE",
+        };
 
-        pairCount += 1;
         expect(seen.has(identity)).toBe(false);
         seen.add(identity);
-        expect(result.zodiacInsight.category, identity).toBe(
-          expected.get(identity) ?? "LEARNING_EACH_OTHERS_PACE",
-        );
+        expect(insight.relation, identity).toBe(expectedInsight.relation);
+        expect(insight.category, identity).toBe(expectedInsight.category);
+        relationTotals[insight.relation] += 1;
       }
     }
 
-    expect(pairCount).toBe(66);
-    expect(seen.size).toBe(66);
+    expect(seen.size).toBe(78);
     expect(expected.size).toBe(24);
-  });
-
-  it("classifies all 12 same-zodiac pairs as learning each other's pace", () => {
-    for (const zodiacId of ZODIAC_IDS) {
-      expect(
-        relationship(
-          profile({ zodiacId }),
-          profile({ zodiacId }),
-        ).zodiacInsight,
-      ).toMatchObject({
-        relation: "SAME_ZODIAC",
-        category: "LEARNING_EACH_OTHERS_PACE",
-      });
-    }
+    expect(relationTotals).toEqual({
+      LIUHE: 6,
+      SANHE: 12,
+      LIUCHONG: 6,
+      GENERAL: 54,
+    });
   });
 });
 
@@ -195,12 +219,14 @@ describe("five-element and yin-yang layer", () => {
   it("gives complement precedence and supports tied dominant/deficient elements", () => {
     const a = profile({
       dayMaster: dayMaster("WOOD"),
-      fiveElements: { WOOD: 3, FIRE: 3, EARTH: 1, METAL: 1, WATER: 2 },
+      fiveElements: { WOOD: 2, FIRE: 2, EARTH: 0, METAL: 0, WATER: 2 },
+      yinYang: { YIN: 3, YANG: 3 },
       boundaryState: "exact",
     });
     const b = profile({
       dayMaster: dayMaster("EARTH"),
-      fiveElements: { WOOD: 0, FIRE: 2, EARTH: 2, METAL: 0, WATER: 1 },
+      fiveElements: { WOOD: 0, FIRE: 1, EARTH: 3, METAL: 1, WATER: 1 },
+      yinYang: { YIN: 2, YANG: 4 },
       boundaryState: "exact",
     });
 
@@ -208,6 +234,26 @@ describe("five-element and yin-yang layer", () => {
       relation: "COMPLEMENT",
       category: "NATURAL_INTERLOCK",
     });
+  });
+
+  it.each([
+    [
+      "uniform-uniform",
+      { WOOD: 0, FIRE: 0, EARTH: 0, METAL: 0, WATER: 0 },
+      { WOOD: 0, FIRE: 0, EARTH: 0, METAL: 0, WATER: 0 },
+    ],
+    [
+      "uniform-nonuniform",
+      { WOOD: 0, FIRE: 0, EARTH: 0, METAL: 0, WATER: 0 },
+      { WOOD: 2, FIRE: 1, EARTH: 1, METAL: 1, WATER: 1 },
+    ],
+  ])("rejects %s distributions before they can produce a false complement", (_label, a, b) => {
+    expect(() =>
+      relationship(
+        exactProfile({ fiveElements: a }),
+        exactProfile({ fiveElements: b }),
+      ),
+    ).toThrowError(RelationshipValidationError);
   });
 
   it("uses same rhythm only for equal element and polarity", () => {
@@ -232,21 +278,10 @@ describe("five-element and yin-yang layer", () => {
     });
   });
 
-  it("does not guess distributions when either side is null", () => {
-    const apparentlyComplementary = {
-      WOOD: 4,
-      FIRE: 0,
-      EARTH: 0,
-      METAL: 0,
-      WATER: 0,
-    } as const;
-
+  it("does not guess distributions when solar-term ambiguity makes both null", () => {
     const insight = relationship(
-      profile({ fiveElements: apparentlyComplementary }),
-      profile({
-        dayMaster: dayMaster("FIRE"),
-        fiveElements: null,
-      }),
+      profile({ dayMaster: dayMaster("WOOD") }),
+      profile({ dayMaster: dayMaster("FIRE") }),
     ).fiveElementInsight;
 
     expect(insight.relation).toBe("GENERATING");
@@ -254,7 +289,7 @@ describe("five-element and yin-yang layer", () => {
 });
 
 describe("MBTI layer", () => {
-  function expectedCategory(a: MbtiType, b: MbtiType): EtoRelationshipCategory {
+  function expectedCategory(a: MbtiType, b: MbtiType): RelationshipCategory {
     const sameAxes = [...a].filter((letter, index) => letter === b[index]).length;
     if (sameAxes === 4) return "NATURAL_INTERLOCK";
     if (sameAxes === 3) return "EXPANDING_POSSIBILITIES";
@@ -280,8 +315,7 @@ describe("MBTI layer", () => {
         expect(forward.mbtiInsight?.category, `${mbtiA}/${mbtiB}`).toBe(
           expectedCategory(mbtiA, mbtiB),
         );
-        expect(reverse.mbtiInsight?.category).toBe(forward.mbtiInsight?.category);
-        expect(reverse.mbtiInsight?.summary).toBe(forward.mbtiInsight?.summary);
+        expect(reverse.mbtiInsight).toEqual(forward.mbtiInsight);
       }
     }
     expect(count).toBe(256);
@@ -372,6 +406,81 @@ describe("balanced relationship result", () => {
     );
   });
 
+  const generatingAndControlling = [
+    ["WOOD", "FIRE"],
+    ["FIRE", "EARTH"],
+    ["EARTH", "METAL"],
+    ["METAL", "WATER"],
+    ["WATER", "WOOD"],
+    ["FIRE", "WOOD"],
+    ["EARTH", "FIRE"],
+    ["METAL", "EARTH"],
+    ["WATER", "METAL"],
+    ["WOOD", "WATER"],
+    ["WOOD", "EARTH"],
+    ["EARTH", "WATER"],
+    ["WATER", "FIRE"],
+    ["FIRE", "METAL"],
+    ["METAL", "WOOD"],
+    ["EARTH", "WOOD"],
+    ["WATER", "EARTH"],
+    ["FIRE", "WATER"],
+    ["METAL", "FIRE"],
+    ["WOOD", "METAL"],
+  ] as const;
+
+  const reversalCases: readonly (readonly [string, DerivedEtoProfile, DerivedEtoProfile])[] = [
+    ...generatingAndControlling.map(
+      ([elementA, elementB]) =>
+        [
+          `${elementA}/${elementB}`,
+          profile({ mbti: "ENFP", dayMaster: { element: elementA, polarity: "YANG" } }),
+          profile({ mbti: "ISTJ", dayMaster: { element: elementB, polarity: "YIN" } }),
+        ] as const,
+    ),
+    [
+      "same rhythm",
+      profile({ dayMaster: { element: "WATER", polarity: "YIN" } }),
+      profile({ dayMaster: { element: "WATER", polarity: "YIN" } }),
+    ],
+    [
+      "general",
+      profile({ dayMaster: { element: "WATER", polarity: "YIN" } }),
+      profile({ dayMaster: { element: "WATER", polarity: "YANG" } }),
+    ],
+    [
+      "complement",
+      exactProfile({
+        fiveElements: { WOOD: 2, FIRE: 2, EARTH: 0, METAL: 0, WATER: 2 },
+      }),
+      exactProfile({
+        fiveElements: { WOOD: 0, FIRE: 1, EARTH: 3, METAL: 1, WATER: 1 },
+      }),
+    ],
+  ];
+
+  it.each(reversalCases)(
+    "preserves all symmetric fields and swaps exact tips for %s",
+    (_label, a, b) => {
+      const forward = createEtoRelationship({
+        memberA: { id: "z-person", profile: a },
+        memberB: { id: "a-person", profile: b },
+      });
+      const reverse = createEtoRelationship({
+        memberA: { id: "a-person", profile: b },
+        memberB: { id: "z-person", profile: a },
+      });
+
+      expect({ ...reverse, tips: undefined }).toEqual({
+        ...forward,
+        tips: undefined,
+      });
+      expect(reverse.tips.togetherJa).toBe(forward.tips.togetherJa);
+      expect(reverse.tips.forPersonAJa).toBe(forward.tips.forPersonBJa);
+      expect(reverse.tips.forPersonBJa).toBe(forward.tips.forPersonAJa);
+    },
+  );
+
   it("returns only qualitative, non-empty Japanese public copy", () => {
     const result = relationship(profile({ mbti: "INFP" }), profile({ mbti: "ESTJ" }));
     const forbidden = /score|percentage|rank|point|count/i;
@@ -395,6 +504,18 @@ describe("balanced relationship result", () => {
 });
 
 describe("relationship validation", () => {
+  const exactProfileKeys = [
+    "version",
+    "zodiacId",
+    "mbti",
+    "dayMaster",
+    "fiveElements",
+    "yinYang",
+    "calculationMode",
+    "boundaryState",
+    "engineVersion",
+  ] as const;
+
   it("rejects identical member IDs with a stable typed error", () => {
     expect(() =>
       createEtoRelationship({
@@ -405,15 +526,33 @@ describe("relationship validation", () => {
   });
 
   it.each([
+    ["version", { version: 2 }],
     ["zodiac", { zodiacId: "cat" }],
     ["MBTI", { mbti: "XXXX" }],
     ["day-master element", { dayMaster: { element: "AIR", polarity: "YIN" } }],
     ["day-master polarity", { dayMaster: { element: "WOOD", polarity: "NEUTRAL" } }],
-    ["negative count", { fiveElements: { WOOD: -1, FIRE: 1, EARTH: 1, METAL: 1, WATER: 1 } }],
-    ["fractional count", { yinYang: { YIN: 1.5, YANG: 2 } }],
-    ["wrong count key", { fiveElements: { WOOD: 1, FIRE: 1, EARTH: 1, METAL: 1, AIR: 1 } }],
+    ["calculation mode", { calculationMode: "month-only" }],
+    ["boundary state", { boundaryState: "uncertain" }],
+    ["engine version", { engineVersion: "private-engine-version" }],
+    [
+      "negative count",
+      {
+        ...exactProfile(),
+        fiveElements: { WOOD: -1, FIRE: 2, EARTH: 2, METAL: 2, WATER: 1 },
+      },
+    ],
+    [
+      "fractional count",
+      { ...exactProfile(), yinYang: { YIN: 1.5, YANG: 4.5 } },
+    ],
+    [
+      "wrong count key",
+      {
+        ...exactProfile(),
+        fiveElements: { WOOD: 2, FIRE: 1, EARTH: 1, METAL: 1, AIR: 1 },
+      },
+    ],
   ])("fails safely for malformed runtime %s", (_label, override) => {
-    const secret = "private-member-value";
     let thrown: unknown;
     try {
       relationship(
@@ -425,7 +564,108 @@ describe("relationship validation", () => {
     }
     expect(thrown).toBeInstanceOf(RelationshipValidationError);
     expect(thrown).not.toBeInstanceOf(TypeError);
-    expect((thrown as Error).message).not.toContain(secret);
+    expect(thrown).toMatchObject({
+      name: "RelationshipValidationError",
+      code: "INVALID_RELATIONSHIP_INPUT",
+      message: "Relationship input is invalid",
+    });
+  });
+
+  it("does not leak a secret embedded in malformed input", () => {
+    const secret = "private-member-value";
+    let thrown: unknown;
+    try {
+      relationship(
+        profile(),
+        { ...profile(), mbti: secret } as unknown as DerivedEtoProfile,
+      );
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown).toMatchObject({
+      name: "RelationshipValidationError",
+      code: "INVALID_RELATIONSHIP_INPUT",
+      message: "Relationship input is invalid",
+    });
+    expect(JSON.stringify(thrown)).not.toContain(secret);
+    expect(String(thrown)).not.toContain(secret);
+  });
+
+  it.each([
+    ["profile extra key", { ...profile(), extra: true }],
+    [
+      "profile missing key",
+      Object.fromEntries(
+        Object.entries(profile()).filter(([field]) => field !== "engineVersion"),
+      ),
+    ],
+    [
+      "profile symbol key",
+      Object.assign(profile(), { [Symbol("secret")]: true }),
+    ],
+    [
+      "profile inherited required keys",
+      Object.assign(Object.create({ engineVersion: "mofu-eto-four-pillars-v1" }),
+        Object.fromEntries(
+          Object.entries(profile()).filter(([field]) => field !== "engineVersion"),
+        ),
+      ),
+    ],
+    ["day-master extra key", { ...profile(), dayMaster: { ...profile().dayMaster, extra: true } }],
+    ["day-master missing key", { ...profile(), dayMaster: { element: "WOOD" } }],
+    ["day-master inherited key", { ...profile(), dayMaster: Object.create({ element: "WOOD", polarity: "YANG" }) }],
+  ])("requires exact plain own-key shape for %s", (_label, malformed) => {
+    expect(Object.keys(profile())).toEqual(exactProfileKeys);
+    expect(() =>
+      relationship(profile(), malformed as unknown as DerivedEtoProfile),
+    ).toThrowError(RelationshipValidationError);
+  });
+
+  it.each([
+    ["ambiguous date-time", { calculationMode: "date-time" }],
+    ["ambiguous with five counts", { fiveElements: { WOOD: 2, FIRE: 1, EARTH: 1, METAL: 1, WATER: 1 } }],
+    ["ambiguous with yin-yang counts", { yinYang: { YIN: 3, YANG: 3 } }],
+    ["exact with null counts", { boundaryState: "exact" }],
+    ["exact with one null", { ...exactProfile(), yinYang: null }],
+    ["date-only five total", { ...exactProfile(), fiveElements: { WOOD: 1, FIRE: 1, EARTH: 1, METAL: 1, WATER: 1 } }],
+    ["date-only yin-yang total", { ...exactProfile(), yinYang: { YIN: 2, YANG: 3 } }],
+    ["date-time five total", { ...exactProfile(), calculationMode: "date-time", fiveElements: { WOOD: 2, FIRE: 2, EARTH: 1, METAL: 1, WATER: 1 }, yinYang: { YIN: 4, YANG: 4 } }],
+    ["date-time yin-yang total", { ...exactProfile(), calculationMode: "date-time", fiveElements: { WOOD: 2, FIRE: 2, EARTH: 2, METAL: 1, WATER: 1 }, yinYang: { YIN: 3, YANG: 4 } }],
+    ["count extra key", { ...exactProfile(), fiveElements: { WOOD: 2, FIRE: 1, EARTH: 1, METAL: 1, WATER: 1, AIR: 0 } }],
+  ])("rejects inconsistent boundary/count state: %s", (_label, malformed) => {
+    expect(() =>
+      relationship(profile(), malformed as unknown as DerivedEtoProfile),
+    ).toThrowError(RelationshipValidationError);
+  });
+
+  it("accepts exact date-only and date-time count totals", () => {
+    expect(() => relationship(exactProfile(), exactProfile())).not.toThrow();
+    const dateTime = exactProfile({
+      calculationMode: "date-time",
+      fiveElements: { WOOD: 2, FIRE: 2, EARTH: 2, METAL: 1, WATER: 1 },
+      yinYang: { YIN: 4, YANG: 4 },
+    });
+    expect(() => relationship(dateTime, dateTime)).not.toThrow();
+  });
+
+  it("wraps URI-unsafe member IDs in the stable validation error", () => {
+    let thrown: unknown;
+    try {
+      createEtoRelationship({
+        memberA: { id: "unsafe-\uD800", profile: profile() },
+        memberB: { id: "safe", profile: profile() },
+      });
+    } catch (error) {
+      thrown = error;
+    }
+    expect(thrown).toBeInstanceOf(RelationshipValidationError);
+    expect(thrown).not.toBeInstanceOf(URIError);
+    expect(thrown).toMatchObject({
+      name: "RelationshipValidationError",
+      code: "INVALID_RELATIONSHIP_INPUT",
+      message: "Relationship input is invalid",
+    });
   });
 
   it("rejects malformed callable-boundary values instead of throwing TypeError", () => {
