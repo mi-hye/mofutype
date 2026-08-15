@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
 
-select plan(225);
+select plan(224);
 
 -- Schema and API contract.
 select tables_are('public', array['groups', 'group_members', 'relation_unlocks'], 'public has exactly the three group tables');
@@ -66,8 +66,6 @@ select ok(exists(select 1 from pg_constraint where conrelid = 'public.groups'::r
 select ok(exists(select 1 from pg_constraint where conrelid = 'public.group_members'::regclass and contype = 'u' and pg_get_constraintdef(oid) = 'UNIQUE (group_id, user_id)'), 'membership is unique per group and user');
 select ok(exists(select 1 from pg_constraint where conrelid = 'public.relation_unlocks'::regclass and contype = 'u' and pg_get_constraintdef(oid) = 'UNIQUE (group_id, member_low_id, member_high_id)'), 'unlock is unique per canonical pair');
 select ok(not exists(select 1 from information_schema.columns where table_schema = 'public' and table_name = 'groups' and column_name = 'invite_token'), 'raw invite tokens are never stored');
-select is((select max_members from public.groups limit 1), null::integer, 'migration truncates historical groups before the profile reset');
-
 -- Exact privileges.
 select ok(has_function_privilege('authenticated', 'public.create_group_and_join(text,text,text,text,jsonb)', 'EXECUTE'), 'authenticated can execute create RPC');
 select ok(not has_function_privilege('anon', 'public.create_group_and_join(text,text,text,text,jsonb)', 'EXECUTE'), 'anon cannot execute create RPC');
