@@ -4,7 +4,6 @@ import { memo, useCallback, useMemo, useState } from "react";
 import {
   Background,
   ReactFlow,
-  useReactFlow,
   type EdgeMouseHandler,
   type NodeMouseHandler,
 } from "@xyflow/react";
@@ -39,17 +38,6 @@ interface GroupGraphProps {
 }
 
 const nodeTypes = { animal: AnimalNode };
-
-function PointerControls() {
-  const { fitView, zoomIn, zoomOut } = useReactFlow();
-  return (
-    <div className="pointer-flow-controls" data-touch-friendly="true" aria-hidden="true">
-      <button type="button" tabIndex={-1} onClick={() => void zoomIn()}>＋</button>
-      <button type="button" tabIndex={-1} onClick={() => void zoomOut()}>−</button>
-      <button type="button" tabIndex={-1} onClick={() => void fitView({ padding: 0.22 })}>全体</button>
-    </div>
-  );
-}
 
 function selectionFromEdge(edge: RelationshipGraphEdge): PairSelection | null {
   if (!edge.data) return null;
@@ -119,20 +107,21 @@ function GroupGraphComponent({
           onPaneClick={() => setSelectedNodeId(null)}
           fitView
           fitViewOptions={{ padding: 0.22 }}
-          minZoom={0.35}
-          maxZoom={1.8}
-          panOnDrag
-          zoomOnScroll
-          zoomOnPinch
+          maxZoom={1}
+          panOnDrag={false}
+          panOnScroll={false}
+          zoomOnScroll={false}
+          zoomOnPinch={false}
+          zoomOnDoubleClick={false}
+          preventScrolling={false}
           nodesDraggable={false}
           nodesConnectable={false}
           nodesFocusable={false}
           edgesFocusable={false}
           elementsSelectable
-          proOptions={{ hideAttribution: false }}
+          proOptions={{ hideAttribution: true }}
         >
           <Background gap={28} size={1.5} />
-          <PointerControls />
         </ReactFlow>
       </div>
 

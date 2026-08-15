@@ -11,7 +11,8 @@ export function AnimalNode({ data }: { data: AnimalNodeData }) {
       aria-label={data.accessibleLabel}>
       <Handle type="target" position={Position.Top} className="animal-graph-node__handle" />
       <AnimalAvatar animalId={data.member.animalId} nickname={data.member.nickname}
-        size={data.size} selected={data.selected} />
+        size={data.size} selected={data.selected}
+        src={`/animals/faces/${data.member.animalId}.png`} />
       {data.selected ? (
         <span className="animal-graph-node__selected-sticker" aria-hidden="true">
           SELECTED

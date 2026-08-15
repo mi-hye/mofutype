@@ -12,6 +12,7 @@ export interface AnimalAvatarProps {
   nickname: string;
   size?: AnimalAvatarSize;
   selected?: boolean;
+  src?: string;
 }
 
 // Asset-file existence is intentionally verified by the Task 11 integration suite.
@@ -21,11 +22,13 @@ export function AnimalAvatar({
   nickname,
   size = "md",
   selected = false,
+  src,
 }: AnimalAvatarProps) {
   const [failedAsset, setFailedAsset] = useState<string | null>(null);
   const animal = ANIMALS[animalId];
+  const asset = src ?? animal.asset;
   const accessibleName = `${nickname}の${animal.nameJa}`;
-  const imageFailed = failedAsset === animal.asset;
+  const imageFailed = failedAsset === asset;
 
   return (
     <span
@@ -43,13 +46,13 @@ export function AnimalAvatar({
           <span aria-hidden="true">{animal.nameJa}</span>
         </span>
       ) : (
-        // The catalog serves trusted local SVG paths; native error handling powers the fallback.
+        // Trusted local assets use native error handling to preserve the text fallback.
         // eslint-disable-next-line @next/next/no-img-element
         <img
           className="animal-avatar__image"
-          src={animal.asset}
+          src={asset}
           alt={accessibleName}
-          onError={() => setFailedAsset(animal.asset)}
+          onError={() => setFailedAsset(asset)}
         />
       )}
       {selected ? (

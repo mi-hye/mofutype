@@ -15,7 +15,6 @@ vi.mock("@xyflow/react", async () => {
   return {
     Background: () => null,
     Handle: () => null,
-    useReactFlow: () => ({ zoomIn: vi.fn(), zoomOut: vi.fn(), fitView: vi.fn() }),
     Position: { Top: "top", Bottom: "bottom" },
     ReactFlow: (props: Record<string, unknown>) => {
       flowProps.current = props;
@@ -41,7 +40,9 @@ vi.mock("@xyflow/react", async () => {
           ))}
           <button type="button" tabIndex={-1} data-testid="canvas-pane" onClick={(event) => (props.onPaneClick as (event: React.MouseEvent) => void)(event)}>blank</button>
           {props.children as React.ReactNode}
-          <a href="https://reactflow.dev/attribution">React Flow</a>
+          {(props.proOptions as { hideAttribution?: boolean } | undefined)?.hideAttribution
+            ? null
+            : <a href="https://reactflow.dev/attribution">React Flow</a>}
         </div>
       );
     },
@@ -115,23 +116,29 @@ describe("GroupGraph", () => {
     expect(onPairSelect).toHaveBeenCalledWith(expect.objectContaining({ pairKey: "a:b" }));
   });
 
-  it("configures viewport navigation and locks graph editing", () => {
+  it("uses animal PNGs and locks viewport navigation and graph editing", () => {
     render(<GroupGraph members={[member("a")]} unlocks={[]} onPairSelect={vi.fn()} />);
     expect(flowProps.current).toEqual(expect.objectContaining({
       fitView: true,
-      minZoom: 0.35,
-      maxZoom: 1.8,
-      panOnDrag: true,
-      zoomOnScroll: true,
-      zoomOnPinch: true,
+      maxZoom: 1,
+      panOnDrag: false,
+      panOnScroll: false,
+      zoomOnScroll: false,
+      zoomOnPinch: false,
+      zoomOnDoubleClick: false,
+      preventScrolling: false,
       nodesDraggable: false,
       nodesConnectable: false,
       nodesFocusable: false,
       edgesFocusable: false,
       elementsSelectable: true,
-      proOptions: { hideAttribution: false },
+      proOptions: { hideAttribution: true },
     }));
     const canvas = screen.getByTestId("group-graph-canvas");
+    expect(canvas.querySelector("img"))
+      .toHaveAttribute("src", "/animals/faces/fawn.png");
+    expect(screen.queryByText("React Flow")).not.toBeInTheDocument();
+    expect(screen.queryByText("全体")).not.toBeInTheDocument();
     expect(canvas).toHaveAttribute("aria-hidden", "true");
     expect(Array.from(canvas.querySelectorAll<HTMLElement>("a, button, [tabindex]"))
       .every((element) => element.tabIndex === -1)).toBe(true);
