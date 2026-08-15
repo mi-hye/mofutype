@@ -259,6 +259,18 @@ button, input, textarea, select { font: inherit; }
 .group-graph__accessible button { min-height: 42px; border: var(--border-subtle); border-radius: 999px; padding: 0.48rem 0.8rem; background: var(--surface); color: var(--ink); font-size: 0.84rem; font-weight: 650; cursor: pointer; }
 .group-graph__accessible button[aria-pressed="true"] { border-color: #d8a8a3; background: var(--surface-coral); color: var(--coral-deep); }
 
+.my-result-card { position: relative; display: grid; gap: 1.25rem; overflow: hidden; border: var(--border-subtle); border-radius: var(--radius-18); padding: clamp(1rem, 4vw, 1.8rem); background: #fff; box-shadow: var(--shadow-pop); }
+.my-result-card::before { position: absolute; top: 0; left: 0; width: 7rem; height: 0.3rem; background: var(--accent-vermilion); content: ""; }
+.my-result-card__heading p { margin: 0 0 0.25rem; color: var(--accent-vermilion); font-size: 0.68rem; font-weight: 800; letter-spacing: 0.12em; }
+.my-result-card__heading h2 { margin: 0; font-size: clamp(1.35rem, 5vw, 2rem); letter-spacing: -0.04em; line-height: 1.2; }
+.my-result-card__content { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 1rem; }
+.my-result-card__content > div { display: grid; min-width: 0; gap: 0.25rem; }
+.my-result-card__label { color: var(--text-muted); font-size: 0.72rem; font-weight: 700; }
+.my-result-card__content strong { font-size: 1.35rem; line-height: 1.2; }
+.my-result-card__content p { margin: 0; color: var(--text-muted); font-size: 0.82rem; }
+.my-result-card__content ul { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.45rem 0 0; padding: 0; list-style: none; }
+.my-result-card__content li { border: var(--border-subtle); border-radius: 999px; padding: 0.2rem 0.6rem; background: var(--surface); font-size: 0.72rem; font-weight: 700; }
+
 .relation-sheet { position: relative; width: min(100%, 58rem); min-width: 0; overflow: hidden; margin: 2rem auto 0; border: var(--border-subtle); border-radius: var(--radius-18); padding: clamp(1.1rem, 4vw, 2.25rem); background: #fff; box-shadow: var(--shadow-pop); animation: rise-in 420ms ease-out both; }
 .relation-sheet::before { position: absolute; top: 0; left: 0; width: 8rem; height: 0.3rem; background: var(--accent-vermilion); content: ""; }
 .relation-sheet__header { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 1rem; border-bottom: var(--border-subtle); padding-bottom: 0.85rem; }

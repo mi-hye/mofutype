@@ -84,6 +84,22 @@ function repository(initial: GroupAggregate) {
 }
 
 describe("GroupScreen", () => {
+  it("shows the signed-in member's derived astrology result below the graph", () => {
+    const initial = aggregate("g1", [
+      member("a", "わたし"),
+      { ...member("b", "ともだち"), animalId: "lion", animalGroup: "SUN", mbti: "ENTJ",
+        profile: { version: 1, animalId: "lion", animalGroup: "SUN", mbti: "ENTJ", calculationMode: "date-time" } },
+    ]);
+    const repo = repository(initial);
+
+    render(<GroupScreen initialAggregate={initial} repository={repo.api} currentUserId="u-b" />);
+
+    expect(screen.getByRole("heading", { name: "わたしの四柱推命結果" })).toBeInTheDocument();
+    expect(screen.getByText("ライオン")).toBeInTheDocument();
+    expect(screen.getByRole("list", { name: "診断結果の詳細" })).toHaveTextContent("ENTJ太陽タイプ出生時刻を反映");
+    expect(screen.queryByText("こじか")).not.toBeInTheDocument();
+  });
+
   it("subscribes once with the group filter, refreshes initial data, and cleans up", async () => {
     const initial = aggregate();
     const repo = repository(initial);

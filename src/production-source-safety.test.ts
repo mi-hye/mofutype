@@ -111,6 +111,7 @@ describe("production source safety", () => {
       ".checkout-panel__price {",
       ".checkout-panel fieldset {",
       ".checkout-panel input[type=\"radio\"]",
+      ".my-result-card {",
     ]) {
       expect(globalStyles).toContain(selector);
     }

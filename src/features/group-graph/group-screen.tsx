@@ -3,10 +3,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { RefreshCw } from "lucide-react";
 
+import { AnimalAvatar } from "@/components/animal-avatar";
 import { Button } from "@/components/ui/button";
 import { StatusBanner, type ConnectionStatus } from "@/components/ui/status-banner";
 import { RelationSheet } from "@/features/relationship/relation-sheet";
 import { GroupShareControls } from "@/features/share/group-share-controls";
+import { ANIMALS } from "@/lib/astrology/animals";
 import type {
   GroupAggregate,
   GroupSubscriptionCallbacks,
@@ -18,12 +20,13 @@ import { GroupGraph, type PairSelection } from "./group-graph";
 type GroupRepository = Pick<
   ReturnType<typeof createBrowserGroupRepository>,
   "loadGroup" | "subscribeToGroup"
->;
+> & Partial<Pick<ReturnType<typeof createBrowserGroupRepository>, "ensureAnonymousSession">>;
 
 interface GroupScreenProps {
   initialAggregate: GroupAggregate;
   repository: GroupRepository;
   inviteToken?: string;
+  currentUserId?: string;
 }
 
 function upsertById<T extends { id: string }>(items: readonly T[], incoming: T): T[] {
@@ -102,8 +105,9 @@ export function GroupScreen(props: GroupScreenProps) {
   return <GroupScreenForGroup key={props.initialAggregate.group.id} {...props} />;
 }
 
-function GroupScreenForGroup({ initialAggregate, repository, inviteToken }: GroupScreenProps) {
+function GroupScreenForGroup({ initialAggregate, repository, inviteToken, currentUserId }: GroupScreenProps) {
   const [aggregate, setAggregate] = useState(initialAggregate);
+  const [resolvedUserId, setResolvedUserId] = useState<string | null>(null);
   const [status, setStatus] = useState<ConnectionStatus>("connecting");
   const [loadError, setLoadError] = useState(false);
   const [subscriptionAttempt, setSubscriptionAttempt] = useState(0);
@@ -283,6 +287,27 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken }: Grou
     }
   }, [initialAggregate.group.id, repository]);
 
+  useEffect(() => {
+    if (currentUserId) return;
+    if (!repository.ensureAnonymousSession) return;
+    let current = true;
+    void repository.ensureAnonymousSession().then((userId) => {
+      if (current) setResolvedUserId(userId);
+    }).catch(() => {
+      // Connection status already provides the user-facing recovery path.
+    });
+    return () => { current = false; };
+  }, [currentUserId, repository]);
+
+  const activeUserId = currentUserId ?? resolvedUserId;
+  const currentMember = activeUserId
+    ? aggregate.members.find((member) => member.userId === activeUserId) ?? null
+    : null;
+  const currentAnimal = currentMember ? ANIMALS[currentMember.animalId] : null;
+  const animalGroupLabel = currentMember
+    ? { MOON: "月タイプ", EARTH: "地球タイプ", SUN: "太陽タイプ" }[currentMember.animalGroup]
+    : null;
+
   return (
     <main className="group-member-shell">
       <header className="group-member-header">
@@ -329,6 +354,32 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken }: Grou
       ) : null}
 
       <GroupGraph members={aggregate.members} unlocks={aggregate.unlocks} onPairSelect={setSelectedPair} />
+      {currentMember && currentAnimal ? (
+        <section className="my-result-card" aria-labelledby="my-result-title">
+          <div className="my-result-card__heading">
+            <p>MY PROFILE</p>
+            <h2 id="my-result-title">わたしの四柱推命結果</h2>
+          </div>
+          <div className="my-result-card__content">
+            <AnimalAvatar
+              animalId={currentMember.animalId}
+              nickname={currentMember.nickname}
+              size="md"
+              src={`/animals/faces/${currentMember.animalId}.png`}
+            />
+            <div>
+              <span className="my-result-card__label">動物タイプ</span>
+              <strong>{currentAnimal.nameJa}</strong>
+              <p>{currentMember.nickname}さんの生年月日から導いたタイプです。</p>
+              <ul aria-label="診断結果の詳細">
+                <li>{currentMember.mbti ?? "MBTI未設定"}</li>
+                <li>{animalGroupLabel}</li>
+                <li>{currentMember.profile.calculationMode === "date-time" ? "出生時刻を反映" : "生年月日で診断"}</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+      ) : null}
       {selectedPair ? (
         <RelationSheet
           relationship={selectedPair.relationship}
