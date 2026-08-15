@@ -2,7 +2,8 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createRelationship } from "@/lib/relationship/local-provider";
+import { createEtoRelationship } from "@/lib/eto/relationship";
+import type { DerivedEtoProfile, ZodiacId } from "@/lib/eto/types";
 import type { GroupMember, RelationUnlock } from "@/lib/supabase/models";
 
 type MockNode = { id: string; type: string; data: Record<string, unknown> };
@@ -50,11 +51,24 @@ vi.mock("@xyflow/react", async () => {
 
 import { GroupGraph } from "./group-graph";
 
-function member(id: string, nickname = id): GroupMember {
+function profile(zodiacId: ZodiacId = "dragon"): DerivedEtoProfile {
+  return {
+    version: 1,
+    zodiacId,
+    mbti: null,
+    dayMaster: { element: "WOOD", polarity: "YANG" },
+    fiveElements: { WOOD: 2, FIRE: 1, EARTH: 1, METAL: 1, WATER: 1 },
+    yinYang: { YIN: 3, YANG: 3 },
+    calculationMode: "date-only",
+    boundaryState: "exact",
+    engineVersion: "mofu-eto-four-pillars-v1",
+  };
+}
+
+function member(id: string, nickname = id, zodiacId: ZodiacId = "dragon"): GroupMember {
   return {
     id, groupId: "g1", userId: `u-${id}`, nickname,
-    animalId: "fawn", animalGroup: "MOON", mbti: null,
-    profile: { version: 1, animalId: "fawn", animalGroup: "MOON", mbti: null, calculationMode: "date-only" },
+    zodiacId, mbti: null, profile: profile(zodiacId),
     joinedAt: "2026-08-15T00:00:00Z",
   };
 }
@@ -76,7 +90,7 @@ describe("GroupGraph", () => {
 
     await user.click(screen.getByTestId("canvas-node-b"));
     expect(within(screen.getByTestId("canvas-node-b")).getByText("SELECTED"))
-      .toHaveClass("animal-graph-node__selected-sticker");
+      .toHaveClass("zodiac-graph-node__selected-sticker");
     expect(screen.getByRole("status", { name: "選択中のメンバー" })).toHaveTextContent("べに");
     expect(screen.getByRole("status", { name: "選択中のメンバー" })).toHaveTextContent("2本");
     await user.click(screen.getByTestId("canvas-pane"));
@@ -106,7 +120,7 @@ describe("GroupGraph", () => {
     expect(screen.getByRole("region", { name: "関係性グラフの操作リスト" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "あおを選択" }));
     const relationshipButton = screen.getByRole("button", { name: /あおとべにの関係を見る.*解放済み/ });
-    expect(relationshipButton).toHaveTextContent("こじか × こじか");
+    expect(relationshipButton).toHaveTextContent("たつとたつ");
     expect(relationshipButton).not.toHaveTextContent("a:b");
     const lockedRelationshipButton = screen.getByRole("button", { name: /あおとちゃの関係を見る/ });
     expect(lockedRelationshipButton).not.toHaveTextContent("解放済み");
@@ -156,7 +170,7 @@ describe("GroupGraph", () => {
   it("builds 30-member relationships once across presentation-only changes", async () => {
     const user = userEvent.setup();
     const members = Array.from({ length: 30 }, (_, index) => member(`m-${String(index).padStart(2, "0")}`));
-    const relationshipFactory = vi.fn(createRelationship);
+    const relationshipFactory = vi.fn(createEtoRelationship);
     const onPairSelect = vi.fn();
     const view = render(
       <GroupGraph members={members} unlocks={[]} onPairSelect={onPairSelect}

@@ -9,25 +9,27 @@ import {
   type NodeMouseHandler,
 } from "@xyflow/react";
 
-import { createRelationship } from "@/lib/relationship/local-provider";
-import type { RelationshipResult } from "@/lib/relationship/types";
+import {
+  createEtoRelationship,
+  type EtoRelationshipResult,
+} from "@/lib/eto/relationship";
 import type { RelationUnlock } from "@/lib/supabase/models";
-import { AnimalNode } from "./animal-node";
+import { ZodiacNode } from "./zodiac-node";
 import {
   buildGraphTopology,
   decorateGraph,
   graphMemberSnapshot,
   graphMembersVersion,
-  type AnimalGraphNode,
   type RelationshipFactory,
   type RelationshipGraphMember,
   type RelationshipGraphEdge,
+  type ZodiacGraphNode,
 } from "./build-graph";
 
 export interface PairSelection {
   pairKey: string;
   memberIds: readonly [RelationshipGraphMember["id"], RelationshipGraphMember["id"]];
-  relationship: RelationshipResult;
+  relationship: EtoRelationshipResult;
   unlocked: boolean;
 }
 
@@ -38,7 +40,7 @@ interface GroupGraphProps {
   relationshipFactory?: RelationshipFactory;
 }
 
-const nodeTypes = { animal: AnimalNode };
+const nodeTypes = { zodiac: ZodiacNode };
 
 function PointerControls() {
   const { fitView, zoomIn, zoomOut } = useReactFlow();
@@ -65,7 +67,7 @@ function GroupGraphComponent({
   members,
   unlocks,
   onPairSelect,
-  relationshipFactory = createRelationship,
+  relationshipFactory = createEtoRelationship,
 }: GroupGraphProps) {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const membersVersion = graphMembersVersion(members);
@@ -88,7 +90,7 @@ function GroupGraphComponent({
     [graph.edges],
   );
 
-  const handleNodeClick = useCallback<NodeMouseHandler<AnimalGraphNode>>(
+  const handleNodeClick = useCallback<NodeMouseHandler<ZodiacGraphNode>>(
     (_event, node) => setSelectedNodeId(node.id),
     [],
   );
@@ -110,7 +112,7 @@ function GroupGraphComponent({
     <section className="group-graph" aria-label="メンバー関係性グラフ">
       <div ref={hideCanvasFromKeyboard} className="group-graph__canvas"
         data-testid="group-graph-canvas" aria-hidden="true">
-        <ReactFlow<AnimalGraphNode, RelationshipGraphEdge>
+        <ReactFlow<ZodiacGraphNode, RelationshipGraphEdge>
           key={membersVersion}
           nodes={graph.nodes}
           edges={graph.edges}
@@ -169,7 +171,7 @@ function GroupGraphComponent({
                 <li key={edge.id}>
                   <button type="button" onClick={() => onPairSelect(selection)}>
                     {selectedMember.nickname}と{other.nickname}の関係を見る：
-                    {selection.relationship.freeTitleJa}
+                    {selection.relationship.headlineJa}
                     {selection.unlocked ? "（解放済み）" : ""}
                   </button>
                 </li>
