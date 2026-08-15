@@ -108,6 +108,8 @@ function GroupGraphComponent({
           zoomOnPinch
           nodesDraggable={false}
           nodesConnectable={false}
+          nodesFocusable={false}
+          edgesFocusable={false}
           elementsSelectable
           proOptions={{ hideAttribution: false }}
         >
@@ -147,7 +149,9 @@ function GroupGraphComponent({
               return (
                 <li key={edge.id}>
                   <button type="button" onClick={() => onPairSelect(selection)}>
-                    {selectedMember.nickname}と{other.nickname}の関係を見る
+                    {selectedMember.nickname}と{other.nickname}の関係を見る：
+                    {selection.relationship.freeTitleJa}
+                    {selection.unlocked ? "（解放済み）" : ""}
                   </button>
                 </li>
               );

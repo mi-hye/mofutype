@@ -96,12 +96,17 @@ describe("GroupGraph", () => {
   it("provides a keyboard-accessible member and relationship alternative", async () => {
     const user = userEvent.setup();
     const onPairSelect = vi.fn();
-    render(<GroupGraph members={[member("a", "あお"), member("b", "べに")]} unlocks={[]} onPairSelect={onPairSelect} />);
+    render(<GroupGraph members={[member("a", "あお"), member("b", "べに"), member("c", "ちゃ")]} unlocks={[unlock("a", "b")]} onPairSelect={onPairSelect} />);
 
     expect(screen.getByRole("region", { name: "関係性グラフの操作リスト" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "あおを選択" }));
-    expect(screen.getByRole("button", { name: /あおとべにの関係を見る/ })).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: /あおとべにの関係を見る/ }));
+    const relationshipButton = screen.getByRole("button", { name: /あおとべにの関係を見る.*解放済み/ });
+    expect(relationshipButton).toHaveTextContent("こじか × こじか");
+    expect(relationshipButton).not.toHaveTextContent("a:b");
+    const lockedRelationshipButton = screen.getByRole("button", { name: /あおとちゃの関係を見る/ });
+    expect(lockedRelationshipButton).not.toHaveTextContent("解放済み");
+    expect(lockedRelationshipButton).not.toHaveTextContent("a:c");
+    await user.click(relationshipButton);
     expect(onPairSelect).toHaveBeenCalledWith(expect.objectContaining({ pairKey: "a:b" }));
   });
 
@@ -116,6 +121,8 @@ describe("GroupGraph", () => {
       zoomOnPinch: true,
       nodesDraggable: false,
       nodesConnectable: false,
+      nodesFocusable: false,
+      edgesFocusable: false,
       elementsSelectable: true,
       proOptions: { hideAttribution: false },
     }));
@@ -156,8 +163,11 @@ describe("GroupGraph", () => {
     );
     expect(relationshipFactory).toHaveBeenCalledTimes(435);
 
-    const sameSemanticMembers = members.map((item) => ({
+    const sameSemanticMembers = members.map((item, index) => ({
       ...item,
+      groupId: "irrelevant-group",
+      userId: `irrelevant-user-${index}`,
+      joinedAt: "2099-01-01T00:00:00Z",
       profile: { ...item.profile },
     }));
     view.rerender(

@@ -120,6 +120,67 @@ describe("GroupScreen", () => {
     await waitFor(() => expect(screen.getByTestId("graph-state")).toHaveTextContent("pairs:3"));
   });
 
+  it("merges a deferred initial snapshot with newer realtime member and unlock upserts", async () => {
+    let resolveLoad!: (value: GroupAggregate) => void;
+    let callbacks: GroupSubscriptionCallbacks | undefined;
+    const initial = aggregate("g1", [member("a", "initial-a")], [unlock("u1")]);
+    const repositoryApi = {
+      loadGroup: vi.fn(() => new Promise<GroupAggregate>((resolve) => { resolveLoad = resolve; })),
+      subscribeToGroup: vi.fn((_groupId: string, next: GroupSubscriptionCallbacks) => {
+        callbacks = next;
+        return vi.fn(async () => undefined);
+      }),
+    } as never;
+    render(<GroupScreen initialAggregate={initial} repository={repositoryApi} />);
+
+    act(() => {
+      callbacks?.onMemberChange?.({ eventType: "UPDATE", new: member("a", "realtime-a") });
+      callbacks?.onMemberChange?.({ eventType: "INSERT", new: member("c", "realtime-c") });
+      callbacks?.onUnlockChange?.({ eventType: "UPDATE", new: unlock("u1", "unlocked") });
+      callbacks?.onUnlockChange?.({ eventType: "INSERT", new: unlock("u2", "unlocked") });
+    });
+    await act(async () => resolveLoad(aggregate(
+      "g1",
+      [member("a", "snapshot-a"), member("b", "snapshot-b")],
+      [unlock("u1", "failed"), unlock("snapshot-only", "pending")],
+    )));
+
+    expect(screen.getByTestId("graph-state")).toHaveTextContent(/members:a:realtime-a,b:snapshot-b,c:realtime-c/);
+    expect(screen.getByTestId("graph-state")).toHaveTextContent(/unlocks:u1:unlocked,snapshot-only:pending,u2:unlocked/);
+  });
+
+  it("merges a deferred manual snapshot without losing concurrent realtime upserts", async () => {
+    const user = userEvent.setup();
+    let resolveRefresh!: (value: GroupAggregate) => void;
+    let callbacks: GroupSubscriptionCallbacks | undefined;
+    const initial = aggregate("g1", [member("a", "initial-a")], [unlock("u1")]);
+    const loadGroup = vi.fn()
+      .mockResolvedValueOnce(initial)
+      .mockImplementationOnce(() => new Promise<GroupAggregate>((resolve) => { resolveRefresh = resolve; }));
+    const repositoryApi = {
+      loadGroup,
+      subscribeToGroup: vi.fn((_groupId: string, next: GroupSubscriptionCallbacks) => {
+        callbacks = next;
+        return vi.fn(async () => undefined);
+      }),
+    } as never;
+    render(<GroupScreen initialAggregate={initial} repository={repositoryApi} />);
+    await waitFor(() => expect(loadGroup).toHaveBeenCalledOnce());
+    await user.click(screen.getByRole("button", { name: "最新の情報に更新" }));
+    act(() => {
+      callbacks?.onMemberChange?.({ eventType: "UPDATE", new: member("a", "realtime-a") });
+      callbacks?.onUnlockChange?.({ eventType: "UPDATE", new: unlock("u1", "unlocked") });
+    });
+    await act(async () => resolveRefresh(aggregate(
+      "g1",
+      [member("a", "snapshot-a"), member("b", "snapshot-b")],
+      [unlock("u1", "failed"), unlock("snapshot-only", "pending")],
+    )));
+
+    expect(screen.getByTestId("graph-state")).toHaveTextContent(/members:a:realtime-a,b:snapshot-b/);
+    expect(screen.getByTestId("graph-state")).toHaveTextContent(/unlocks:u1:unlocked,snapshot-only:pending/);
+  });
+
   it("ignores stale events and load results after a group change", async () => {
     let resolveFirst!: (value: GroupAggregate) => void;
     const first = aggregate("g1");

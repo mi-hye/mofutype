@@ -84,12 +84,28 @@ function uniquePrefixes(members: readonly GroupMember[]): Map<string, string> {
 function positionAt(index: number, count: number): { x: number; y: number } {
   if (count === 1) return { x: 0, y: 0 };
 
-  const outerCount = count > 15 ? count - 8 : count;
-  const isInner = count > 15 && index < 8;
-  const ringIndex = isInner ? index : index - (count > 15 ? 8 : 0);
-  const ringCount = isInner ? 8 : outerCount;
-  const radius = isInner ? 210 : Math.max(230, ringCount * 28);
-  const angle = -Math.PI / 2 + (ringIndex * Math.PI * 2) / ringCount;
+  if (count <= 15) {
+    const radius = Math.max(230, count * 28);
+    const angle = -Math.PI / 2 + (index * Math.PI * 2) / count;
+    return {
+      x: Math.round(Math.cos(angle) * radius),
+      y: Math.round(Math.sin(angle) * radius),
+    };
+  }
+
+  const minimumChord = 124;
+  const radiusForChord = (capacity: number) =>
+    minimumChord / (2 * Math.sin(Math.PI / capacity));
+  const innerCount = Math.min(10, Math.ceil(count / 2.5));
+  const outerCount = count - innerCount;
+  const innerRadius = Math.max(190, radiusForChord(innerCount));
+  const outerRadius = Math.max(innerRadius + 150, radiusForChord(outerCount));
+  const isInner = index < innerCount;
+  const ringIndex = isInner ? index : index - innerCount;
+  const ringCount = isInner ? innerCount : outerCount;
+  const radius = isInner ? innerRadius : outerRadius;
+  const stagger = isInner ? 0 : Math.PI / outerCount;
+  const angle = -Math.PI / 2 + stagger + (ringIndex * Math.PI * 2) / ringCount;
   return {
     x: Math.round(Math.cos(angle) * radius),
     y: Math.round(Math.sin(angle) * radius),
@@ -101,8 +117,6 @@ export function graphMembersVersion(members: readonly GroupMember[]): string {
     .sort((first, second) => first.id < second.id ? -1 : first.id > second.id ? 1 : 0)
     .map((member) => ({
       id: member.id,
-      groupId: member.groupId,
-      userId: member.userId,
       nickname: member.nickname,
       animalId: member.animalId,
       animalGroup: member.animalGroup,
@@ -114,7 +128,6 @@ export function graphMembersVersion(members: readonly GroupMember[]): string {
         mbti: member.profile.mbti,
         calculationMode: member.profile.calculationMode,
       },
-      joinedAt: member.joinedAt,
     }));
   return JSON.stringify(snapshots);
 }
@@ -201,17 +214,23 @@ export function decorateGraph(
     const emphasis: EdgeEmphasis = selectedNodeId === null
       ? "default"
       : incident ? "incident" : "faint";
+    const unlocked = unlockedPairs.has(edge.id);
+    const strokeWidth = incident ? (unlocked ? 5 : 4) : unlocked ? 3 : 1.5;
+    const opacity = emphasis === "faint"
+      ? unlocked ? 0.28 : 0.06
+      : incident ? 1 : unlocked ? 0.68 : 0.16;
     return {
       ...edge,
       animated: incident,
+      className: `relationship-edge relationship-edge--${unlocked ? "unlocked" : "locked"}`,
       style: {
-        strokeWidth: incident ? 4 : 2,
-        opacity: emphasis === "faint" ? 0.12 : emphasis === "incident" ? 1 : 0.55,
-        strokeDasharray: incident ? "9 4" : undefined,
+        strokeWidth,
+        opacity,
+        strokeDasharray: unlocked ? undefined : incident ? "9 4" : "3 7",
       },
       data: {
         ...edge.data,
-        unlocked: unlockedPairs.has(edge.id),
+        unlocked,
         emphasis,
       },
     };

@@ -28,6 +28,50 @@ function upsertById<T extends { id: string }>(items: readonly T[], incoming: T):
   return items.map((item, itemIndex) => itemIndex === index ? incoming : item);
 }
 
+function mergeSnapshotItems<T extends { id: string }>(
+  snapshot: readonly T[],
+  current: readonly T[],
+  revisions: ReadonlyMap<string, number>,
+  revisionBeforeLoad: number,
+): T[] {
+  const merged = [...snapshot];
+  const indexes = new Map(merged.map((item, index) => [item.id, index]));
+  for (const item of current) {
+    const index = indexes.get(item.id);
+    if (index === undefined) {
+      indexes.set(item.id, merged.length);
+      merged.push(item);
+    } else if ((revisions.get(item.id) ?? 0) > revisionBeforeLoad) {
+      merged[index] = item;
+    }
+  }
+  return merged;
+}
+
+function mergeSnapshotAggregate(
+  snapshot: GroupAggregate,
+  current: GroupAggregate,
+  memberRevisions: ReadonlyMap<string, number>,
+  unlockRevisions: ReadonlyMap<string, number>,
+  revisionBeforeLoad: number,
+): GroupAggregate {
+  return {
+    ...snapshot,
+    members: mergeSnapshotItems(
+      snapshot.members,
+      current.members,
+      memberRevisions,
+      revisionBeforeLoad,
+    ),
+    unlocks: mergeSnapshotItems(
+      snapshot.unlocks,
+      current.unlocks,
+      unlockRevisions,
+      revisionBeforeLoad,
+    ),
+  };
+}
+
 function connectionStatus(status: string): ConnectionStatus {
   switch (status) {
     case "SUBSCRIBED": return "success";
@@ -49,17 +93,22 @@ function GroupScreenForGroup({ initialAggregate, repository }: GroupScreenProps)
   const [subscriptionAttempt, setSubscriptionAttempt] = useState(0);
   const [selectedPair, setSelectedPair] = useState<PairSelection | null>(null);
   const generation = useRef(0);
-  const eventVersion = useRef(0);
+  const changeRevision = useRef(0);
+  const memberRevisions = useRef(new Map<string, number>());
+  const unlockRevisions = useRef(new Map<string, number>());
+  const loadRequest = useRef(0);
 
   const applyMember = useCallback((member: GroupMember) => {
-    eventVersion.current += 1;
+    changeRevision.current += 1;
+    memberRevisions.current.set(member.id, changeRevision.current);
     setAggregate((current) => ({
       ...current,
       members: upsertById(current.members, member),
     }));
   }, []);
   const applyUnlock = useCallback((unlock: RelationUnlock) => {
-    eventVersion.current += 1;
+    changeRevision.current += 1;
+    unlockRevisions.current.set(unlock.id, changeRevision.current);
     setAggregate((current) => ({
       ...current,
       unlocks: upsertById(current.unlocks, unlock),
@@ -69,7 +118,9 @@ function GroupScreenForGroup({ initialAggregate, repository }: GroupScreenProps)
   useEffect(() => {
     const currentGeneration = generation.current + 1;
     generation.current = currentGeneration;
-    const versionBeforeLoad = eventVersion.current;
+    const revisionBeforeLoad = changeRevision.current;
+    const request = loadRequest.current + 1;
+    loadRequest.current = request;
     const callbacks: GroupSubscriptionCallbacks = {
       onMemberChange: ({ new: member }) => {
         if (generation.current === currentGeneration) applyMember(member);
@@ -99,9 +150,15 @@ function GroupScreenForGroup({ initialAggregate, repository }: GroupScreenProps)
     void repository.loadGroup(initialAggregate.group.id).then((fresh) => {
       if (
         generation.current === currentGeneration &&
-        eventVersion.current === versionBeforeLoad
+        loadRequest.current === request
       ) {
-        setAggregate(fresh);
+        setAggregate((current) => mergeSnapshotAggregate(
+          fresh,
+          current,
+          memberRevisions.current,
+          unlockRevisions.current,
+          revisionBeforeLoad,
+        ));
       }
     }).catch(() => {
       if (generation.current === currentGeneration) setLoadError(true);
@@ -115,15 +172,23 @@ function GroupScreenForGroup({ initialAggregate, repository }: GroupScreenProps)
 
   const refresh = useCallback(async () => {
     const currentGeneration = generation.current;
-    const versionBeforeLoad = eventVersion.current;
+    const revisionBeforeLoad = changeRevision.current;
+    const request = loadRequest.current + 1;
+    loadRequest.current = request;
     setLoadError(false);
     try {
       const fresh = await repository.loadGroup(initialAggregate.group.id);
       if (
         generation.current === currentGeneration &&
-        eventVersion.current === versionBeforeLoad
+        loadRequest.current === request
       ) {
-        setAggregate(fresh);
+        setAggregate((current) => mergeSnapshotAggregate(
+          fresh,
+          current,
+          memberRevisions.current,
+          unlockRevisions.current,
+          revisionBeforeLoad,
+        ));
       }
     } catch {
       if (generation.current === currentGeneration) setLoadError(true);

@@ -71,6 +71,27 @@ describe("buildGraph", () => {
     expect(graph.nodes.every((node) => node.data.size === size)).toBe(true);
   });
 
+  it.each(Array.from({ length: 29 }, (_, index) => index + 2))(
+    "keeps node centers safely separated for %i members",
+    (count) => {
+      const graph = buildGraph(
+        Array.from({ length: count }, (_, index) => member(`m-${String(index).padStart(2, "0")}`)),
+        null,
+        [],
+      );
+      const footprint = { lg: 140, md: 120, sm: 112 }[graph.nodes[0].data.size];
+      let minimumDistance = Number.POSITIVE_INFINITY;
+      for (let first = 0; first < graph.nodes.length; first += 1) {
+        for (let second = first + 1; second < graph.nodes.length; second += 1) {
+          const dx = graph.nodes[first].position.x - graph.nodes[second].position.x;
+          const dy = graph.nodes[first].position.y - graph.nodes[second].position.y;
+          minimumDistance = Math.min(minimumDistance, Math.hypot(dx, dy));
+        }
+      }
+      expect(minimumDistance).toBeGreaterThanOrEqual(footprint - 1);
+    },
+  );
+
   it("keeps node positions and pair directions stable across input reorder", () => {
     const members = [member("charlie"), member("alpha"), member("bravo")];
     const first = buildGraph(members, null, []);
@@ -106,8 +127,27 @@ describe("buildGraph", () => {
 
     expect(graph.edges.find((edge) => edge.id === "a:b")?.data?.unlocked).toBe(true);
     expect(graph.edges.find((edge) => edge.id === "a:c")?.data?.unlocked).toBe(false);
+    expect(graph.edges.find((edge) => edge.id === "a:b")?.className).toContain("unlocked");
+    expect(graph.edges.find((edge) => edge.id === "a:c")?.className).toContain("locked");
+    expect(Number(graph.edges.find((edge) => edge.id === "a:c")?.style?.opacity)).toBeLessThanOrEqual(0.2);
     expect(graph.edges[0].data?.relationship.pairKey).toBe(graph.edges[0].id);
     expect(JSON.stringify(graph)).not.toMatch(/score|percent|percentage|%/i);
+  });
+
+  it("preserves visible unlock distinction while incident edges are highlighted", () => {
+    const graph = buildGraph(
+      [member("a"), member("b"), member("c")],
+      "a",
+      [unlock("a", "b")],
+    );
+    const unlockedEdge = graph.edges.find((edge) => edge.id === "a:b");
+    const lockedEdge = graph.edges.find((edge) => edge.id === "a:c");
+
+    expect(unlockedEdge?.data.emphasis).toBe("incident");
+    expect(lockedEdge?.data.emphasis).toBe("incident");
+    expect(unlockedEdge?.className).toContain("unlocked");
+    expect(lockedEdge?.className).toContain("locked");
+    expect(Number(unlockedEdge?.style?.strokeWidth)).toBeGreaterThan(Number(lockedEdge?.style?.strokeWidth));
   });
 
   it("adds discriminators only to duplicate nicknames using minimal unique prefixes", () => {
