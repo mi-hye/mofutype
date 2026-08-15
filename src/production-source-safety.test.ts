@@ -51,16 +51,24 @@ function colorToken(styles: string, name: string): string {
   return match[1];
 }
 
-describe("production source safety", () => {
-  it("defines the Urban Utility tokens and reduced-motion fallback", () => {
-    const globalStyles = readFileSync(path.join(sourceRoot, "app/globals.css"), "utf8");
+function designStyles(): string {
+  return ["design-system.css", "globals.css"]
+    .map((fileName) => readFileSync(path.join(sourceRoot, "app", fileName), "utf8"))
+    .join("\n");
+}
 
-    expect(globalStyles).toContain("--paper-warm:");
-    expect(globalStyles).toContain("--accent-navy:");
-    expect(globalStyles).toContain("--accent-vermilion:");
-    expect(globalStyles).toContain("--accent-sand:");
+describe("production source safety", () => {
+  it("defines the warm Mofu design tokens and reduced-motion fallback", () => {
+    const globalStyles = designStyles();
+
+    expect(globalStyles).toContain("--color-paper: #f7ecdc");
+    expect(globalStyles).toContain("--color-blush: #f1d1ca");
+    expect(globalStyles).toContain("--color-ink: #4f312b");
+    expect(globalStyles).toContain("--action-primary:");
     expect(globalStyles).toContain("--border-subtle:");
     expect(globalStyles).toContain("--shadow-pop:");
+    expect(globalStyles).toContain('background: var(--action-primary)');
+    expect(globalStyles).toContain('background-image: none');
     expect(globalStyles).toContain("@media (prefers-reduced-motion: reduce)");
     expect(globalStyles).toContain('.animal-avatar[data-selected="true"]');
     expect(globalStyles).toMatch(
@@ -78,7 +86,7 @@ describe("production source safety", () => {
   });
 
   it("defines role-based editorial tokens and explicit responsive contracts", () => {
-    const globalStyles = readFileSync(path.join(sourceRoot, "app/globals.css"), "utf8");
+    const globalStyles = designStyles();
 
     for (const token of [
       "--paper-warm:",
@@ -98,8 +106,8 @@ describe("production source safety", () => {
     );
   });
 
-  it("defines Urban Utility contracts for relationship and checkout surfaces", () => {
-    const globalStyles = readFileSync(path.join(sourceRoot, "app/globals.css"), "utf8");
+  it("defines warm Mofu contracts for relationship and checkout surfaces", () => {
+    const globalStyles = designStyles();
 
     for (const selector of [
       ".relation-sheet {",
@@ -120,7 +128,7 @@ describe("production source safety", () => {
   });
 
   it("keeps the profile step compact without replacing native controls", () => {
-    const globalStyles = readFileSync(path.join(sourceRoot, "app/globals.css"), "utf8");
+    const globalStyles = designStyles();
 
     expect(globalStyles).toContain(".profile-step .ui-card {");
     expect(globalStyles).toContain("max-width: 38rem;");
@@ -137,7 +145,7 @@ describe("production source safety", () => {
   });
 
   it("keeps semantic selected-edge colors visible against cream", () => {
-    const globalStyles = readFileSync(path.join(sourceRoot, "app/globals.css"), "utf8");
+    const globalStyles = designStyles();
     const cream = colorToken(globalStyles, "--cream");
 
     expect(contrastRatio(colorToken(globalStyles, "--edge-hot-pink"), cream))
@@ -149,7 +157,7 @@ describe("production source safety", () => {
   });
 
   it("keeps a mobile-first relationship preview without hiding document overflow", () => {
-    const globalStyles = readFileSync(path.join(sourceRoot, "app/globals.css"), "utf8");
+    const globalStyles = designStyles();
     const pageSource = readFileSync(path.join(sourceRoot, "app/page.tsx"), "utf8");
 
     expect(globalStyles).not.toContain("min-width: 320px");
