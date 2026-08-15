@@ -85,6 +85,9 @@ describe("production source safety", () => {
       expect(squiggleFilters).toContain(`id="${filterId}"`);
     }
     expect(squiggleFilters).toContain('id="wrinkle-effect"');
+    expect(squiggleFilters).toContain('id="node-wrinkle-effect"');
+    expect(squiggleFilters).toContain("result=\"node-wrinkle-noise\"");
+    expect(squiggleFilters).toContain("scale={5}");
     expect(squiggleFilters).toContain('baseFrequency="0.03"');
     expect(squiggleFilters).toContain("numOctaves={3}");
     expect(squiggleFilters).toContain("scale={9}");
@@ -215,7 +218,8 @@ describe("production source safety", () => {
     for (const animalImage of ["tiger.png", "rat.png", "rabbit.png"]) {
       expect(previewSource).toContain(`/zodiac/${animalImage}`);
     }
-    expect(globalStyles).toMatch(/\.hero__node-frame::before[^}]*filter:\s*url\(#wrinkle-effect\)/);
+    expect(globalStyles).toMatch(/\.hero__node-frame::before[^}]*background:\s*var\(--surface-elevated\)[^}]*filter:\s*url\(#node-wrinkle-effect\)/);
+    expect(globalStyles).toMatch(/\.hero__connectors line[^}]*stroke-width:\s*1\.25[^}]*stroke-opacity:\s*0\.72/);
     expect(globalStyles).toMatch(/\.ui-button::before[^}]*animation:\s*squigglevision/);
     expect(globalStyles).toContain(".ui-button > span { position: relative; z-index: 1; }");
     expect(globalStyles).toContain("@keyframes float-orbit");
