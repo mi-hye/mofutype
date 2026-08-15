@@ -27,6 +27,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 button, input, textarea, select { font: inherit; }
 ::selection { background: var(--butter); color: var(--ink); }
 :focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+.svg-filters { position: absolute; width: 0; height: 0; pointer-events: none; }
 
 .ui-button {
   display: inline-flex;
@@ -36,24 +37,25 @@ button, input, textarea, select { font: inherit; }
   justify-content: center;
   gap: 0.55rem;
   position: relative;
-  overflow: hidden;
-  border: 1.5px solid transparent;
-  border-radius: 1.15rem 1rem 1.2rem 0.95rem / 1rem 1.2rem 0.95rem 1.15rem;
+  overflow: visible;
+  border: 3.5px solid var(--button-border-color);
+  border-radius: 999px;
   padding: 0.68rem 1.05rem;
+  background: var(--button-background);
+  box-shadow: 0 5px 0 var(--button-shadow-base), 0 10px 22px rgb(var(--ink-rgb) / 10%);
   color: var(--ink);
   font-weight: 750;
   letter-spacing: -0.01em;
   line-height: 1.2;
   cursor: pointer;
-  transition: border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+  animation: squigglevision 0.32s infinite steps(1);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s ease;
 }
 .ui-button::after { display: none; }
-.ui-button[data-variant="primary"] { border-color: var(--color-line); outline: 1px solid rgb(var(--paper-rgb) / 72%); outline-offset: -4px; background: var(--action-primary); box-shadow: 3px 5px 0 rgb(var(--ink-rgb) / 13%), 0 10px 22px rgb(var(--ink-rgb) / 10%); color: var(--action-primary-text); }
-.ui-button[data-variant="secondary"] { border-color: rgb(var(--ink-rgb) / 62%); background: var(--action-secondary); color: var(--ink); }
-.ui-button[data-variant="ghost"] { border-color: rgb(var(--ink-rgb) / 38%); background: rgb(var(--paper-rgb) / 84%); color: var(--ink); }
+.ui-button[data-variant="primary"], .ui-button[data-variant="secondary"], .ui-button[data-variant="ghost"] { border-color: var(--button-border-color); background: var(--button-background); color: var(--button-border-color); }
 .ui-button[data-size="sm"] { min-height: 42px; padding-inline: 0.82rem; font-size: 0.875rem; }
 .ui-button[data-size="lg"] { min-height: 52px; padding-inline: 1.4rem; font-size: 1rem; }
-.ui-button:not(:disabled):active { transform: translateY(1px); box-shadow: 0 4px 12px rgb(var(--ink-rgb) / 14%); }
+.ui-button:not(:disabled):active { transform: translateY(-1px) scale(0.99); }
 .ui-button:disabled { cursor: not-allowed; opacity: 0.52; }
 .ui-button__loading { display: inline-flex; }
 .ui-button__spinner { width: 1rem; height: 1rem; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spin 700ms linear infinite; }
@@ -213,6 +215,7 @@ button, input, textarea, select { font: inherit; }
 .group-share-controls { display: grid; min-width: 0; justify-items: end; gap: 0.55rem; }
 .group-share-controls p { margin: 0; color: var(--text-muted); font-size: 0.75rem; font-weight: 650; }
 .group-share-button { width: 46px; min-width: 46px; min-height: 46px; padding: 0 !important; border: 0 !important; border-radius: 0.8rem; background: transparent !important; box-shadow: none !important; }
+.group-share-button, .group-refresh-button { animation: none; filter: none; }
 .group-share-button > span:first-child { display: grid; place-items: center; }
 .group-share-button svg { width: 1.2rem; height: 1.2rem; overflow: visible; fill: none; stroke: var(--ink); }
 .group-refresh-button { width: 46px; min-width: 46px; min-height: 46px; padding: 0 !important; border: 0 !important; background: transparent !important; box-shadow: none !important; }
@@ -310,6 +313,13 @@ button, input, textarea, select { font: inherit; }
 .legal-page dd { margin: 0; color: var(--text-muted); }
 
 @keyframes spin { to { transform: rotate(360deg); } }
+@keyframes squigglevision {
+  0% { filter: url(#squiggle-1); }
+  25% { filter: url(#squiggle-2); }
+  50% { filter: url(#squiggle-3); }
+  75% { filter: url(#squiggle-4); }
+  100% { filter: url(#squiggle-1); }
+}
 @keyframes skeleton-swipe { to { background-position: -220% 0; } }
 @keyframes float-orbit { 0%, 100% { transform: translate3d(0, 0, 0); } 50% { transform: translate3d(-0.55rem, -0.35rem, 0); } }
 @keyframes rise-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
@@ -319,8 +329,7 @@ button, input, textarea, select { font: inherit; }
 @keyframes status-pulse { 0%, 100% { box-shadow: 0 0 0 3px var(--surface-subtle); } 50% { box-shadow: 0 0 0 5px rgb(var(--ink-rgb) / 10%); } }
 
 @media (hover: hover) and (pointer: fine) {
-  .ui-button:not(:disabled):hover { transform: translateY(-2px); }
-  .ui-button[data-variant="primary"]:not(:disabled):hover { border-color: var(--color-line); background: var(--action-primary-hover); box-shadow: 3px 6px 0 rgb(var(--ink-rgb) / 14%), 0 12px 24px rgb(var(--ink-rgb) / 12%); }
+  .ui-button:not(:disabled):hover { background: var(--button-background-hover); transform: translateY(-3px) scale(1.02); }
   .ui-card:hover { box-shadow: 0 22px 48px rgb(var(--shadow-rgb) / 13%); transform: translateY(-3px); }
   .form-field input:hover, .form-field select:hover { border-color: var(--accent-blue); }
   .unknown-toggle:hover { transform: translateY(-1px); }
@@ -402,5 +411,6 @@ button, input, textarea, select { font: inherit; }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
+  .ui-button { animation: none !important; filter: url(#squiggle-1); }
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
 }

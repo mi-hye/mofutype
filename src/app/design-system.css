@@ -35,6 +35,10 @@
   --action-primary-hover: #e9beb5;
   --action-primary-text: var(--color-ink);
   --action-secondary: var(--color-sage);
+  --button-border-color: #4a2e2b;
+  --button-background: radial-gradient(circle, #fff5f2 0%, #f7ede2 100%);
+  --button-background-hover: radial-gradient(circle, #ffeded 0%, #f5cac3 100%);
+  --button-shadow-base: #ebdcd0;
   --status-success: #416c59;
   --status-warning: #7a5a1f;
   --status-danger: var(--color-error-text);

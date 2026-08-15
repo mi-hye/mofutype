@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "@xyflow/react/dist/style.css";
 
 import { DevLocaleToggle } from "@/components/dev-locale-toggle";
+import { SquiggleFilters } from "@/components/ui/squiggle-filters";
 
 import "./globals.css";
 
@@ -23,6 +24,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="ja">
       <body>
+        <SquiggleFilters />
         {children}
         <DevLocaleToggle />
       </body>

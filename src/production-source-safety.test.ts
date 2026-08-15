@@ -60,6 +60,10 @@ function designStyles(): string {
 describe("production source safety", () => {
   it("defines the warm Mofu design tokens and reduced-motion fallback", () => {
     const globalStyles = designStyles();
+    const squiggleFilters = readFileSync(
+      path.join(sourceRoot, "components/ui/squiggle-filters.tsx"),
+      "utf8",
+    );
 
     expect(globalStyles).toContain("--color-paper: #f7ecdc");
     expect(globalStyles).toContain("--color-blush: #f1d1ca");
@@ -67,8 +71,19 @@ describe("production source safety", () => {
     expect(globalStyles).toContain("--action-primary:");
     expect(globalStyles).toContain("--border-subtle:");
     expect(globalStyles).toContain("--shadow-pop:");
-    expect(globalStyles).toContain('background: var(--action-primary)');
     expect(globalStyles).toContain('background-image: none');
+    expect(globalStyles).toContain("--button-border-color: #4a2e2b");
+    expect(globalStyles).toContain(
+      "--button-background: radial-gradient(circle, #fff5f2 0%, #f7ede2 100%)",
+    );
+    expect(globalStyles).toContain(
+      "--button-background-hover: radial-gradient(circle, #ffeded 0%, #f5cac3 100%)",
+    );
+    expect(globalStyles).toContain("animation: squigglevision 0.32s infinite steps(1)");
+    expect(globalStyles).toContain("@keyframes squigglevision");
+    for (const filterId of ["squiggle-1", "squiggle-2", "squiggle-3", "squiggle-4"]) {
+      expect(squiggleFilters).toContain(`id="${filterId}"`);
+    }
     expect(globalStyles).toContain("@media (prefers-reduced-motion: reduce)");
     expect(globalStyles).toContain('.animal-avatar[data-selected="true"]');
     expect(globalStyles).toMatch(
