@@ -35,6 +35,17 @@ select has_column('public', 'groups', 'invite_token_hash', 'only an invite token
 select has_function('public', 'is_group_member', array['uuid'], 'membership helper exists');
 select has_function('public', 'create_group_and_join', array['text','text','text','text','text','jsonb'], 'create RPC accepts animal group as validated text');
 select has_function('public', 'join_group', array['text','text','text','text','text','jsonb'], 'join RPC accepts animal group as validated text');
+select has_function('public', 'get_group_invite_preview', array['text'], 'invite preview RPC exists');
+select is(
+  (select prosecdef from pg_proc where oid = 'public.get_group_invite_preview(text)'::regprocedure),
+  true,
+  'invite preview is security definer'
+);
+select is(
+  (select proconfig from pg_proc where oid = 'public.get_group_invite_preview(text)'::regprocedure),
+  array['search_path=""']::text[],
+  'invite preview fixes an empty search path'
+);
 select ok(
   not exists(
     select 1 from pg_proc
@@ -58,6 +69,10 @@ select throws_ok(
 select throws_ok(
   $$select * from public.join_group('token', 'Joiner', 'wolf', 'EARTH', null, '{"version":1,"animalId":"wolf","animalGroup":"EARTH","mbti":null,"calculationMode":"date-only"}'::jsonb)$$,
   '42501', 'permission denied for function join_group', 'anon cannot execute join RPC'
+);
+select throws_ok(
+  $$select * from public.get_group_invite_preview(repeat('a', 64))$$,
+  '42501', 'permission denied for function get_group_invite_preview', 'anon cannot execute invite preview RPC'
 );
 select throws_ok(
   $$select * from public.unlock_relation_mock('00000000-0000-0000-0000-000000000010', '00000000-0000-0000-0000-000000000011', '00000000-0000-0000-0000-000000000012')$$,
@@ -116,6 +131,13 @@ select throws_ok(
   $$select * from public.join_group('missing', 'Joiner', 'wolf', 'EARTH', null, '{"version":1,"animalId":"wolf","animalGroup":"EARTH","mbti":null,"calculationMode":"date-only"}'::jsonb)$$,
   'P0001', 'UNAUTHENTICATED', 'join rejects unauthenticated callers with a stable error'
 );
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '', true);
+select throws_ok(
+  $$select * from public.get_group_invite_preview(repeat('a', 64))$$,
+  'P0001', 'UNAUTHENTICATED', 'invite preview rejects unauthenticated calls in its body'
+);
+reset role;
 
 create temporary table created_group(group_id uuid, member_id uuid, invite_token text);
 grant select, insert on created_group to authenticated;
@@ -123,6 +145,35 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000001', true);
 insert into created_group
 select * from public.create_group_and_join('  Best Friends  ', '  Owner  ', 'fawn', 'MOON', 'INFP', '{"version":1,"animalId":"fawn","animalGroup":"MOON","mbti":"INFP","calculationMode":"date-time"}'::jsonb);
+reset role;
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000003', true);
+select is(
+  (select count(*) from public.get_group_invite_preview((select invite_token from created_group))),
+  1::bigint,
+  'authenticated nonmember can preview a valid invite before sharing profile data'
+);
+select is(
+  (select to_jsonb(preview) from public.get_group_invite_preview((select invite_token from created_group)) preview),
+  jsonb_build_object(
+    'group_id', (select group_id from created_group),
+    'name', 'Best Friends',
+    'member_count', 1,
+    'max_members', 30
+  ),
+  'invite preview returns only safe group metadata'
+);
+select is(
+  (select count(*) from public.get_group_invite_preview(repeat('f', 64))),
+  0::bigint,
+  'well-formed nonexistent invite returns zero preview rows'
+);
+select is(
+  (select count(*) from public.get_group_invite_preview('not-a-token')),
+  0::bigint,
+  'malformed invite returns zero preview rows'
+);
 reset role;
 
 select throws_ok(

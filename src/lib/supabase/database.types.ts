@@ -192,6 +192,15 @@ export type Database = {
           member_id: string
         }[]
       }
+      get_group_invite_preview: {
+        Args: { p_invite_token: string }
+        Returns: {
+          group_id: string
+          max_members: number
+          member_count: number
+          name: string
+        }[]
+      }
       is_group_member: { Args: { p_group_id: string }; Returns: boolean }
       join_group: {
         Args: {

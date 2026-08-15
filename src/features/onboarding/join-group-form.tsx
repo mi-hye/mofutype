@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
 import { localAstrologyProvider } from "@/lib/astrology/local-provider";
 import type { AstrologyProvider } from "@/lib/astrology/types";
-import { createBrowserGroupRepository, type GroupAggregate } from "@/lib/supabase/group-repository";
+import { SupabaseConfigurationError } from "@/lib/supabase/browser";
+import { createBrowserGroupRepository, type GroupAggregate, type GroupInvitePreview } from "@/lib/supabase/group-repository";
 import { ProfileForm, emptyProfileDraft, type ProfileDraft, type ProfileErrors } from "./profile-form";
 import { createOnboardingSchema } from "./schema";
 
@@ -46,16 +47,27 @@ function errorFingerprint(error: unknown): string {
 
 function publicJoinError(error: unknown): string {
   const fingerprint = errorFingerprint(error);
+  const code = typeof error === "object" && error !== null && "code" in error
+    ? String(error.code)
+    : "";
+  if (error instanceof SupabaseConfigurationError || code === "MISSING_SUPABASE_CONFIG") {
+    return "現在グループ参加を利用できません。設定を確認してください。";
+  }
+  if (code === "AUTH_FAILED" || fingerprint.includes("unauthenticated")) {
+    return "接続を準備できませんでした。しばらくしてから、もう一度お試しください。";
+  }
+  if (fingerprint.includes("group_full")) return "このグループは定員に達しています。";
+  if (fingerprint.includes("invalid_invite")) return "招待リンクが無効か、削除されています。";
   if (/full|capacity|max.?members|定員/.test(fingerprint)) return "このグループは定員に達しています。";
   if (/invalid|deleted|not.?found|invite|招待/.test(fingerprint)) return "招待リンクが無効か、削除されています。";
   if (/auth/.test(fingerprint)) return "接続を準備できませんでした。しばらくしてから、もう一度お試しください。";
-  if (/missing_supabase_config/.test(fingerprint)) return "現在グループ参加を利用できません。設定を確認してください。";
   return "グループに参加できませんでした。通信環境を確認して、もう一度お試しください。";
 }
 
 export interface JoinGroupFormProps {
   inviteToken: string;
   onJoined(aggregate: GroupAggregate): void;
+  preview?: GroupInvitePreview;
   repositoryFactory?: () => Pick<BrowserRepository, "joinGroup" | "loadGroup">;
   astrologyProvider?: AstrologyProvider;
   storage?: Storage;
@@ -65,6 +77,7 @@ export interface JoinGroupFormProps {
 export function JoinGroupForm({
   inviteToken,
   onJoined,
+  preview,
   repositoryFactory = createBrowserGroupRepository,
   astrologyProvider = localAstrologyProvider,
   storage,
@@ -76,6 +89,17 @@ export function JoinGroupForm({
   const [errors, setErrors] = useState<ProfileErrors>({});
   const [failure, setFailure] = useState("");
   const [loading, setLoading] = useState(false);
+  const mounted = useRef(false);
+  const generation = useRef(0);
+
+  useEffect(() => {
+    mounted.current = true;
+    generation.current += 1;
+    return () => {
+      mounted.current = false;
+      generation.current += 1;
+    };
+  }, [inviteToken]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -93,6 +117,8 @@ export function JoinGroupForm({
     }
     setErrors({});
     setLoading(true);
+    const submission = ++generation.current;
+    const isCurrent = () => mounted.current && generation.current === submission;
     let profile;
     try {
       profile = await astrologyProvider.derive({
@@ -101,10 +127,12 @@ export function JoinGroupForm({
         mbti: result.data.mbti,
       });
     } catch {
+      if (!isCurrent()) return;
       setFailure("プロフィールを作成できませんでした。入力内容を確認してください。");
       setLoading(false);
       return;
     }
+    if (!isCurrent()) return;
     let aggregate: GroupAggregate;
     try {
       const repository = repositoryFactory();
@@ -113,8 +141,11 @@ export function JoinGroupForm({
         nickname: result.data.nickname,
         profile,
       });
+      if (!isCurrent()) return;
       aggregate = await repository.loadGroup(membership.groupId);
+      if (!isCurrent()) return;
     } catch (error) {
+      if (!isCurrent()) return;
       try { activeStorage?.setItem(key, JSON.stringify(draft)); } catch { /* storage may be unavailable */ }
       setFailure(publicJoinError(error));
       setLoading(false);
@@ -125,17 +156,26 @@ export function JoinGroupForm({
     } catch {
       // Browser storage cleanup is best-effort after a successful mutation.
     }
+    if (!isCurrent()) return;
     try {
       onJoined(aggregate);
     } catch {
-      setFailure("参加したグループを表示できませんでした。ページを再読み込みしてください。");
+      if (isCurrent()) {
+        setFailure("参加したグループを表示できませんでした。ページを再読み込みしてください。");
+      }
     }
-    setLoading(false);
+    if (isCurrent()) setLoading(false);
   }
 
   return (
     <section className="join-panel" aria-labelledby="join-title">
       <h1 id="join-title">グループに招待されています</h1>
+      {preview ? (
+        <div className="invite-preview" aria-label="招待されたグループ">
+          <strong>{preview.name}</strong>
+          <span>メンバー {preview.memberCount} / {preview.maxMembers}人</span>
+        </div>
+      ) : null}
       <p>プロフィールを入力して、グループに参加しましょう。</p>
       <form className="onboarding-form" aria-label="グループ参加フォーム" onSubmit={submit} noValidate>
         <ProfileForm value={draft} onChange={setDraft} errors={errors} disabled={loading} />

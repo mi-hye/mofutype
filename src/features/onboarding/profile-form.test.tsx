@@ -57,5 +57,7 @@ describe("ProfileForm", () => {
     expect(screen.getByLabelText("ニックネーム")).toHaveAccessibleDescription(
       "ニックネームを入力してください",
     );
+    expect(screen.getByLabelText("ニックネーム")).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByRole("alert")).toHaveTextContent("ニックネームを入力してください");
   });
 });

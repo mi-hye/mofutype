@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { GroupAggregate } from "@/lib/supabase/group-repository";
+import { SupabaseConfigurationError } from "@/lib/supabase/browser";
 import { JoinGroupForm, joinDraftKey } from "./join-group-form";
 
 const token = "c".repeat(64);
@@ -11,6 +12,13 @@ const aggregate = {
   members: [],
   unlocks: [],
 } satisfies GroupAggregate;
+
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (error: unknown) => void;
+  const promise = new Promise<T>((done, fail) => { resolve = done; reject = fail; });
+  return { promise, resolve, reject };
+}
 
 async function fillValid(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByLabelText("ニックネーム"), "  もふ  ");
@@ -122,5 +130,105 @@ describe("JoinGroupForm", () => {
     await waitFor(() => expect(onJoined).toHaveBeenCalledWith(aggregate));
     await waitFor(() => expect(submit).not.toBeDisabled());
     expect(storage.setItem).not.toHaveBeenCalled();
+  });
+
+  it("prioritizes the actual Supabase configuration error class over message regex", async () => {
+    const user = userEvent.setup();
+    render(
+      <JoinGroupForm inviteToken={token}
+        repositoryFactory={() => { throw new SupabaseConfigurationError(); }} onJoined={vi.fn()} />,
+    );
+    await fillValid(user);
+    await user.click(screen.getByRole("button", { name: "グループに参加" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "現在グループ参加を利用できません。設定を確認してください。",
+    );
+  });
+
+  it("prioritizes stable AUTH_FAILED over nested invite fingerprints", async () => {
+    const user = userEvent.setup();
+    const joinGroup = vi.fn(async () => {
+      throw Object.assign(new Error("auth wrapper"), {
+        code: "AUTH_FAILED",
+        cause: { message: "INVALID_INVITE" },
+      });
+    });
+    render(
+      <JoinGroupForm inviteToken={token} repositoryFactory={() => ({ joinGroup } as never)}
+        onJoined={vi.fn()} />,
+    );
+    await fillValid(user);
+    await user.click(screen.getByRole("button", { name: "グループに参加" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "接続を準備できませんでした。しばらくしてから、もう一度お試しください。",
+    );
+  });
+
+  it("does not continue a deferred successful join after unmount", async () => {
+    const user = userEvent.setup();
+    const pending = deferred<{ groupId: string; memberId: string }>();
+    const joinGroup = vi.fn(() => pending.promise);
+    const loadGroup = vi.fn();
+    const onJoined = vi.fn();
+    const storage = { getItem: () => null, setItem: vi.fn(), removeItem: vi.fn() } as unknown as Storage;
+    const view = render(
+      <JoinGroupForm inviteToken={token} repositoryFactory={() => ({ joinGroup, loadGroup } as never)}
+        onJoined={onJoined} storage={storage} />,
+    );
+    await fillValid(user);
+    await user.click(screen.getByRole("button", { name: "グループに参加" }));
+    await waitFor(() => expect(joinGroup).toHaveBeenCalledOnce());
+    view.unmount();
+    pending.resolve({ groupId: "g1", memberId: "m1" });
+    await pending.promise;
+    await Promise.resolve();
+    expect(loadGroup).not.toHaveBeenCalled();
+    expect(onJoined).not.toHaveBeenCalled();
+    expect(storage.setItem).not.toHaveBeenCalled();
+    expect(storage.removeItem).not.toHaveBeenCalled();
+  });
+
+  it("ignores a deferred group-load failure following unmount", async () => {
+    const user = userEvent.setup();
+    const pending = deferred<GroupAggregate>();
+    const loadGroup = vi.fn(() => pending.promise);
+    const storage = { getItem: () => null, setItem: vi.fn(), removeItem: vi.fn() } as unknown as Storage;
+    const view = render(
+      <JoinGroupForm inviteToken={token}
+        repositoryFactory={() => ({ joinGroup: async () => ({ groupId: "g1", memberId: "m1" }), loadGroup } as never)}
+        onJoined={vi.fn()} storage={storage} />,
+    );
+    await fillValid(user);
+    await user.click(screen.getByRole("button", { name: "グループに参加" }));
+    await waitFor(() => expect(loadGroup).toHaveBeenCalledOnce());
+    view.unmount();
+    pending.reject(new Error("offline"));
+    await expect(pending.promise).rejects.toThrow("offline");
+    await Promise.resolve();
+    expect(storage.setItem).not.toHaveBeenCalled();
+    expect(storage.removeItem).not.toHaveBeenCalled();
+  });
+
+  it("does not enter member state or clean storage when deferred load succeeds after unmount", async () => {
+    const user = userEvent.setup();
+    const pending = deferred<GroupAggregate>();
+    const loadGroup = vi.fn(() => pending.promise);
+    const onJoined = vi.fn();
+    const storage = { getItem: () => null, setItem: vi.fn(), removeItem: vi.fn() } as unknown as Storage;
+    const view = render(
+      <JoinGroupForm inviteToken={token}
+        repositoryFactory={() => ({ joinGroup: async () => ({ groupId: "g1", memberId: "m1" }), loadGroup } as never)}
+        onJoined={onJoined} storage={storage} />,
+    );
+    await fillValid(user);
+    await user.click(screen.getByRole("button", { name: "グループに参加" }));
+    await waitFor(() => expect(loadGroup).toHaveBeenCalledOnce());
+    view.unmount();
+    pending.resolve(aggregate);
+    await pending.promise;
+    await Promise.resolve();
+    expect(onJoined).not.toHaveBeenCalled();
+    expect(storage.setItem).not.toHaveBeenCalled();
+    expect(storage.removeItem).not.toHaveBeenCalled();
   });
 });

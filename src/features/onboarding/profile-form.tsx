@@ -43,7 +43,7 @@ export function ProfileForm({ value, onChange, errors, disabled = false }: Profi
       <div className="form-field">
         <label htmlFor={`${prefix}-${name}`}>{label}</label>
         {control}
-        {error ? <p className="field-error" id={`${prefix}-${name}-error`}>{error}</p> : null}
+        {error ? <p className="field-error" id={`${prefix}-${name}-error`} role="alert">{error}</p> : null}
       </div>
     );
   };
@@ -55,17 +55,18 @@ export function ProfileForm({ value, onChange, errors, disabled = false }: Profi
       {field("nickname", "ニックネーム", (
         <input id={`${prefix}-nickname`} type="text" value={value.nickname} maxLength={20}
           onChange={(event) => update("nickname", event.target.value)} disabled={disabled}
-          aria-describedby={describedBy("nickname")} />
+          aria-describedby={describedBy("nickname")} aria-invalid={Boolean(errors.nickname) || undefined} />
       ))}
       {field("birthDate", "生年月日", (
         <input id={`${prefix}-birthDate`} type="date" required value={value.birthDate}
           onChange={(event) => update("birthDate", event.target.value)} disabled={disabled}
-          aria-describedby={describedBy("birthDate")} />
+          aria-describedby={describedBy("birthDate")} aria-invalid={Boolean(errors.birthDate) || undefined} />
       ))}
       {field("birthTime", "出生時刻", (
         <input id={`${prefix}-birthTime`} type="time" value={value.birthTime}
           onChange={(event) => update("birthTime", event.target.value)}
-          disabled={disabled || !value.birthTimeKnown} aria-describedby={describedBy("birthTime")} />
+          disabled={disabled || !value.birthTimeKnown} aria-describedby={describedBy("birthTime")}
+          aria-invalid={Boolean(errors.birthTime) || undefined} />
       ))}
       <label className="unknown-toggle">
         <input type="checkbox" checked={!value.birthTimeKnown} disabled={disabled}
@@ -75,7 +76,8 @@ export function ProfileForm({ value, onChange, errors, disabled = false }: Profi
       {field("mbti", "MBTI", (
         <select id={`${prefix}-mbti`} value={value.mbti}
           onChange={(event) => update("mbti", event.target.value)}
-          disabled={disabled || !value.mbtiKnown} aria-describedby={describedBy("mbti")}>
+          disabled={disabled || !value.mbtiKnown} aria-describedby={describedBy("mbti")}
+          aria-invalid={Boolean(errors.mbti) || undefined}>
           <option value="">選択してください</option>
           {MBTI_TYPES.map((type) => <option value={type} key={type}>{type}</option>)}
         </select>

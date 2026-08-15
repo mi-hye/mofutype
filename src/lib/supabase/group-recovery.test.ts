@@ -74,3 +74,51 @@ describe("joined-group Supabase adapter", () => {
     expect(query.select).not.toHaveBeenCalledWith(expect.stringContaining("invite_token_hash"));
   });
 });
+
+describe("previewGroupInvite", () => {
+  function previewClient(result: { data: unknown; error: unknown }) {
+    return {
+      auth: {
+        getSession: async () => ({ data: { session: { user: { id: "user-1" } } }, error: null }),
+        signInAnonymously: async () => ({ data: { user: { id: "user-1" } }, error: null }),
+      },
+      previewGroupInvite: vi.fn(async () => result),
+    };
+  }
+
+  it("maps exactly one safe invite preview row", async () => {
+    const fake = previewClient({
+      data: [{ group_id: "group-1", name: "なかまたち", member_count: 2, max_members: 30 }],
+      error: null,
+    });
+    await expect(createGroupRepository(fake as never).previewGroupInvite(token)).resolves.toEqual({
+      groupId: "group-1", name: "なかまたち", memberCount: 2, maxMembers: 30,
+    });
+    expect(fake.previewGroupInvite).toHaveBeenCalledWith({ p_invite_token: token });
+  });
+
+  it("returns null for zero rows and rejects unsafe cardinality/data", async () => {
+    await expect(
+      createGroupRepository(previewClient({ data: [], error: null }) as never).previewGroupInvite(token),
+    ).resolves.toBeNull();
+    await expect(
+      createGroupRepository(previewClient({ data: [{}, {}], error: null }) as never).previewGroupInvite(token),
+    ).rejects.toEqual(expect.objectContaining({ code: "INVALID_DATA" }));
+    await expect(
+      createGroupRepository(previewClient({ data: [{ group_id: "g", name: "x", member_count: -1, max_members: 30 }], error: null }) as never).previewGroupInvite(token),
+    ).rejects.toEqual(expect.objectContaining({ code: "INVALID_DATA" }));
+  });
+
+  it("maps preview transport errors to a safe load error", async () => {
+    await expect(
+      createGroupRepository(previewClient({ data: null, error: new Error("secret") }) as never).previewGroupInvite(token),
+    ).rejects.toEqual(expect.objectContaining({ code: "LOAD_FAILED", message: "Unable to load the group." }));
+  });
+
+  it("uses the typed preview RPC adapter", async () => {
+    const rpc = vi.fn(async () => ({ data: [], error: null }));
+    const adapter = createSupabaseGroupRepositoryAdapter({ rpc } as never);
+    await adapter.previewGroupInvite({ p_invite_token: token });
+    expect(rpc).toHaveBeenCalledWith("get_group_invite_preview", { p_invite_token: token });
+  });
+});

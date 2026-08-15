@@ -218,6 +218,10 @@ class FakeSupabaseClient implements GroupRepositoryClient {
     return this.rpc("join_group", args);
   }
 
+  previewGroupInvite(args: Record<string, unknown>): Promise<Result> {
+    return this.rpc("get_group_invite_preview", args);
+  }
+
   unlockRelation(args: Record<string, unknown>): Promise<Result> {
     return this.rpc("unlock_relation_mock", args);
   }

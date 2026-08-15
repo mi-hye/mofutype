@@ -21,6 +21,7 @@ type ClientResult = { data: unknown; error: unknown };
 type Functions = AppDatabase["public"]["Functions"];
 type CreateGroupArgs = Functions["create_group_and_join"]["Args"];
 type JoinGroupArgs = Functions["join_group"]["Args"];
+type PreviewGroupInviteArgs = Functions["get_group_invite_preview"]["Args"];
 type UnlockRelationArgs = Functions["unlock_relation_mock"]["Args"];
 
 interface RealtimeChannel {
@@ -55,6 +56,7 @@ export interface GroupRepositoryClient {
   };
   createGroupAndJoin(args: CreateGroupArgs): Promise<ClientResult>;
   joinGroup(args: JoinGroupArgs): Promise<ClientResult>;
+  previewGroupInvite(args: PreviewGroupInviteArgs): Promise<ClientResult>;
   unlockRelation(args: UnlockRelationArgs): Promise<ClientResult>;
   loadGroup(groupId: string): Promise<ClientResult>;
   findJoinedGroupId(inviteTokenHash: string): Promise<ClientResult>;
@@ -79,6 +81,13 @@ export interface GroupAggregate {
   group: Group;
   members: GroupMember[];
   unlocks: RelationUnlock[];
+}
+
+export interface GroupInvitePreview {
+  groupId: string;
+  name: string;
+  memberCount: number;
+  maxMembers: number;
 }
 
 export type GroupChangeEvent<T> = {
@@ -271,6 +280,38 @@ export function createGroupRepository(client: GroupRepositoryClient) {
     };
   }
 
+  async function previewGroupInvite(
+    inviteToken: string,
+  ): Promise<GroupInvitePreview | null> {
+    await ensureAnonymousSession();
+    let result: ClientResult;
+    try {
+      result = await client.previewGroupInvite({ p_invite_token: inviteToken });
+    } catch (cause) {
+      throw repositoryError("LOAD_FAILED", cause);
+    }
+    if (result.error) throw repositoryError("LOAD_FAILED", result.error);
+    if (!Array.isArray(result.data)) throw repositoryError("INVALID_DATA");
+    if (result.data.length === 0) return null;
+    if (result.data.length !== 1) throw repositoryError("INVALID_DATA");
+    const row = exactlyOneRow(result.data);
+    const memberCount = row.member_count;
+    const maxMembers = row.max_members;
+    if (
+      !Number.isInteger(memberCount) ||
+      (memberCount as number) < 0 ||
+      !Number.isInteger(maxMembers) ||
+      (maxMembers as number) < 1 ||
+      (memberCount as number) > (maxMembers as number)
+    ) throw repositoryError("INVALID_DATA");
+    return {
+      groupId: requiredString(row, "group_id"),
+      name: requiredString(row, "name"),
+      memberCount: memberCount as number,
+      maxMembers: maxMembers as number,
+    };
+  }
+
   async function loadGroup(groupId: string): Promise<GroupAggregate> {
     await ensureAnonymousSession();
     let groupResult: ClientResult;
@@ -427,6 +468,7 @@ export function createGroupRepository(client: GroupRepositoryClient) {
     ensureAnonymousSession,
     createGroup,
     joinGroup,
+    previewGroupInvite,
     findJoinedGroupByInviteToken,
     loadGroup,
     unlockPair,
@@ -483,6 +525,8 @@ export function createSupabaseGroupRepositoryAdapter(
     createGroupAndJoin: async (args) =>
       await client.rpc("create_group_and_join", args),
     joinGroup: async (args) => await client.rpc("join_group", args),
+    previewGroupInvite: async (args) =>
+      await client.rpc("get_group_invite_preview", args),
     unlockRelation: async (args) =>
       await client.rpc("unlock_relation_mock", args),
     loadGroup: async (groupId) =>

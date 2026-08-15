@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
 import { localAstrologyProvider } from "@/lib/astrology/local-provider";
@@ -63,6 +63,16 @@ export function CreateGroupForm({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [failure, setFailure] = useState("");
   const [loading, setLoading] = useState(false);
+  const mounted = useRef(false);
+  const generation = useRef(0);
+
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      generation.current += 1;
+    };
+  }, []);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -80,6 +90,8 @@ export function CreateGroupForm({
     }
     setErrors({});
     setLoading(true);
+    const submission = ++generation.current;
+    const isCurrent = () => mounted.current && generation.current === submission;
     let profile;
     try {
       profile = await astrologyProvider.derive({
@@ -88,10 +100,12 @@ export function CreateGroupForm({
         mbti: result.data.mbti,
       });
     } catch {
+      if (!isCurrent()) return;
       setFailure("プロフィールを作成できませんでした。入力内容を確認してください。");
       setLoading(false);
       return;
     }
+    if (!isCurrent()) return;
     let inviteToken = "";
     try {
       const response = await repositoryFactory().createGroup({
@@ -99,9 +113,11 @@ export function CreateGroupForm({
         nickname: result.data.nickname,
         profile,
       });
+      if (!isCurrent()) return;
       if (!INVITE_TOKEN_PATTERN.test(response.inviteToken)) throw new Error("invalid invite token");
       inviteToken = response.inviteToken;
     } catch (error) {
+      if (!isCurrent()) return;
       try { activeStorage?.setItem(CREATE_DRAFT_KEY, JSON.stringify(draft)); } catch { /* storage may be unavailable */ }
       setFailure(publicCreateError(error));
       setLoading(false);
@@ -112,12 +128,15 @@ export function CreateGroupForm({
     } catch {
       // Browser storage cleanup is best-effort after a successful mutation.
     }
+    if (!isCurrent()) return;
     try {
       navigate(`/g/${inviteToken}`);
     } catch {
-      setFailure("作成したグループを開けませんでした。もう一度リンクを開いてください。");
+      if (isCurrent()) {
+        setFailure("作成したグループを開けませんでした。もう一度リンクを開いてください。");
+      }
     }
-    setLoading(false);
+    if (isCurrent()) setLoading(false);
   }
 
   return (
@@ -126,8 +145,9 @@ export function CreateGroupForm({
         <label htmlFor="create-group-name">グループ名</label>
         <input id="create-group-name" type="text" maxLength={30} value={draft.groupName}
           onChange={(event) => setDraft({ ...draft, groupName: event.target.value })}
-          disabled={loading} aria-describedby={errors.groupName ? "create-group-name-error" : undefined} />
-        {errors.groupName ? <p className="field-error" id="create-group-name-error">{errors.groupName}</p> : null}
+          disabled={loading} aria-describedby={errors.groupName ? "create-group-name-error" : undefined}
+          aria-invalid={Boolean(errors.groupName) || undefined} />
+        {errors.groupName ? <p className="field-error" id="create-group-name-error" role="alert">{errors.groupName}</p> : null}
       </div>
       <ProfileForm value={draft} onChange={(profile) => setDraft({ ...draft, ...profile })}
         errors={errors as ProfileErrors} disabled={loading} />
