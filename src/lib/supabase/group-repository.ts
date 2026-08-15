@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import type { DerivedProfile } from "../astrology/types";
+import type { DerivedEtoProfile } from "../eto/types";
 import type { AppDatabase } from "./app-database.types";
 import { createSupabaseBrowserClient } from "./browser";
 import {
@@ -68,13 +68,13 @@ export interface GroupRepositoryClient {
 export interface CreateGroupInput {
   name: string;
   nickname: string;
-  profile: DerivedProfile;
+  profile: DerivedEtoProfile;
 }
 
 export interface JoinGroupInput {
   inviteToken: string;
   nickname: string;
-  profile: DerivedProfile;
+  profile: DerivedEtoProfile;
 }
 
 export interface GroupAggregate {
@@ -130,13 +130,29 @@ function repositoryError(
   );
 }
 
-function safeProfile(profile: DerivedProfile) {
+function safeProfile(profile: DerivedEtoProfile) {
   return {
     version: 1 as const,
-    animalId: profile.animalId,
-    animalGroup: profile.animalGroup,
+    zodiacId: profile.zodiacId,
     mbti: profile.mbti,
+    dayMaster: {
+      element: profile.dayMaster.element,
+      polarity: profile.dayMaster.polarity,
+    },
+    fiveElements: profile.fiveElements === null ? null : {
+      WOOD: profile.fiveElements.WOOD,
+      FIRE: profile.fiveElements.FIRE,
+      EARTH: profile.fiveElements.EARTH,
+      METAL: profile.fiveElements.METAL,
+      WATER: profile.fiveElements.WATER,
+    },
+    yinYang: profile.yinYang === null ? null : {
+      YIN: profile.yinYang.YIN,
+      YANG: profile.yinYang.YANG,
+    },
     calculationMode: profile.calculationMode,
+    boundaryState: profile.boundaryState,
+    engineVersion: "mofu-eto-four-pillars-v1",
   };
 }
 
@@ -245,8 +261,7 @@ export function createGroupRepository(client: GroupRepositoryClient) {
     const args: CreateGroupArgs = {
       p_name: input.name,
       p_nickname: input.nickname,
-      p_animal_id: payload.animalId,
-      p_animal_group: payload.animalGroup,
+      p_zodiac_id: payload.zodiacId,
       p_mbti: payload.mbti,
       p_profile_payload: payload,
     };
@@ -268,8 +283,7 @@ export function createGroupRepository(client: GroupRepositoryClient) {
     const args: JoinGroupArgs = {
       p_invite_token: input.inviteToken,
       p_nickname: input.nickname,
-      p_animal_id: payload.animalId,
-      p_animal_group: payload.animalGroup,
+      p_zodiac_id: payload.zodiacId,
       p_mbti: payload.mbti,
       p_profile_payload: payload,
     };
@@ -486,7 +500,7 @@ export function createBrowserGroupRepository() {
 
 const GROUP_COLUMNS = "id,name,max_members,created_at";
 const MEMBER_COLUMNS =
-  "id,group_id,user_id,nickname,animal_id,animal_group,mbti,profile_payload,joined_at";
+  "id,group_id,user_id,nickname,zodiac_id,mbti,profile_payload,joined_at";
 const UNLOCK_COLUMNS =
   "id,group_id,member_low_id,member_high_id,status,payment_provider,payment_reference,unlocked_by,unlocked_at";
 

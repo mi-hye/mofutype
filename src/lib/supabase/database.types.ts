@@ -36,37 +36,37 @@ export type Database = {
     Tables: {
       group_members: {
         Row: {
-          animal_group: Database["public"]["Enums"]["animal_group"]
-          animal_id: string
           group_id: string
           id: string
           joined_at: string
           mbti: string | null
           nickname: string
           profile_payload: Json
+          profile_version: number
           user_id: string
+          zodiac_id: string
         }
         Insert: {
-          animal_group: Database["public"]["Enums"]["animal_group"]
-          animal_id: string
           group_id: string
           id?: string
           joined_at?: string
           mbti?: string | null
           nickname: string
           profile_payload: Json
+          profile_version: number
           user_id: string
+          zodiac_id: string
         }
         Update: {
-          animal_group?: Database["public"]["Enums"]["animal_group"]
-          animal_id?: string
           group_id?: string
           id?: string
           joined_at?: string
           mbti?: string | null
           nickname?: string
           profile_payload?: Json
+          profile_version?: number
           user_id?: string
+          zodiac_id?: string
         }
         Relationships: [
           {
@@ -168,23 +168,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      _profile_is_valid: {
-        Args: {
-          p_animal_group: string
-          p_animal_id: string
-          p_mbti: string
-          p_profile_payload: Json
-        }
+      _eto_profile_is_valid: {
+        Args: { p_mbti: string; p_profile_payload: Json; p_zodiac_id: string }
         Returns: boolean
       }
       create_group_and_join: {
         Args: {
-          p_animal_group: string
-          p_animal_id: string
           p_mbti: string
           p_name: string
           p_nickname: string
           p_profile_payload: Json
+          p_zodiac_id: string
         }
         Returns: {
           group_id: string
@@ -204,12 +198,11 @@ export type Database = {
       is_group_member: { Args: { p_group_id: string }; Returns: boolean }
       join_group: {
         Args: {
-          p_animal_group: string
-          p_animal_id: string
           p_invite_token: string
           p_mbti: string
           p_nickname: string
           p_profile_payload: Json
+          p_zodiac_id: string
         }
         Returns: {
           group_id: string
@@ -238,7 +231,6 @@ export type Database = {
       }
     }
     Enums: {
-      animal_group: "MOON" | "EARTH" | "SUN"
       unlock_status: "pending" | "unlocked" | "failed"
     }
     CompositeTypes: {
@@ -370,7 +362,6 @@ export const Constants = {
   },
   public: {
     Enums: {
-      animal_group: ["MOON", "EARTH", "SUN"],
       unlock_status: ["pending", "unlocked", "failed"],
     },
   },

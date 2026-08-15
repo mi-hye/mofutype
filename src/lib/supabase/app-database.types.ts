@@ -3,7 +3,7 @@ import type { Database } from "./database.types";
 type GeneratedFunctions = Database["public"]["Functions"];
 
 type WithNullableMbtiArgs<
-  Definition extends { Args: { p_mbti: string } },
+  Definition extends { Args: { p_mbti: string; p_zodiac_id: string } },
 > = Omit<Definition, "Args"> & {
   Args: Omit<Definition["Args"], "p_mbti"> & {
     // Supabase codegen currently omits SQL argument nullability metadata, even
