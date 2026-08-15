@@ -14,6 +14,8 @@ import { parseEtoInput } from "./validation";
 
 const STEMS = [..."甲乙丙丁戊己庚辛壬癸"];
 const BRANCHES = [..."子丑寅卯辰巳午未申酉戌亥"];
+const STEM_WU_XING = [..."木木火火土土金金水水"];
+const BRANCH_WU_XING = [..."水土木木土火火土金金土水"];
 const TOKYO_TO_LIBRARY_BASIS_MINUTES = 60;
 
 function todayInTokyo(): string {
@@ -135,6 +137,21 @@ function polarityFor(character: string, kind: "stem" | "branch"): Polarity {
   return index % 2 === 0 ? "YANG" : "YIN";
 }
 
+function timePillarForDay(dayStem: string, timeBranch: string): PillarFact {
+  const dayGanIndex = STEMS.indexOf(dayStem);
+  const timeZhiIndex = BRANCHES.indexOf(timeBranch);
+  if (dayGanIndex < 0 || timeZhiIndex < 0) {
+    throw new Error("Unsupported Four Pillars symbol");
+  }
+
+  const timeGanIndex = ((dayGanIndex % 5) * 2 + timeZhiIndex) % 10;
+  return {
+    stem: STEMS[timeGanIndex],
+    branch: BRANCHES[timeZhiIndex],
+    wuXing: `${STEM_WU_XING[timeGanIndex]}${BRANCH_WU_XING[timeZhiIndex]}`,
+  };
+}
+
 function countPillars(pillars: readonly PillarFact[]) {
   const fiveElements: Record<FiveElement, number> = {
     WOOD: 0,
@@ -218,11 +235,7 @@ function calculateParsedFourPillarsFacts(
   }
 
   const exact = exactYearMonth(parsed, parsed.hour, parsed.minute);
-  const time = {
-    stem: japan.getTimeGan(),
-    branch: japan.getTimeZhi(),
-    wuXing: japan.getTimeWuXing(),
-  };
+  const time = timePillarForDay(day.stem, japan.getTimeZhi());
   const counts = countPillars([exact.year, exact.month, day, time]);
   return {
     ...identityFacts,

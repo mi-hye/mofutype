@@ -78,6 +78,26 @@ describe("calculateFourPillarsFacts", () => {
     ).toEqual({ element: "WOOD", polarity: "YANG" });
   });
 
+  it.each(["23:00", "23:59"])(
+    "keeps the 癸 day basis and derives the 壬子-equivalent time pillar at %s JST",
+    (birthTime) => {
+      const facts = calculateFourPillarsFacts(
+        input("2024-02-29", birthTime),
+        TODAY_ISO,
+      );
+
+      expect(facts.dayMaster).toEqual({ element: "WATER", polarity: "YIN" });
+      expect(facts.fiveElements).toEqual({
+        WOOD: 2,
+        FIRE: 1,
+        EARTH: 1,
+        METAL: 0,
+        WATER: 4,
+      });
+      expect(facts.yinYang).toEqual({ YIN: 2, YANG: 6 });
+    },
+  );
+
   it("is independent of the host timezone", () => {
     process.env.TZ = "America/Los_Angeles";
     const losAngeles = calculateFourPillarsFacts(
