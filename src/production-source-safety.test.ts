@@ -52,13 +52,15 @@ function colorToken(styles: string, name: string): string {
 }
 
 describe("production source safety", () => {
-  it("defines the Soft Editorial tokens and reduced-motion fallback", () => {
+  it("defines the Pop Editorial tokens and reduced-motion fallback", () => {
     const globalStyles = readFileSync(path.join(sourceRoot, "app/globals.css"), "utf8");
 
     expect(globalStyles).toContain("--paper-warm:");
+    expect(globalStyles).toContain("--accent-blue:");
     expect(globalStyles).toContain("--accent-coral:");
+    expect(globalStyles).toContain("--accent-lemon:");
     expect(globalStyles).toContain("--border-subtle:");
-    expect(globalStyles).toContain("--shadow-soft:");
+    expect(globalStyles).toContain("--shadow-pop:");
     expect(globalStyles).toContain("@media (prefers-reduced-motion: reduce)");
     expect(globalStyles).toContain('.animal-avatar[data-selected="true"]');
     expect(globalStyles).toMatch(
@@ -93,7 +95,7 @@ describe("production source safety", () => {
     expect(globalStyles).toContain("@media (forced-colors: active)");
   });
 
-  it("defines Soft Editorial contracts for relationship and checkout surfaces", () => {
+  it("defines Pop Editorial contracts for relationship and checkout surfaces", () => {
     const globalStyles = readFileSync(path.join(sourceRoot, "app/globals.css"), "utf8");
 
     for (const selector of [
@@ -140,14 +142,21 @@ describe("production source safety", () => {
     expect(globalStyles).toContain("stroke: var(--edge-mint)");
   });
 
-  it("removes decorative zine clutter without hiding document overflow", () => {
+  it("keeps restrained editorial decoration and motion without hiding document overflow", () => {
     const globalStyles = readFileSync(path.join(sourceRoot, "app/globals.css"), "utf8");
 
     expect(globalStyles).not.toContain("min-width: 320px");
     expect(globalStyles).not.toContain("overflow-x: hidden");
-    expect(globalStyles).toMatch(
-      /\.hero__tape,\s*\.hero__dots,\s*\.hero__stripe,\s*\.hero__cutout,\s*\.hero__issue-note,\s*\.create-section__tape\s*\{\s*display:\s*none/,
-    );
+    for (const selector of [
+      ".hero__tape {",
+      ".hero__dots {",
+      ".hero__stripe {",
+      ".hero__cutout {",
+      ".hero__issue-note {",
+      ".create-section__tape {",
+    ]) expect(globalStyles).toContain(selector);
+    expect(globalStyles).toContain("@keyframes float-orbit");
+    expect(globalStyles).toContain("@keyframes rise-in");
   });
 
   it("detects a forbidden animal symbol in supplied source", () => {
