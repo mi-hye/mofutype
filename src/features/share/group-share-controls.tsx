@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { Share } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -109,12 +110,7 @@ export function GroupShareControls({
         title="招待リンクを共有"
         onClick={() => void share()}
       >
-        <svg data-testid="share-icon" aria-hidden="true" viewBox="0 0 24 24" focusable="false">
-          <circle cx="18" cy="5" r="2.5" />
-          <circle cx="6" cy="12" r="2.5" />
-          <circle cx="18" cy="19" r="2.5" />
-          <path d="m8.25 10.9 7.5-4.5M8.25 13.1l7.5 4.5" />
-        </svg>
+        <Share data-testid="share-icon" aria-hidden="true" focusable="false" strokeWidth={2.4} />
       </Button>
       {message === "shared" ? <p role="status">共有しました</p> : null}
       {message === "copied" ? <p role="status">招待リンクをコピーしました</p> : null}

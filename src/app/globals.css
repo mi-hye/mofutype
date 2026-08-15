@@ -319,7 +319,7 @@ select {
 .group-share-controls p { margin: 0; font-size: 0.75rem; font-weight: 850; }
 .group-share-button { width: 44px; min-width: 44px; min-height: 44px; padding: 0 !important; }
 .group-share-button > span:first-child { display: grid; place-items: center; }
-.group-share-button svg { width: 1.2rem; height: 1.2rem; overflow: visible; fill: var(--hot-pink); stroke: var(--ink); stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
+.group-share-button svg { width: 1.25rem; height: 1.25rem; overflow: visible; fill: none; stroke: var(--ink); }
 .group-graph { display: grid; gap: var(--space-18); }
 .group-graph__canvas {
   width: 100%;
