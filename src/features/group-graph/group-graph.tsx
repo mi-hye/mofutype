@@ -9,12 +9,16 @@ import {
   type NodeMouseHandler,
 } from "@xyflow/react";
 
+import { createRelationship } from "@/lib/relationship/local-provider";
 import type { RelationshipResult } from "@/lib/relationship/types";
 import type { GroupMember, RelationUnlock } from "@/lib/supabase/models";
 import { AnimalNode } from "./animal-node";
 import {
-  buildGraph,
+  buildGraphTopology,
+  decorateGraph,
+  graphMembersVersion,
   type AnimalGraphNode,
+  type RelationshipFactory,
   type RelationshipGraphEdge,
 } from "./build-graph";
 
@@ -29,6 +33,7 @@ interface GroupGraphProps {
   members: readonly GroupMember[];
   unlocks: readonly RelationUnlock[];
   onPairSelect: (selection: PairSelection) => void;
+  relationshipFactory?: RelationshipFactory;
 }
 
 const nodeTypes = { animal: AnimalNode };
@@ -43,11 +48,25 @@ function selectionFromEdge(edge: RelationshipGraphEdge): PairSelection | null {
   };
 }
 
-function GroupGraphComponent({ members, unlocks, onPairSelect }: GroupGraphProps) {
+function GroupGraphComponent({
+  members,
+  unlocks,
+  onPairSelect,
+  relationshipFactory = createRelationship,
+}: GroupGraphProps) {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const membersVersion = graphMembersVersion(members);
+  const topologyMembers = useMemo(
+    () => JSON.parse(membersVersion) as GroupMember[],
+    [membersVersion],
+  );
+  const topology = useMemo(
+    () => buildGraphTopology(topologyMembers, relationshipFactory),
+    [relationshipFactory, topologyMembers],
+  );
   const graph = useMemo(
-    () => buildGraph(members, selectedNodeId, unlocks),
-    [members, selectedNodeId, unlocks],
+    () => decorateGraph(topology, selectedNodeId, unlocks),
+    [topology, selectedNodeId, unlocks],
   );
   const selectedMember = useMemo(
     () => members.find((member) => member.id === selectedNodeId) ?? null,

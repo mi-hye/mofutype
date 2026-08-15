@@ -2,7 +2,8 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { GroupMember } from "@/lib/supabase/models";
+import { createRelationship } from "@/lib/relationship/local-provider";
+import type { GroupMember, RelationUnlock } from "@/lib/supabase/models";
 
 type MockNode = { id: string; type: string; data: Record<string, unknown> };
 type MockEdge = { id: string; data: Record<string, unknown> };
@@ -52,6 +53,14 @@ function member(id: string, nickname = id): GroupMember {
     animalId: "fawn", animalGroup: "MOON", mbti: null,
     profile: { version: 1, animalId: "fawn", animalGroup: "MOON", mbti: null, calculationMode: "date-only" },
     joinedAt: "2026-08-15T00:00:00Z",
+  };
+}
+
+function unlock(low: string, high: string): RelationUnlock {
+  return {
+    id: `u-${low}-${high}`, groupId: "g1", memberLowId: low, memberHighId: high,
+    status: "unlocked", paymentProvider: "mock", paymentReference: null,
+    unlockedBy: low, unlockedAt: "2026-08-15T00:00:00Z",
   };
 }
 
@@ -124,5 +133,46 @@ describe("GroupGraph", () => {
     view.rerender(<GroupGraph members={members} unlocks={unlocks} onPairSelect={onPairSelect} />);
     expect(flowProps.current?.nodes).toBe(firstNodes);
     expect(flowProps.current?.edges).toBe(firstEdges);
+  });
+
+  it("builds 30-member relationships once across presentation-only changes", async () => {
+    const user = userEvent.setup();
+    const members = Array.from({ length: 30 }, (_, index) => member(`m-${String(index).padStart(2, "0")}`));
+    const relationshipFactory = vi.fn(createRelationship);
+    const onPairSelect = vi.fn();
+    const view = render(
+      <GroupGraph members={members} unlocks={[]} onPairSelect={onPairSelect}
+        relationshipFactory={relationshipFactory} />,
+    );
+    expect(relationshipFactory).toHaveBeenCalledTimes(435);
+
+    await user.click(screen.getByTestId("canvas-node-m-12"));
+    await user.click(screen.getByTestId("canvas-pane"));
+    expect(relationshipFactory).toHaveBeenCalledTimes(435);
+
+    view.rerender(
+      <GroupGraph members={members} unlocks={[unlock("m-00", "m-01")]}
+        onPairSelect={vi.fn()} relationshipFactory={relationshipFactory} />,
+    );
+    expect(relationshipFactory).toHaveBeenCalledTimes(435);
+
+    const sameSemanticMembers = members.map((item) => ({
+      ...item,
+      profile: { ...item.profile },
+    }));
+    view.rerender(
+      <GroupGraph members={sameSemanticMembers} unlocks={[unlock("m-00", "m-01")]}
+        onPairSelect={vi.fn()} relationshipFactory={relationshipFactory} />,
+    );
+    expect(relationshipFactory).toHaveBeenCalledTimes(435);
+
+    const changedMembers = sameSemanticMembers.map((item, index) =>
+      index === 0 ? { ...item, nickname: "semantic-change" } : item,
+    );
+    view.rerender(
+      <GroupGraph members={changedMembers} unlocks={[unlock("m-00", "m-01")]}
+        onPairSelect={vi.fn()} relationshipFactory={relationshipFactory} />,
+    );
+    expect(relationshipFactory).toHaveBeenCalledTimes(870);
   });
 });

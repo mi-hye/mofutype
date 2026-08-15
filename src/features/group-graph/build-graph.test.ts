@@ -1,7 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
+import { createRelationship } from "@/lib/relationship/local-provider";
 import type { GroupMember, RelationUnlock } from "@/lib/supabase/models";
-import { buildGraph } from "./build-graph";
+import { buildGraph, buildGraphTopology, decorateGraph } from "./build-graph";
 
 function member(id: string, nickname = id): GroupMember {
   return {
@@ -38,12 +39,10 @@ function unlock(low: string, high: string): RelationUnlock {
 }
 
 describe("buildGraph", () => {
-  it.each([
-    [1, 0],
-    [2, 1],
-    [3, 3],
-    [30, 435],
-  ])("creates every unordered pair for %i members", (count, edgeCount) => {
+  it.each(Array.from({ length: 30 }, (_, index) => {
+    const count = index + 1;
+    return [count, count * (count - 1) / 2] as const;
+  }))("creates every unordered pair for %i members", (count, edgeCount) => {
     const graph = buildGraph(
       Array.from({ length: count }, (_, index) => member(`member-${String(index).padStart(2, "0")}`)),
       null,
@@ -128,5 +127,41 @@ describe("buildGraph", () => {
     expect(byId["solo-id"].discriminator).toBeNull();
     expect(byId["abcd-one"].accessibleLabel).toContain("もふ");
     expect(byId["abcd-one"].accessibleLabel).toContain("abcd-o");
+  });
+
+  it("creates relationships only in topology and never during decoration", () => {
+    const members = Array.from({ length: 30 }, (_, index) => member(`m-${String(index).padStart(2, "0")}`));
+    const relationshipFactory = vi.fn(createRelationship);
+    const topology = buildGraphTopology(members, relationshipFactory);
+
+    expect(relationshipFactory).toHaveBeenCalledTimes(435);
+    decorateGraph(topology, "m-12", []);
+    decorateGraph(topology, null, [unlock("m-00", "m-01")]);
+    expect(relationshipFactory).toHaveBeenCalledTimes(435);
+  });
+
+  it("decorates immutably without mutating topology nodes, edges, or data", () => {
+    const topology = buildGraphTopology([member("a"), member("b"), member("c")]);
+    const snapshot = structuredClone(topology);
+    for (const node of topology.nodes) {
+      Object.freeze(node.data);
+      Object.freeze(node);
+    }
+    for (const edge of topology.edges) {
+      Object.freeze(edge.data);
+      Object.freeze(edge);
+    }
+    Object.freeze(topology.nodes);
+    Object.freeze(topology.edges);
+    Object.freeze(topology);
+
+    const decorated = decorateGraph(topology, "b", [unlock("a", "b")]);
+
+    expect(topology).toEqual(snapshot);
+    expect(decorated.nodes[0]).not.toBe(topology.nodes[0]);
+    expect(decorated.nodes[0].data).not.toBe(topology.nodes[0].data);
+    expect(decorated.edges[0]).not.toBe(topology.edges[0]);
+    expect(decorated.edges[0].data).not.toBe(topology.edges[0].data);
+    expect(decorated.edges.find((edge) => edge.id === "a:b")?.data?.unlocked).toBe(true);
   });
 });

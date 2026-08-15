@@ -2,29 +2,45 @@ import type { Edge, Node } from "@xyflow/react";
 
 import { createRelationship } from "@/lib/relationship/local-provider";
 import { canonicalPairKey } from "@/lib/relationship/pair-key";
-import type { RelationshipResult } from "@/lib/relationship/types";
+import type { CreateRelationshipInput, RelationshipResult } from "@/lib/relationship/types";
 import type { GroupMember, RelationUnlock } from "@/lib/supabase/models";
 
 export type GraphNodeSize = "sm" | "md" | "lg";
 export type EdgeEmphasis = "default" | "incident" | "faint";
+export type RelationshipFactory = (input: CreateRelationshipInput) => RelationshipResult;
 
-export interface AnimalNodeData extends Record<string, unknown> {
+export interface TopologyNodeData extends Record<string, unknown> {
   member: GroupMember;
   size: GraphNodeSize;
-  selected: boolean;
   discriminator: string | null;
   accessibleLabel: string;
 }
 
-export interface RelationshipEdgeData extends Record<string, unknown> {
+export interface AnimalNodeData extends TopologyNodeData {
+  selected: boolean;
+}
+
+export interface TopologyEdgeData extends Record<string, unknown> {
   relationship: RelationshipResult;
   memberIds: readonly [string, string];
+}
+
+export interface RelationshipEdgeData extends TopologyEdgeData {
   unlocked: boolean;
   emphasis: EdgeEmphasis;
 }
 
+export type TopologyNode = Node<TopologyNodeData, "animal">;
+export type TopologyEdge = Edge<TopologyEdgeData> & { data: TopologyEdgeData };
 export type AnimalGraphNode = Node<AnimalNodeData, "animal">;
-export type RelationshipGraphEdge = Edge<RelationshipEdgeData>;
+export type RelationshipGraphEdge = Edge<RelationshipEdgeData> & {
+  data: RelationshipEdgeData;
+};
+
+export interface GraphTopology {
+  nodes: TopologyNode[];
+  edges: TopologyEdge[];
+}
 
 export interface BuiltGraph {
   nodes: AnimalGraphNode[];
@@ -80,11 +96,33 @@ function positionAt(index: number, count: number): { x: number; y: number } {
   };
 }
 
-export function buildGraph(
+export function graphMembersVersion(members: readonly GroupMember[]): string {
+  const snapshots = [...members]
+    .sort((first, second) => first.id < second.id ? -1 : first.id > second.id ? 1 : 0)
+    .map((member) => ({
+      id: member.id,
+      groupId: member.groupId,
+      userId: member.userId,
+      nickname: member.nickname,
+      animalId: member.animalId,
+      animalGroup: member.animalGroup,
+      mbti: member.mbti,
+      profile: {
+        version: member.profile.version,
+        animalId: member.profile.animalId,
+        animalGroup: member.profile.animalGroup,
+        mbti: member.profile.mbti,
+        calculationMode: member.profile.calculationMode,
+      },
+      joinedAt: member.joinedAt,
+    }));
+  return JSON.stringify(snapshots);
+}
+
+export function buildGraphTopology(
   members: readonly GroupMember[],
-  selectedNodeId: string | null,
-  unlocks: readonly RelationUnlock[],
-): BuiltGraph {
+  relationshipFactory: RelationshipFactory = createRelationship,
+): GraphTopology {
   if (members.length > 30) {
     throw new Error("A group graph supports at most 30 members");
   }
@@ -98,9 +136,8 @@ export function buildGraph(
 
   const size = nodeSize(sorted.length);
   const discriminators = uniquePrefixes(sorted);
-  const nodes = sorted.map<AnimalGraphNode>((item, index) => {
+  const nodes = sorted.map<TopologyNode>((item, index) => {
     const discriminator = discriminators.get(item.id) ?? null;
-    const selected = item.id === selectedNodeId;
     return {
       id: item.id,
       type: "animal",
@@ -110,7 +147,6 @@ export function buildGraph(
       data: {
         member: item,
         size,
-        selected,
         discriminator,
         accessibleLabel: discriminator
           ? `${item.nickname}（識別子 ${discriminator}）の関係性ノード`
@@ -119,43 +155,74 @@ export function buildGraph(
     };
   });
 
-  const unlockedPairs = new Set(
-    unlocks
-      .filter((item) => item.status === "unlocked")
-      .map((item) => canonicalPairKey(item.memberLowId, item.memberHighId)),
-  );
-  const edges: RelationshipGraphEdge[] = [];
+  const edges: TopologyEdge[] = [];
   for (let firstIndex = 0; firstIndex < sorted.length; firstIndex += 1) {
     for (let secondIndex = firstIndex + 1; secondIndex < sorted.length; secondIndex += 1) {
       const first = sorted[firstIndex];
       const second = sorted[secondIndex];
       const pairKey = canonicalPairKey(first.id, second.id);
-      const incident = selectedNodeId !== null &&
-        (first.id === selectedNodeId || second.id === selectedNodeId);
-      const emphasis: EdgeEmphasis = selectedNodeId === null
-        ? "default"
-        : incident ? "incident" : "faint";
-      const relationship = createRelationship({ memberA: first, memberB: second });
+      const relationship = relationshipFactory({ memberA: first, memberB: second });
       edges.push({
         id: pairKey,
         source: first.id,
         target: second.id,
-        animated: incident,
         interactionWidth: 24,
-        style: {
-          strokeWidth: incident ? 4 : 2,
-          opacity: emphasis === "faint" ? 0.12 : emphasis === "incident" ? 1 : 0.55,
-          strokeDasharray: incident ? "9 4" : undefined,
-        },
         data: {
           relationship,
           memberIds: [first.id, second.id],
-          unlocked: unlockedPairs.has(pairKey),
-          emphasis,
         },
       });
     }
   }
 
   return { nodes, edges };
+}
+
+export function decorateGraph(
+  topology: GraphTopology,
+  selectedNodeId: string | null,
+  unlocks: readonly RelationUnlock[],
+): BuiltGraph {
+  const unlockedPairs = new Set(
+    unlocks
+      .filter((item) => item.status === "unlocked")
+      .map((item) => canonicalPairKey(item.memberLowId, item.memberHighId)),
+  );
+  const nodes = topology.nodes.map<AnimalGraphNode>((node) => ({
+    ...node,
+    data: {
+      ...node.data,
+      selected: node.id === selectedNodeId,
+    },
+  }));
+  const edges = topology.edges.map<RelationshipGraphEdge>((edge) => {
+    const incident = selectedNodeId !== null &&
+      (edge.source === selectedNodeId || edge.target === selectedNodeId);
+    const emphasis: EdgeEmphasis = selectedNodeId === null
+      ? "default"
+      : incident ? "incident" : "faint";
+    return {
+      ...edge,
+      animated: incident,
+      style: {
+        strokeWidth: incident ? 4 : 2,
+        opacity: emphasis === "faint" ? 0.12 : emphasis === "incident" ? 1 : 0.55,
+        strokeDasharray: incident ? "9 4" : undefined,
+      },
+      data: {
+        ...edge.data,
+        unlocked: unlockedPairs.has(edge.id),
+        emphasis,
+      },
+    };
+  });
+  return { nodes, edges };
+}
+
+export function buildGraph(
+  members: readonly GroupMember[],
+  selectedNodeId: string | null,
+  unlocks: readonly RelationUnlock[],
+): BuiltGraph {
+  return decorateGraph(buildGraphTopology(members), selectedNodeId, unlocks);
 }
