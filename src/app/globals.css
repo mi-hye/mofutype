@@ -181,7 +181,7 @@ select {
 .status-banner[data-status="offline"] .status-banner__mark,
 .status-banner[data-status="error"] .status-banner__mark { background: var(--coral); }
 
-.animal-avatar {
+.zodiac-avatar {
   position: relative;
   display: inline-grid;
   place-items: center;
@@ -192,13 +192,13 @@ select {
   box-shadow: 3px 3px 0 var(--ink);
 }
 
-.animal-avatar[data-size="sm"] { width: 44px; height: 44px; }
-.animal-avatar[data-size="md"] { width: 72px; height: 72px; }
-.animal-avatar[data-size="lg"] { width: 112px; height: 112px; }
-.animal-avatar[data-selected="true"] { outline: 4px solid var(--ink); outline-offset: 3px; box-shadow: 5px 5px 0 var(--hot-pink); transform: scale(1.04); }
-.animal-avatar__image { width: 100%; height: 100%; object-fit: cover; }
-.animal-avatar__fallback { display: grid; width: 100%; height: 100%; place-items: center; padding: 0.25rem; text-align: center; font-size: 0.72em; font-weight: 900; }
-.animal-avatar__selected-mark { position: absolute; right: 5%; bottom: 5%; width: 22%; min-width: 0.75rem; aspect-ratio: 1; border: 2px solid var(--ink); border-radius: 50%; background: var(--coral); }
+.zodiac-avatar[data-size="sm"] { width: 44px; height: 44px; }
+.zodiac-avatar[data-size="md"] { width: 72px; height: 72px; }
+.zodiac-avatar[data-size="lg"] { width: 112px; height: 112px; }
+.zodiac-avatar[data-selected="true"] { outline: 4px solid var(--ink); outline-offset: 3px; box-shadow: 5px 5px 0 var(--hot-pink); transform: scale(1.04); }
+.zodiac-avatar__image { width: 100%; height: 100%; object-fit: cover; }
+.zodiac-avatar__fallback { display: grid; width: 100%; height: 100%; place-items: center; padding: 0.25rem; text-align: center; font-size: 0.72em; font-weight: 900; }
+.zodiac-avatar__selected-mark { position: absolute; right: 5%; bottom: 5%; width: 22%; min-width: 0.75rem; aspect-ratio: 1; border: 2px solid var(--ink); border-radius: 50%; background: var(--coral); }
 
 .landing-shell { position: relative; width: min(100% - 2rem, 72rem); margin-inline: auto; padding: 1.25rem 0 4rem; }
 .landing-nav { display: flex; align-items: center; justify-content: space-between; gap: 1rem; border-bottom: 3px solid var(--ink); padding-bottom: 0.7rem; }

@@ -27,14 +27,14 @@ export function ZodiacAvatar({
 
   return (
     <span
-      className="animal-avatar zodiac-avatar"
+      className="zodiac-avatar"
       data-selected={selected ? "true" : "false"}
       data-size={size}
       data-testid="zodiac-avatar"
     >
       {imageFailed ? (
         <span
-          className="animal-avatar__fallback zodiac-avatar__fallback"
+          className="zodiac-avatar__fallback"
           role="img"
           aria-label={accessibleName}
         >
@@ -44,7 +44,7 @@ export function ZodiacAvatar({
         // The catalog serves trusted local PNG paths; native error handling powers the fallback.
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          className="animal-avatar__image zodiac-avatar__image"
+          className="zodiac-avatar__image"
           src={zodiac.assetPath}
           alt={accessibleName}
           onError={() => setFailedAsset(zodiac.assetPath)}
@@ -52,7 +52,7 @@ export function ZodiacAvatar({
       )}
       {selected ? (
         <span
-          className="animal-avatar__selected-mark zodiac-avatar__selected-mark"
+          className="zodiac-avatar__selected-mark"
           aria-hidden="true"
         />
       ) : null}

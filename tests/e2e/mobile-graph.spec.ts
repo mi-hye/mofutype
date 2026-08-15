@@ -11,8 +11,8 @@ test("a 30-member mobile graph renders 435 relationships without horizontal over
   await expect(page.getByText("メンバー 30人")).toBeVisible({ timeout: 15_000 });
   await expect(page.locator(".react-flow__node")).toHaveCount(30, { timeout: 15_000 });
   await expect(page.locator(".react-flow__edge")).toHaveCount(435, { timeout: 15_000 });
-  await expect(page.getByTestId("animal-avatar")).toHaveCount(30);
-  await expect(page.getByTestId("animal-avatar").first()).toHaveAttribute("data-size", "sm");
+  await expect(page.getByTestId("zodiac-avatar")).toHaveCount(30);
+  await expect(page.getByTestId("zodiac-avatar").first()).toHaveAttribute("data-size", "sm");
 
   await page.getByRole("button", { name: "オーナーを選択" }).click();
   await expect(page.locator(".relationship-edge--incident")).toHaveCount(29);
