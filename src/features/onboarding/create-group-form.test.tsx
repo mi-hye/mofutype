@@ -1,12 +1,26 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
-import type { GroupRepositoryError } from "@/lib/supabase/group-repository";
+import type { DerivedEtoProfile } from "@/lib/eto/types";
 import { SupabaseConfigurationError } from "@/lib/supabase/browser";
-import { CreateGroupForm, CREATE_DRAFT_KEY } from "./create-group-form";
+import { CREATE_DRAFT_KEY, CreateGroupForm } from "./create-group-form";
 
 const token = "b".repeat(64);
+const clock = () => new Date("2026-08-15T15:30:00.000Z");
+const rawDate = "2000-02-29";
+const rawTime = "09:05";
+const profile: DerivedEtoProfile = {
+  version: 1,
+  zodiacId: "dragon",
+  mbti: "ENFP",
+  dayMaster: { element: "EARTH", polarity: "YANG" },
+  fiveElements: { WOOD: 2, FIRE: 1, EARTH: 2, METAL: 1, WATER: 2 },
+  yinYang: { YIN: 4, YANG: 4 },
+  calculationMode: "date-time",
+  boundaryState: "exact",
+  engineVersion: "mofu-eto-four-pillars-v1",
+};
 
 function deferred<T>() {
   let resolve!: (value: T) => void;
@@ -15,210 +29,179 @@ function deferred<T>() {
   return { promise, resolve, reject };
 }
 
+function recordingStorage(seed?: Record<string, string>, throwOnRemove = false) {
+  const values = new Map(Object.entries(seed ?? {}));
+  const getItem = vi.fn(() => { throw new Error("getItem must not be called"); });
+  const setItem = vi.fn(() => { throw new Error("setItem must not be called"); });
+  const removeItem = vi.fn((key: string) => {
+    if (throwOnRemove) throw new Error("storage unavailable");
+    values.delete(key);
+  });
+  return {
+    storage: { getItem, setItem, removeItem } as unknown as Storage,
+    values,
+    getItem,
+    setItem,
+    removeItem,
+  };
+}
+
 async function fillValid(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByLabelText("グループ名"), "  なかまたち  ");
   await user.type(screen.getByLabelText("ニックネーム"), "  もふ  ");
-  fireEvent.change(screen.getByLabelText("生年月日"), { target: { value: "2000-02-29" } });
-  fireEvent.change(screen.getByLabelText("出生時刻"), { target: { value: "09:05" } });
+  fireEvent.change(screen.getByLabelText("生年月日"), { target: { value: rawDate } });
+  fireEvent.change(screen.getByLabelText("出生時刻"), { target: { value: rawTime } });
   await user.selectOptions(screen.getByLabelText("MBTI"), "ENFP");
 }
 
+function expectNoRawPersistence(recorder: ReturnType<typeof recordingStorage>) {
+  expect(recorder.getItem).not.toHaveBeenCalled();
+  expect(recorder.setItem).not.toHaveBeenCalled();
+  expect([...recorder.values.values()].join(" ")).not.toMatch(/2000-02-29|09:05|もふ|なかまたち/);
+}
+
 describe("CreateGroupForm", () => {
-  beforeEach(() => sessionStorage.clear());
-
-  it("derives locally, sends only safe normalized data, clears draft and navigates", async () => {
-    const user = userEvent.setup();
-    const createGroup = vi.fn(async () => ({ groupId: "g1", memberId: "m1", inviteToken: token }));
-    const navigate = vi.fn();
-    render(<CreateGroupForm repositoryFactory={() => ({ createGroup } as never)} navigate={navigate} />);
-    await fillValid(user);
-    await user.click(screen.getByRole("button", { name: "グループを作成" }));
-
-    await waitFor(() => expect(createGroup).toHaveBeenCalledOnce());
-    expect(createGroup).toHaveBeenCalledWith({
-      name: "なかまたち",
-      nickname: "もふ",
-      profile: {
-        version: 1,
-        animalId: expect.any(String),
-        animalGroup: expect.any(String),
-        mbti: "ENFP",
-        calculationMode: "date-time",
-      },
+  it("removes the legacy draft on mount without reading or restoring it", async () => {
+    const recorder = recordingStorage({
+      [CREATE_DRAFT_KEY]: JSON.stringify({ nickname: "保存した名前", birthDate: "1999-01-01" }),
     });
-    expect(JSON.stringify(createGroup.mock.calls)).not.toMatch(/2000-02-29|09:05|birth/i);
-    expect(navigate).toHaveBeenCalledWith(`/g/${token}`);
-    expect(sessionStorage.getItem(CREATE_DRAFT_KEY)).toBeNull();
+
+    render(<CreateGroupForm storage={recorder.storage} clock={clock} />);
+
+    await waitFor(() => expect(recorder.removeItem).toHaveBeenCalledWith(CREATE_DRAFT_KEY));
+    expect(screen.getByLabelText("ニックネーム")).toHaveValue("");
+    expect(screen.getByLabelText("生年月日")).toHaveAttribute("max", "2026-08-16");
+    expectNoRawPersistence(recorder);
   });
 
-  it("shows required Japanese validation messages", () => {
-    render(<CreateGroupForm repositoryFactory={vi.fn()} navigate={vi.fn()} />);
+  it("validates without storage reads or writes", async () => {
+    const recorder = recordingStorage();
+    render(<CreateGroupForm storage={recorder.storage} clock={clock} repositoryFactory={vi.fn()} />);
+
     fireEvent.submit(screen.getByRole("form", { name: "グループ作成フォーム" }));
+
     expect(screen.getByText("グループ名を入力してください")).toBeInTheDocument();
     expect(screen.getByText("ニックネームを入力してください")).toBeInTheDocument();
     expect(screen.getByText("正しい生年月日を入力してください")).toBeInTheDocument();
-    expect(screen.getByLabelText("グループ名")).toHaveAttribute("aria-invalid", "true");
-    expect(screen.getByLabelText("生年月日")).toHaveAttribute("aria-invalid", "true");
-    expect(screen.getAllByRole("alert").map((alert) => alert.textContent)).toContain(
-      "グループ名を入力してください",
+    expectNoRawPersistence(recorder);
+  });
+
+  it("derives the new profile, submits it exactly, clears memory, then navigates", async () => {
+    const user = userEvent.setup();
+    const recorder = recordingStorage();
+    const derive = vi.fn(async () => profile);
+    const createGroup = vi.fn(async () => ({ groupId: "g1", memberId: "m1", inviteToken: token }));
+    const navigate = vi.fn((path: string) => {
+      expect(path).toBe(`/g/${token}`);
+      expect(screen.getByLabelText("グループ名")).toHaveValue("");
+      expect(screen.getByLabelText("ニックネーム")).toHaveValue("");
+      expect(screen.getByLabelText("生年月日")).toHaveValue("");
+      expect(screen.getByLabelText("出生時刻")).toHaveValue("");
+    });
+    render(
+      <CreateGroupForm storage={recorder.storage} clock={clock} etoProvider={{ derive }}
+        repositoryFactory={() => ({ createGroup } as never)} navigate={navigate} />,
     );
-  });
-
-  it("preserves and restores a raw draft only after repository failure", async () => {
-    const user = userEvent.setup();
-    const error = Object.assign(new Error("secret backend message"), { code: "CREATE_FAILED" }) as GroupRepositoryError;
-    const createGroup = vi.fn(async () => { throw error; });
-    const view = render(<CreateGroupForm repositoryFactory={() => ({ createGroup } as never)} navigate={vi.fn()} />);
     await fillValid(user);
-    await user.click(screen.getByRole("button", { name: "グループを作成" }));
-    expect(await screen.findByText("グループを作成できませんでした。通信環境を確認して、もう一度お試しください。")).toBeInTheDocument();
-    expect(screen.queryByText("secret backend message")).not.toBeInTheDocument();
-    expect(sessionStorage.getItem(CREATE_DRAFT_KEY)).toContain("2000-02-29");
 
-    view.unmount();
-    render(<CreateGroupForm repositoryFactory={() => ({ createGroup } as never)} navigate={vi.fn()} />);
-    expect(screen.getByLabelText("グループ名")).toHaveValue("  なかまたち  ");
-    expect(screen.getByLabelText("生年月日")).toHaveValue("2000-02-29");
+    await user.click(screen.getByRole("button", { name: "グループを作成" }));
+
+    await waitFor(() => expect(navigate).toHaveBeenCalledOnce());
+    expect(derive).toHaveBeenCalledWith(
+      { birthDate: rawDate, birthTime: rawTime, mbti: "ENFP" },
+      "2026-08-16",
+    );
+    expect(createGroup).toHaveBeenCalledWith({ name: "なかまたち", nickname: "もふ", profile });
+    expect(JSON.stringify(createGroup.mock.calls)).not.toMatch(/2000-02-29|09:05|birth/i);
+    expectNoRawPersistence(recorder);
   });
 
-  it("disables duplicate submission while loading", async () => {
+  it.each([
+    ["provider", "プロフィールを作成できませんでした。入力内容を確認してください。"],
+    ["repository", "グループを作成できませんでした。通信環境を確認して、もう一度お試しください。"],
+    ["navigation", "作成したグループを開けませんでした。もう一度リンクを開いてください。"],
+  ])("keeps retry data only in React memory after a %s failure", async (failureAt, safeMessage) => {
     const user = userEvent.setup();
-    let resolve!: (value: { groupId: string; memberId: string; inviteToken: string }) => void;
-    const createGroup = vi.fn(() => new Promise<typeof token extends string ? { groupId: string; memberId: string; inviteToken: string } : never>((done) => { resolve = done; }));
-    render(<CreateGroupForm repositoryFactory={() => ({ createGroup } as never)} navigate={vi.fn()} />);
+    const recorder = recordingStorage();
+    const secret = `${rawDate}-${rawTime}-秘密`;
+    const derive = vi.fn(async () => {
+      if (failureAt === "provider") throw new Error(secret);
+      return profile;
+    });
+    const createGroup = vi.fn(async () => {
+      if (failureAt === "repository") throw Object.assign(new Error(secret), { code: "CREATE_FAILED" });
+      return { groupId: "g1", memberId: "m1", inviteToken: token };
+    });
+    const navigate = vi.fn(() => {
+      if (failureAt === "navigation") throw new Error(secret);
+    });
+    render(
+      <CreateGroupForm storage={recorder.storage} clock={clock} etoProvider={{ derive }}
+        repositoryFactory={() => ({ createGroup } as never)} navigate={navigate} />,
+    );
+    await fillValid(user);
+
+    await user.click(screen.getByRole("button", { name: "グループを作成" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(safeMessage);
+    expect(screen.getByRole("alert")).not.toHaveTextContent(secret);
+    expect(screen.getByLabelText("生年月日")).toHaveValue(failureAt === "navigation" ? "" : rawDate);
+    expect(navigate.mock.calls.flat().join(" ")).not.toMatch(/2000-02-29|09:05/);
+    expectNoRawPersistence(recorder);
+  });
+
+  it("continues when best-effort legacy cleanup throws and blocks duplicate submits", async () => {
+    const user = userEvent.setup();
+    const recorder = recordingStorage({}, true);
+    const pending = deferred<{ groupId: string; memberId: string; inviteToken: string }>();
+    const createGroup = vi.fn(() => pending.promise);
+    render(
+      <CreateGroupForm storage={recorder.storage} clock={clock} etoProvider={{ derive: async () => profile }}
+        repositoryFactory={() => ({ createGroup } as never)} navigate={vi.fn()} />,
+    );
     await fillValid(user);
     const submit = screen.getByRole("button", { name: "グループを作成" });
+
     await user.click(submit);
+    await user.click(submit);
+
     expect(submit).toBeDisabled();
-    await user.click(submit);
     expect(createGroup).toHaveBeenCalledOnce();
-    resolve({ groupId: "g1", memberId: "m1", inviteToken: token });
+    pending.resolve({ groupId: "g1", memberId: "m1", inviteToken: token });
     await waitFor(() => expect(submit).not.toBeDisabled());
+    expectNoRawPersistence(recorder);
   });
 
-  it("does not persist raw data for a local derivation or post-success navigation failure", async () => {
+  it("uses the configuration-safe error without exposing its cause", async () => {
     const user = userEvent.setup();
-    const derive = vi.fn(async () => { throw new Error("local failure"); });
-    const first = render(
-      <CreateGroupForm
-        astrologyProvider={{ derive }}
-        repositoryFactory={vi.fn()}
-        navigate={vi.fn()}
-      />,
-    );
+    render(<CreateGroupForm clock={clock} repositoryFactory={() => { throw new SupabaseConfigurationError(); }} navigate={vi.fn()} />);
     await fillValid(user);
     await user.click(screen.getByRole("button", { name: "グループを作成" }));
-    await screen.findByRole("alert");
-    expect(sessionStorage.getItem(CREATE_DRAFT_KEY)).toBeNull();
-
-    first.unmount();
-    const createGroup = vi.fn(async () => ({ groupId: "g1", memberId: "m1", inviteToken: token }));
-    render(
-      <CreateGroupForm
-        repositoryFactory={() => ({ createGroup } as never)}
-        navigate={() => { throw new Error("navigation failure"); }}
-      />,
-    );
-    await fillValid(user);
-    await user.click(screen.getByRole("button", { name: "グループを作成" }));
-    await screen.findByRole("alert");
-    expect(sessionStorage.getItem(CREATE_DRAFT_KEY)).toBeNull();
+    expect(await screen.findByRole("alert")).toHaveTextContent("現在グループ作成を利用できません。設定を確認してください。");
   });
 
-  it("navigates and settles loading when successful draft cleanup throws", async () => {
+  it("has no post-unmount provider, repository, storage, navigation, or state effects", async () => {
     const user = userEvent.setup();
-    const createGroup = vi.fn(async () => ({ groupId: "g1", memberId: "m1", inviteToken: token }));
-    const navigate = vi.fn();
-    const storage = {
-      getItem: vi.fn(() => null),
-      setItem: vi.fn(),
-      removeItem: vi.fn(() => { throw new Error("storage unavailable"); }),
-    } as unknown as Storage;
-    render(
-      <CreateGroupForm repositoryFactory={() => ({ createGroup } as never)}
-        navigate={navigate} storage={storage} />,
-    );
-    await fillValid(user);
-    const submit = screen.getByRole("button", { name: "グループを作成" });
-    await user.click(submit);
-
-    await waitFor(() => expect(navigate).toHaveBeenCalledWith(`/g/${token}`));
-    await waitFor(() => expect(submit).not.toBeDisabled());
-    expect(storage.setItem).not.toHaveBeenCalled();
-  });
-
-  it("prioritizes the actual Supabase configuration error class", async () => {
-    const user = userEvent.setup();
-    render(
-      <CreateGroupForm repositoryFactory={() => { throw new SupabaseConfigurationError(); }}
-        navigate={vi.fn()} />,
-    );
-    await fillValid(user);
-    await user.click(screen.getByRole("button", { name: "グループを作成" }));
-    expect(await screen.findByRole("alert")).toHaveTextContent(
-      "現在グループ作成を利用できません。設定を確認してください。",
-    );
-  });
-
-  it("stops after a deferred derivation resolves following unmount", async () => {
-    const user = userEvent.setup();
-    const pending = deferred<Awaited<ReturnType<NonNullable<Parameters<typeof CreateGroupForm>[0]["astrologyProvider"]>["derive"]>>>();
+    const recorder = recordingStorage();
+    const pending = deferred<DerivedEtoProfile>();
     const createGroup = vi.fn();
     const navigate = vi.fn();
-    const storage = { getItem: () => null, setItem: vi.fn(), removeItem: vi.fn() } as unknown as Storage;
     const view = render(
-      <CreateGroupForm astrologyProvider={{ derive: () => pending.promise }}
-        repositoryFactory={() => ({ createGroup } as never)} navigate={navigate} storage={storage} />,
+      <CreateGroupForm storage={recorder.storage} clock={clock} etoProvider={{ derive: () => pending.promise }}
+        repositoryFactory={() => ({ createGroup } as never)} navigate={navigate} />,
     );
     await fillValid(user);
     await user.click(screen.getByRole("button", { name: "グループを作成" }));
+    await waitFor(() => expect(recorder.removeItem).toHaveBeenCalledOnce());
     view.unmount();
-    pending.resolve({ version: 1, animalId: "fawn", animalGroup: "MOON", mbti: "ENFP", calculationMode: "date-time" });
+
+    pending.resolve(profile);
     await pending.promise;
     await Promise.resolve();
+
     expect(createGroup).not.toHaveBeenCalled();
     expect(navigate).not.toHaveBeenCalled();
-    expect(storage.setItem).not.toHaveBeenCalled();
-    expect(storage.removeItem).not.toHaveBeenCalled();
-  });
-
-  it("ignores a deferred repository failure following unmount", async () => {
-    const user = userEvent.setup();
-    const pending = deferred<{ groupId: string; memberId: string; inviteToken: string }>();
-    const createGroup = vi.fn(() => pending.promise);
-    const storage = { getItem: () => null, setItem: vi.fn(), removeItem: vi.fn() } as unknown as Storage;
-    const view = render(
-      <CreateGroupForm repositoryFactory={() => ({ createGroup } as never)} navigate={vi.fn()} storage={storage} />,
-    );
-    await fillValid(user);
-    await user.click(screen.getByRole("button", { name: "グループを作成" }));
-    await waitFor(() => expect(createGroup).toHaveBeenCalledOnce());
-    view.unmount();
-    pending.reject(new Error("offline"));
-    await expect(pending.promise).rejects.toThrow("offline");
-    await Promise.resolve();
-    expect(storage.setItem).not.toHaveBeenCalled();
-    expect(storage.removeItem).not.toHaveBeenCalled();
-  });
-
-  it("does not navigate or clean storage when a deferred create succeeds after unmount", async () => {
-    const user = userEvent.setup();
-    const pending = deferred<{ groupId: string; memberId: string; inviteToken: string }>();
-    const createGroup = vi.fn(() => pending.promise);
-    const navigate = vi.fn();
-    const storage = { getItem: () => null, setItem: vi.fn(), removeItem: vi.fn() } as unknown as Storage;
-    const view = render(
-      <CreateGroupForm repositoryFactory={() => ({ createGroup } as never)} navigate={navigate} storage={storage} />,
-    );
-    await fillValid(user);
-    await user.click(screen.getByRole("button", { name: "グループを作成" }));
-    await waitFor(() => expect(createGroup).toHaveBeenCalledOnce());
-    view.unmount();
-    pending.resolve({ groupId: "g1", memberId: "m1", inviteToken: token });
-    await pending.promise;
-    await Promise.resolve();
-    expect(navigate).not.toHaveBeenCalled();
-    expect(storage.setItem).not.toHaveBeenCalled();
-    expect(storage.removeItem).not.toHaveBeenCalled();
+    expect(recorder.removeItem).toHaveBeenCalledOnce();
+    expectNoRawPersistence(recorder);
   });
 });

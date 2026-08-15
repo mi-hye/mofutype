@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { MBTI_TYPES, createOnboardingSchema } from "./schema";
+import { MBTI_TYPES, createOnboardingSchema, todayIsoInTokyo } from "./schema";
 
 const clock = () => new Date("2026-08-15T12:00:00+09:00");
 const schema = createOnboardingSchema(clock);
@@ -74,6 +74,30 @@ describe("createOnboardingSchema", () => {
     expect(result.error?.issues).toContainEqual(
       expect.objectContaining({ message: "未来の日付は入力できません" }),
     );
+  });
+
+  it("uses the Tokyo calendar date at timezone boundaries", () => {
+    const boundaryClock = () => new Date("2026-08-15T15:30:00.000Z");
+
+    expect(todayIsoInTokyo(boundaryClock)).toBe("2026-08-16");
+    expect(
+      createOnboardingSchema(boundaryClock).safeParse({
+        ...valid,
+        birthDate: "2026-08-16",
+      }).success,
+    ).toBe(true);
+  });
+
+  it("rejects dates before the supported 1900-01-01 boundary", () => {
+    const result = schema.safeParse({ ...valid, birthDate: "1899-12-31" });
+
+    expect(result.error?.issues).toContainEqual(
+      expect.objectContaining({
+        path: ["birthDate"],
+        message: "1900年1月1日以降の生年月日を入力してください",
+      }),
+    );
+    expect(schema.safeParse({ ...valid, birthDate: "1900-01-01" }).success).toBe(true);
   });
 
   it("requires a valid time only when time is known", () => {

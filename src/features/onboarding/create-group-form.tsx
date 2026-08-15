@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { flushSync } from "react-dom";
 
 import { Button } from "@/components/ui/button";
-import { localAstrologyProvider } from "@/lib/astrology/local-provider";
-import type { AstrologyProvider } from "@/lib/astrology/types";
+import { localEtoProvider } from "@/lib/eto/provider";
+import type { EtoProvider } from "@/lib/eto/types";
 import { createBrowserGroupRepository } from "@/lib/supabase/group-repository";
 import { ProfileForm, emptyProfileDraft, type ProfileDraft, type ProfileErrors } from "./profile-form";
-import { createOnboardingSchema } from "./schema";
+import { createOnboardingSchema, todayIsoInTokyo } from "./schema";
 
 export const CREATE_DRAFT_KEY = "mofutype:create-group:draft";
 export const INVITE_TOKEN_PATTERN = /^[a-f0-9]{64}$/;
@@ -17,21 +18,6 @@ type Draft = ProfileDraft & { groupName: string };
 
 function emptyDraft(): Draft {
   return { groupName: "", ...emptyProfileDraft() };
-}
-
-function readDraft(storage?: Storage): Draft {
-  try {
-    if (!storage) return emptyDraft();
-    const value = JSON.parse(storage.getItem(CREATE_DRAFT_KEY) ?? "null") as Partial<Draft> | null;
-    if (!value || typeof value !== "object") return emptyDraft();
-    const initial = emptyDraft();
-    for (const key of Object.keys(initial) as (keyof Draft)[]) {
-      if (typeof value[key] !== typeof initial[key]) return initial;
-    }
-    return value as Draft;
-  } catch {
-    return emptyDraft();
-  }
 }
 
 function publicCreateError(error: unknown): string {
@@ -45,7 +31,7 @@ function publicCreateError(error: unknown): string {
 
 export interface CreateGroupFormProps {
   repositoryFactory?: () => Pick<BrowserRepository, "createGroup">;
-  astrologyProvider?: AstrologyProvider;
+  etoProvider?: EtoProvider;
   navigate?: (path: string) => void;
   storage?: Storage;
   clock?: () => Date;
@@ -53,13 +39,14 @@ export interface CreateGroupFormProps {
 
 export function CreateGroupForm({
   repositoryFactory = createBrowserGroupRepository,
-  astrologyProvider = localAstrologyProvider,
+  etoProvider = localEtoProvider,
   navigate = (path) => window.location.assign(path),
   storage,
   clock = () => new Date(),
 }: CreateGroupFormProps) {
   const activeStorage = storage ?? (typeof window === "undefined" ? undefined : window.sessionStorage);
-  const [draft, setDraft] = useState<Draft>(() => readDraft(activeStorage));
+  const maxBirthDate = todayIsoInTokyo(clock);
+  const [draft, setDraft] = useState<Draft>(emptyDraft);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [failure, setFailure] = useState("");
   const [loading, setLoading] = useState(false);
@@ -68,11 +55,16 @@ export function CreateGroupForm({
 
   useEffect(() => {
     mounted.current = true;
+    try {
+      activeStorage?.removeItem(CREATE_DRAFT_KEY);
+    } catch {
+      // Removing obsolete privacy-sensitive drafts is best-effort.
+    }
     return () => {
       mounted.current = false;
       generation.current += 1;
     };
-  }, []);
+  }, [activeStorage]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -94,11 +86,11 @@ export function CreateGroupForm({
     const isCurrent = () => mounted.current && generation.current === submission;
     let profile;
     try {
-      profile = await astrologyProvider.derive({
+      profile = await etoProvider.derive({
         birthDate: result.data.birthDate,
         birthTime: result.data.birthTime,
         mbti: result.data.mbti,
-      });
+      }, maxBirthDate);
     } catch {
       if (!isCurrent()) return;
       setFailure("プロフィールを作成できませんでした。入力内容を確認してください。");
@@ -118,17 +110,12 @@ export function CreateGroupForm({
       inviteToken = response.inviteToken;
     } catch (error) {
       if (!isCurrent()) return;
-      try { activeStorage?.setItem(CREATE_DRAFT_KEY, JSON.stringify(draft)); } catch { /* storage may be unavailable */ }
       setFailure(publicCreateError(error));
       setLoading(false);
       return;
     }
-    try {
-      activeStorage?.removeItem(CREATE_DRAFT_KEY);
-    } catch {
-      // Browser storage cleanup is best-effort after a successful mutation.
-    }
     if (!isCurrent()) return;
+    flushSync(() => setDraft(emptyDraft()));
     try {
       navigate(`/g/${inviteToken}`);
     } catch {
@@ -150,7 +137,7 @@ export function CreateGroupForm({
         {errors.groupName ? <p className="field-error" id="create-group-name-error" role="alert">{errors.groupName}</p> : null}
       </div>
       <ProfileForm value={draft} onChange={(profile) => setDraft({ ...draft, ...profile })}
-        errors={errors as ProfileErrors} disabled={loading} />
+        errors={errors as ProfileErrors} maxBirthDate={maxBirthDate} disabled={loading} />
       {failure ? <p className="form-error" role="alert">{failure}</p> : null}
       <Button type="submit" size="lg" loading={loading}>グループを作成</Button>
     </form>

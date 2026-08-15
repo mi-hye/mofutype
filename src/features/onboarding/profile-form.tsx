@@ -2,7 +2,7 @@
 
 import { useId } from "react";
 
-import { MBTI_TYPES } from "./schema";
+import { MBTI_TYPES } from "@/lib/eto/types";
 
 export interface ProfileDraft {
   nickname: string;
@@ -30,10 +30,11 @@ interface ProfileFormProps {
   value: ProfileDraft;
   onChange(value: ProfileDraft): void;
   errors: ProfileErrors;
+  maxBirthDate: string;
   disabled?: boolean;
 }
 
-export function ProfileForm({ value, onChange, errors, disabled = false }: ProfileFormProps) {
+export function ProfileForm({ value, onChange, errors, maxBirthDate, disabled = false }: ProfileFormProps) {
   const prefix = useId();
   const update = <K extends keyof ProfileDraft>(key: K, next: ProfileDraft[K]) =>
     onChange({ ...value, [key]: next });
@@ -58,7 +59,7 @@ export function ProfileForm({ value, onChange, errors, disabled = false }: Profi
           aria-describedby={describedBy("nickname")} aria-invalid={Boolean(errors.nickname) || undefined} />
       ))}
       {field("birthDate", "生年月日", (
-        <input id={`${prefix}-birthDate`} type="date" required value={value.birthDate}
+        <input id={`${prefix}-birthDate`} type="date" required min="1900-01-01" max={maxBirthDate} value={value.birthDate}
           onChange={(event) => update("birthDate", event.target.value)} disabled={disabled}
           aria-describedby={describedBy("birthDate")} aria-invalid={Boolean(errors.birthDate) || undefined} />
       ))}
