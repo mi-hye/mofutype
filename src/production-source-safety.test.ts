@@ -52,16 +52,17 @@ function colorToken(styles: string, name: string): string {
 }
 
 describe("production source safety", () => {
-  it("defines the Kawaii Zine tokens and reduced-motion fallback", () => {
+  it("defines the Soft Editorial tokens and reduced-motion fallback", () => {
     const globalStyles = readFileSync(path.join(sourceRoot, "app/globals.css"), "utf8");
 
-    expect(globalStyles).toContain("--hot-pink:");
-    expect(globalStyles).toContain("--mint-pop:");
-    expect(globalStyles).toContain("--shadow-zine:");
+    expect(globalStyles).toContain("--paper-warm:");
+    expect(globalStyles).toContain("--accent-coral:");
+    expect(globalStyles).toContain("--border-subtle:");
+    expect(globalStyles).toContain("--shadow-soft:");
     expect(globalStyles).toContain("@media (prefers-reduced-motion: reduce)");
     expect(globalStyles).toContain('.animal-avatar[data-selected="true"]');
     expect(globalStyles).toMatch(
-      /\.animal-avatar\[data-selected="true"\][^{]*\{[^}]*box-shadow:\s*[^;]*var\(--hot-pink\)/,
+      /\.animal-avatar\[data-selected="true"\][^{]*\{[^}]*box-shadow:\s*[^;]*var\(--accent-coral\)/,
     );
     for (const variant of ["cream", "pink", "mint", "violet"]) {
       expect(globalStyles).toContain(`.ui-card[data-variant="${variant}"]`);
@@ -78,10 +79,10 @@ describe("production source safety", () => {
     const globalStyles = readFileSync(path.join(sourceRoot, "app/globals.css"), "utf8");
 
     for (const token of [
-      "--paper-cream:",
-      "--accent-hot-pink:",
-      "--ink-border:",
-      "--shadow-offset:",
+      "--paper-warm:",
+      "--accent-coral:",
+      "--border-subtle:",
+      "--shadow-soft:",
       "--content-wide:",
     ]) {
       expect(globalStyles).toContain(token);
@@ -92,7 +93,7 @@ describe("production source safety", () => {
     expect(globalStyles).toContain("@media (forced-colors: active)");
   });
 
-  it("defines Kawaii Zine contracts for relationship and checkout surfaces", () => {
+  it("defines Soft Editorial contracts for relationship and checkout surfaces", () => {
     const globalStyles = readFileSync(path.join(sourceRoot, "app/globals.css"), "utf8");
 
     for (const selector of [
@@ -116,12 +117,11 @@ describe("production source safety", () => {
     expect(globalStyles).toContain(".profile-step .ui-card {");
     expect(globalStyles).toContain("max-width: 38rem;");
     expect(globalStyles).toContain(
-      ".profile-step .unknown-toggle { min-height: 36px;",
+      ".profile-step .unknown-toggle { min-height: 34px;",
     );
     expect(globalStyles).toContain(
       ".profile-step .unknown-toggle input { width: 1rem; height: 1rem; }",
     );
-    expect(globalStyles).toContain("padding-left: 0.45rem;");
     expect(globalStyles).toContain(
       ".profile-step .field-error { max-width: 100%; font-size: 0.75rem;",
     );
@@ -140,13 +140,14 @@ describe("production source safety", () => {
     expect(globalStyles).toContain("stroke: var(--edge-mint)");
   });
 
-  it("clips landing decorations locally without hiding document overflow", () => {
+  it("removes decorative zine clutter without hiding document overflow", () => {
     const globalStyles = readFileSync(path.join(sourceRoot, "app/globals.css"), "utf8");
 
     expect(globalStyles).not.toContain("min-width: 320px");
     expect(globalStyles).not.toContain("overflow-x: hidden");
-    expect(globalStyles).toMatch(/\.hero__decor\s*\{[^}]*overflow:\s*clip/);
-    expect(globalStyles).toMatch(/\.hero__stripe\s*\{[^}]*right:\s*0;/);
+    expect(globalStyles).toMatch(
+      /\.hero__tape,\s*\.hero__dots,\s*\.hero__stripe,\s*\.hero__cutout,\s*\.hero__issue-note,\s*\.create-section__tape\s*\{\s*display:\s*none/,
+    );
   });
 
   it("detects a forbidden animal symbol in supplied source", () => {
