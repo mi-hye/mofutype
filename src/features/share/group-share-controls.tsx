@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { Share } from "lucide-react";
+import { createPortal } from "react-dom";
+import { Share, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -38,6 +39,8 @@ export function GroupShareControls({
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const mounted = useRef(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const firstActionRef = useRef<HTMLButtonElement>(null);
   const browserOrigin = useSyncExternalStore(
     subscribeToNoopStore,
     browserOriginSnapshot,
@@ -49,6 +52,18 @@ export function GroupShareControls({
     mounted.current = true;
     return () => { mounted.current = false; };
   }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    firstActionRef.current?.focus();
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setOpen(false);
+      triggerRef.current?.focus();
+    };
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [open]);
 
   const payload = useMemo(() => {
     try {
@@ -83,6 +98,7 @@ export function GroupShareControls({
     setLoading(true);
     setMessage(null);
     setOpen(false);
+    triggerRef.current?.focus();
     try {
       if (action === "share" && browserShare) {
         await browserShare(payload!);
@@ -103,6 +119,7 @@ export function GroupShareControls({
   return (
     <div className="group-share-controls">
       <Button
+        ref={triggerRef}
         type="button"
         className="group-share-button"
         variant="secondary"
@@ -119,17 +136,36 @@ export function GroupShareControls({
       >
         <Share data-testid="share-icon" aria-hidden="true" focusable="false" strokeWidth={2.4} />
       </Button>
-      {open ? (
-        <div id="group-share-actions" className="group-share-actions" role="group" aria-label="共有方法">
-          <Button type="button" variant="ghost" size="sm" onClick={() => void runAction("copy")}>
-            リンクをコピー
-          </Button>
-          {browserShare ? (
-            <Button type="button" variant="ghost" size="sm" onClick={() => void runAction("share")}>
-              アプリで共有
+      {open && typeof document !== "undefined" ? createPortal(
+        <div className="group-share-backdrop" onMouseDown={(event) => {
+          if (event.target !== event.currentTarget) return;
+          setOpen(false);
+          triggerRef.current?.focus();
+        }}>
+          <section id="group-share-actions" className="group-share-actions"
+            role="dialog" aria-modal="true" aria-labelledby="group-share-title">
+            <header>
+              <h2 id="group-share-title">共有方法</h2>
+              <button type="button" className="group-share-actions__close"
+                aria-label="共有メニューを閉じる" onClick={() => {
+                  setOpen(false);
+                  triggerRef.current?.focus();
+                }}>
+                <X aria-hidden="true" focusable="false" />
+              </button>
+            </header>
+            <Button ref={firstActionRef} type="button" variant="ghost" size="sm"
+              onClick={() => void runAction("copy")}>
+              リンクをコピー
             </Button>
-          ) : null}
-        </div>
+            {browserShare ? (
+              <Button type="button" variant="ghost" size="sm" onClick={() => void runAction("share")}>
+                アプリで共有
+              </Button>
+            ) : null}
+          </section>
+        </div>,
+        document.body,
       ) : null}
       {message === "shared" ? <p role="status">共有しました</p> : null}
       {message === "copied" ? <p role="status">招待リンクをコピーしました</p> : null}

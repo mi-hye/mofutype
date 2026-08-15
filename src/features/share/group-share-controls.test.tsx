@@ -7,6 +7,29 @@ import { GroupShareControls } from "./group-share-controls";
 const token = "a".repeat(64);
 
 describe("GroupShareControls", () => {
+  it("opens an accessible action sheet and returns focus on Escape", async () => {
+    const user = userEvent.setup();
+    render(
+      <GroupShareControls
+        groupName="なかよし"
+        memberCount={3}
+        inviteToken={token}
+        origin="https://mofu.example"
+        shareApi={vi.fn(async () => undefined)}
+        writeClipboard={vi.fn(async () => undefined)}
+      />,
+    );
+
+    const trigger = screen.getByRole("button", { name: "招待リンクを共有" });
+    await user.click(trigger);
+    expect(screen.getByRole("dialog", { name: "共有方法" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "リンクをコピー" })).toHaveFocus();
+
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog", { name: "共有方法" })).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
+  });
+
   it("prefers Web Share with the minimal group payload", async () => {
     const user = userEvent.setup();
     const shareApi = vi.fn(async () => undefined);
