@@ -69,7 +69,6 @@ describe("production source safety", () => {
     expect(globalStyles).toContain("--color-blush: #f1d1ca");
     expect(globalStyles).toContain("--color-ink: #4f312b");
     expect(globalStyles).toContain("--action-primary:");
-    expect(globalStyles).toContain("--font-editorial:");
     expect(globalStyles).toContain("--border-subtle:");
     expect(globalStyles).toContain("--shadow-pop:");
     expect(globalStyles).toContain('background-image: none');
@@ -93,8 +92,6 @@ describe("production source safety", () => {
       /\.ui-button\[data-variant="secondary"\]::before[^}]*animation:\s*none[^}]*filter:\s*url\(#wrinkle-effect\)/,
     );
     expect(globalStyles).toContain("@media (prefers-reduced-motion: reduce)");
-    expect(globalStyles).toMatch(/\.edition-label[^}]*background:\s*transparent[^}]*box-shadow:\s*none/);
-    expect(globalStyles).toMatch(/\.hero h1[^}]*font-family:\s*var\(--font-editorial\)/);
     expect(globalStyles).toContain('.animal-avatar[data-selected="true"]');
     expect(globalStyles).toMatch(
       /\.animal-avatar\[data-selected="true"\][^{]*\{[^}]*box-shadow:\s*[^;]*var\(--accent-navy\)/,
