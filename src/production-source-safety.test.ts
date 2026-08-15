@@ -52,19 +52,19 @@ function colorToken(styles: string, name: string): string {
 }
 
 describe("production source safety", () => {
-  it("defines the Pop Editorial tokens and reduced-motion fallback", () => {
+  it("defines the Modern Editorial tokens and reduced-motion fallback", () => {
     const globalStyles = readFileSync(path.join(sourceRoot, "app/globals.css"), "utf8");
 
     expect(globalStyles).toContain("--paper-warm:");
-    expect(globalStyles).toContain("--accent-blue:");
-    expect(globalStyles).toContain("--accent-coral:");
-    expect(globalStyles).toContain("--accent-lemon:");
+    expect(globalStyles).toContain("--accent-navy:");
+    expect(globalStyles).toContain("--accent-brick:");
+    expect(globalStyles).toContain("--accent-sand:");
     expect(globalStyles).toContain("--border-subtle:");
     expect(globalStyles).toContain("--shadow-pop:");
     expect(globalStyles).toContain("@media (prefers-reduced-motion: reduce)");
     expect(globalStyles).toContain('.animal-avatar[data-selected="true"]');
     expect(globalStyles).toMatch(
-      /\.animal-avatar\[data-selected="true"\][^{]*\{[^}]*box-shadow:\s*[^;]*var\(--accent-coral\)/,
+      /\.animal-avatar\[data-selected="true"\][^{]*\{[^}]*box-shadow:\s*[^;]*var\(--accent-navy\)/,
     );
     for (const variant of ["cream", "pink", "mint", "violet"]) {
       expect(globalStyles).toContain(`.ui-card[data-variant="${variant}"]`);
@@ -95,7 +95,7 @@ describe("production source safety", () => {
     expect(globalStyles).toContain("@media (forced-colors: active)");
   });
 
-  it("defines Pop Editorial contracts for relationship and checkout surfaces", () => {
+  it("defines Modern Editorial contracts for relationship and checkout surfaces", () => {
     const globalStyles = readFileSync(path.join(sourceRoot, "app/globals.css"), "utf8");
 
     for (const selector of [
@@ -142,7 +142,7 @@ describe("production source safety", () => {
     expect(globalStyles).toContain("stroke: var(--edge-mint)");
   });
 
-  it("keeps restrained editorial decoration and motion without hiding document overflow", () => {
+  it("keeps restrained editorial planes and motion without hiding document overflow", () => {
     const globalStyles = readFileSync(path.join(sourceRoot, "app/globals.css"), "utf8");
 
     expect(globalStyles).not.toContain("min-width: 320px");
