@@ -174,6 +174,14 @@ describe("production source safety", () => {
       .toBeGreaterThanOrEqual(3);
     expect(contrastRatio(colorToken(globalStyles, "--edge-mint"), cream))
       .toBeGreaterThanOrEqual(3);
+    for (const relationshipColor of [
+      "--relationship-warm",
+      "--relationship-clear",
+      "--relationship-calm",
+    ]) {
+      expect(contrastRatio(colorToken(globalStyles, relationshipColor), cream))
+        .toBeGreaterThanOrEqual(3);
+    }
     expect(globalStyles).toContain("stroke: var(--edge-hot-pink)");
     expect(globalStyles).toContain("stroke: var(--edge-mint)");
   });
@@ -181,6 +189,10 @@ describe("production source safety", () => {
   it("keeps a mobile-first relationship preview without hiding document overflow", () => {
     const globalStyles = designStyles();
     const pageSource = readFileSync(path.join(sourceRoot, "app/page.tsx"), "utf8");
+    const previewSource = readFileSync(
+      path.join(sourceRoot, "features/landing/landing-relationship-preview.tsx"),
+      "utf8",
+    );
 
     expect(globalStyles).not.toContain("min-width: 320px");
     expect(globalStyles).not.toContain("overflow-x: hidden");
@@ -190,18 +202,20 @@ describe("production source safety", () => {
       ".hero__stripe {",
     ]) expect(globalStyles).toContain(selector);
     expect(globalStyles).toMatch(/\.hero__decor\s*\{[^}]*order:\s*3/);
+    expect(globalStyles).toMatch(/\.hero__decor\s*\{[^}]*background-image:\s*none/);
     expect(globalStyles).toMatch(/\.hero\s*\{[^}]*box-shadow:\s*none/);
     expect(globalStyles).toContain(".hero__connectors line");
-    expect(pageSource).toContain('className="hero__connectors"');
-    expect(pageSource.match(/<line /g)).toHaveLength(3);
+    expect(pageSource).toContain("<LandingRelationshipPreview />");
+    expect(previewSource).toContain('className="hero__connectors"');
+    expect(previewSource.match(/className: "hero__connector--/g)).toHaveLength(3);
+    expect(previewSource).toContain('aria-pressed={selected}');
     expect(pageSource).toContain("#12干支");
     expect(pageSource).not.toContain("#動物うらない");
     expect(pageSource).not.toContain("性格タイプ × 動物キャラクター");
     for (const animalImage of ["tiger.png", "rat.png", "rabbit.png"]) {
-      expect(globalStyles).toContain(`/zodiac/${animalImage}`);
+      expect(previewSource).toContain(`/zodiac/${animalImage}`);
     }
-    expect(globalStyles).toMatch(/\.hero__tape, \.hero__dots, \.hero__stripe[^}]*background:\s*var\(--surface-elevated\)/);
-    expect(globalStyles).toMatch(/\.hero__tape::before[^}]*border:\s*0/);
+    expect(globalStyles).toMatch(/\.hero__node-frame::before[^}]*filter:\s*url\(#wrinkle-effect\)/);
     expect(globalStyles).toMatch(/\.ui-button::before[^}]*animation:\s*squigglevision/);
     expect(globalStyles).toContain(".ui-button > span { position: relative; z-index: 1; }");
     expect(globalStyles).toContain("@keyframes float-orbit");

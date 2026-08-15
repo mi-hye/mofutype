@@ -1,6 +1,7 @@
 import Image from "next/image";
 
 import { Card } from "@/components/ui/card";
+import { LandingRelationshipPreview } from "@/features/landing/landing-relationship-preview";
 import { StartGroupForm } from "@/features/onboarding/start-group-form";
 
 export default function Home() {
@@ -20,21 +21,7 @@ export default function Home() {
       </header>
 
       <section className="hero" id="top">
-        <div className="hero__decor" aria-hidden="true">
-          <svg
-            className="hero__connectors"
-            viewBox="0 0 100 100"
-            preserveAspectRatio="none"
-            focusable="false"
-          >
-            <line x1="50" y1="24" x2="19" y2="75" />
-            <line x1="50" y1="24" x2="81" y2="75" />
-            <line x1="19" y1="75" x2="81" y2="75" />
-          </svg>
-          <span className="hero__tape" />
-          <span className="hero__dots" />
-          <span className="hero__stripe" />
-        </div>
+        <LandingRelationshipPreview />
         <span className="hero__cutout" aria-hidden="true">MOFU / 01</span>
         <h1 aria-label="わたしたち、こんな感じ。">
           わたしたち、<span>こんな感じ。</span>
