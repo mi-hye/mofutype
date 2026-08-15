@@ -193,7 +193,7 @@ describe("production source safety", () => {
     for (const animalImage of ["tiger.png", "rat.png", "rabbit.png"]) {
       expect(globalStyles).toContain(`/zodiac/${animalImage}`);
     }
-    expect(globalStyles).toMatch(/\.hero__tape, \.hero__dots, \.hero__stripe[^}]*background:\s*transparent/);
+    expect(globalStyles).toMatch(/\.hero__tape, \.hero__dots, \.hero__stripe[^}]*background:\s*var\(--surface-elevated\)/);
     expect(globalStyles).toMatch(/\.hero__tape::before[^}]*border:\s*0/);
     expect(globalStyles).toMatch(/\.ui-button::before[^}]*animation:\s*squigglevision/);
     expect(globalStyles).toContain(".ui-button > span { position: relative; z-index: 1; }");
