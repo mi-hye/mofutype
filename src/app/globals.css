@@ -51,7 +51,7 @@ button, input, textarea, select { font: inherit; }
   cursor: pointer;
   transition: none;
 }
-.ui-button::before { position: absolute; inset: 0; z-index: -1; border: 3.5px solid var(--button-border-color); border-radius: 999px; background: var(--button-background); box-shadow: 0 5px 0 var(--button-shadow-base), 0 10px 22px rgb(var(--ink-rgb) / 10%); content: ""; filter: url(#wrinkle-effect); transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s ease; }
+.ui-button::before { position: absolute; inset: 0; z-index: -1; border: 3.5px solid var(--button-border-color); border-radius: 999px; background: var(--button-background); box-shadow: 0 5px 0 var(--button-shadow-base), 0 10px 22px rgb(var(--ink-rgb) / 10%); content: ""; animation: squigglevision 0.32s infinite steps(1); transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s ease; }
 .ui-button::after { display: none; }
 .ui-button > span { position: relative; z-index: 1; }
 .ui-button[data-variant="primary"], .ui-button[data-variant="secondary"], .ui-button[data-variant="ghost"] { border-color: transparent; background: transparent; color: var(--button-border-color); }
@@ -316,6 +316,13 @@ button, input, textarea, select { font: inherit; }
 .legal-page dd { margin: 0; color: var(--text-muted); }
 
 @keyframes spin { to { transform: rotate(360deg); } }
+@keyframes squigglevision {
+  0% { filter: url(#squiggle-1); }
+  25% { filter: url(#squiggle-2); }
+  50% { filter: url(#squiggle-3); }
+  75% { filter: url(#squiggle-4); }
+  100% { filter: url(#squiggle-1); }
+}
 @keyframes skeleton-swipe { to { background-position: -220% 0; } }
 @keyframes float-orbit { 0%, 100% { transform: translate3d(0, 0, 0); } 50% { transform: translate3d(-0.55rem, -0.35rem, 0); } }
 @keyframes rise-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
@@ -408,6 +415,6 @@ button, input, textarea, select { font: inherit; }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .ui-button::before { filter: url(#wrinkle-effect); }
+  .ui-button::before { animation: none !important; filter: url(#squiggle-1); }
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
 }
