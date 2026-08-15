@@ -95,6 +95,7 @@ describe("GroupScreen", () => {
     render(<GroupScreen initialAggregate={initial} repository={repo.api} currentUserId="u-b" />);
 
     expect(screen.getByRole("heading", { name: "わたしの四柱推命結果" })).toBeInTheDocument();
+    expect(screen.queryByText("MY PROFILE")).not.toBeInTheDocument();
     expect(screen.getByText("ライオン")).toBeInTheDocument();
     expect(screen.getByRole("list", { name: "診断結果の詳細" })).toHaveTextContent("ENTJ太陽タイプ出生時刻を反映");
     expect(screen.queryByText("こじか")).not.toBeInTheDocument();

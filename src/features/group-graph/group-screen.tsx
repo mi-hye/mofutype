@@ -357,7 +357,6 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken, curren
       {currentMember && currentAnimal ? (
         <section className="my-result-card" aria-labelledby="my-result-title">
           <div className="my-result-card__heading">
-            <p>MY PROFILE</p>
             <h2 id="my-result-title">わたしの四柱推命結果</h2>
           </div>
           <div className="my-result-card__content">
