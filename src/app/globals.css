@@ -468,15 +468,18 @@ select {
   .checkout-panel fieldset label { overflow-wrap: anywhere; }
 }
 
+@media (min-width: 36rem) {
+  .profile-step .profile-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: end; column-gap: 1rem; }
+  .profile-step .profile-fields .form-field:nth-of-type(1),
+  .profile-step .profile-fields .form-field:nth-of-type(2) { grid-column: auto; }
+  .profile-step .unknown-toggle { align-self: end; justify-self: start; }
+}
+
 @media (min-width: 40rem) {
   .landing-shell { padding-top: 2rem; }
   .hero__actions { flex-direction: row; }
   .feature-grid { grid-template-columns: repeat(3, 1fr); }
   .create-section { grid-template-columns: minmax(0, 0.85fr) minmax(20rem, 1.15fr); align-items: start; }
-  .profile-step .profile-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: end; column-gap: 1rem; }
-  .profile-step .profile-fields .form-field:nth-of-type(1),
-  .profile-step .profile-fields .form-field:nth-of-type(2) { grid-column: auto; }
-  .profile-step .unknown-toggle { align-self: end; justify-self: start; }
   .group-member-shell { width: min(calc(100% - 2rem), 86rem); padding-top: 2rem; }
   .group-member-header { grid-template-columns: minmax(0, 1fr) auto; align-items: end; }
   .group-member-actions { justify-content: flex-end; }
