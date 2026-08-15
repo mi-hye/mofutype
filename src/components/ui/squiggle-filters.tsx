@@ -7,70 +7,6 @@ export function SquiggleFilters() {
       focusable="false"
     >
       <defs>
-        <filter id="squiggle-1">
-          <feTurbulence
-            type="fractalNoise"
-            baseFrequency="0.015"
-            numOctaves={1}
-            result="noise"
-            seed={1}
-          />
-          <feDisplacementMap
-            in="SourceGraphic"
-            in2="noise"
-            scale={4}
-            xChannelSelector="R"
-            yChannelSelector="G"
-          />
-        </filter>
-        <filter id="squiggle-2">
-          <feTurbulence
-            type="fractalNoise"
-            baseFrequency="0.015"
-            numOctaves={1}
-            result="noise"
-            seed={15}
-          />
-          <feDisplacementMap
-            in="SourceGraphic"
-            in2="noise"
-            scale={4}
-            xChannelSelector="R"
-            yChannelSelector="G"
-          />
-        </filter>
-        <filter id="squiggle-3">
-          <feTurbulence
-            type="fractalNoise"
-            baseFrequency="0.015"
-            numOctaves={1}
-            result="noise"
-            seed={30}
-          />
-          <feDisplacementMap
-            in="SourceGraphic"
-            in2="noise"
-            scale={4}
-            xChannelSelector="R"
-            yChannelSelector="G"
-          />
-        </filter>
-        <filter id="squiggle-4">
-          <feTurbulence
-            type="fractalNoise"
-            baseFrequency="0.015"
-            numOctaves={1}
-            result="noise"
-            seed={45}
-          />
-          <feDisplacementMap
-            in="SourceGraphic"
-            in2="noise"
-            scale={4}
-            xChannelSelector="R"
-            yChannelSelector="G"
-          />
-        </filter>
         {[0, 1, 2, 3, 4].map((seed) => (
           <filter id={`text-squiggly-${seed}`} key={`text-squiggly-${seed}`}>
             <feTurbulence
@@ -87,21 +23,6 @@ export function SquiggleFilters() {
             />
           </filter>
         ))}
-        <filter id="wrinkle-effect" x="-10%" y="-10%" width="120%" height="120%">
-          <feTurbulence
-            type="fractalNoise"
-            baseFrequency="0.03"
-            numOctaves={3}
-            result="wrinkle-noise"
-          />
-          <feDisplacementMap
-            in="SourceGraphic"
-            in2="wrinkle-noise"
-            scale={9}
-            xChannelSelector="R"
-            yChannelSelector="G"
-          />
-        </filter>
       </defs>
     </svg>
   );
