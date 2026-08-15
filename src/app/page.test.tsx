@@ -29,4 +29,19 @@ describe("Home", () => {
       "#create",
     );
   });
+
+  it("keeps editorial decoration out of the accessibility tree", () => {
+    const { container } = render(<Home />);
+
+    for (const selector of [
+      ".hero__cutout",
+      ".hero__issue-note",
+      ".create-section__tape",
+    ]) {
+      expect(container.querySelector(selector)).toHaveAttribute(
+        "aria-hidden",
+        "true",
+      );
+    }
+  });
 });

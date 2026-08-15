@@ -74,6 +74,24 @@ describe("production source safety", () => {
     );
   });
 
+  it("defines role-based editorial tokens and explicit responsive contracts", () => {
+    const globalStyles = readFileSync(path.join(sourceRoot, "app/globals.css"), "utf8");
+
+    for (const token of [
+      "--paper-cream:",
+      "--accent-hot-pink:",
+      "--ink-border:",
+      "--shadow-offset:",
+      "--content-wide:",
+    ]) {
+      expect(globalStyles).toContain(token);
+    }
+
+    expect(globalStyles).toContain("@media (max-width: 23rem)");
+    expect(globalStyles).toContain("@media (min-width: 64rem)");
+    expect(globalStyles).toContain("@media (forced-colors: active)");
+  });
+
   it("keeps semantic selected-edge colors visible against cream", () => {
     const globalStyles = readFileSync(path.join(sourceRoot, "app/globals.css"), "utf8");
     const cream = colorToken(globalStyles, "--cream");

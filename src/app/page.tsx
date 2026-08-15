@@ -17,6 +17,7 @@ export default function Home() {
           <span className="hero__dots" />
           <span className="hero__stripe" />
         </div>
+        <span className="hero__cutout" aria-hidden="true">MOFU / 01</span>
         <p className="hero__eyebrow">性格タイプ × 動物キャラクター</p>
         <h1 aria-label="わたしたち、こんな感じ。">
           わたしたち、<span>こんな感じ。</span>
@@ -25,6 +26,9 @@ export default function Home() {
           <span>#MBTI</span>
           <span>#動物うらない</span>
         </div>
+        <span className="hero__issue-note" aria-hidden="true">
+          FRIENDS FILE<br />ISSUE 01
+        </span>
         <p className="hero__copy">
           誕生日と性格タイプで、友だちとの空気感を一枚の関係マップに。
         </p>
@@ -42,6 +46,7 @@ export default function Home() {
 
       <section className="create-section" id="create" aria-labelledby="create-title">
         <div className="create-section__intro">
+          <span className="create-section__tape" aria-hidden="true" />
           <p className="hero__eyebrow">はじめる</p>
           <h2 id="create-title">グループを作る</h2>
           <p>あなたのプロフィールを入力して、みんなを招待するグループを作りましょう。</p>
