@@ -27,8 +27,9 @@ create table public.group_members (
     'ISTJ', 'ISFJ', 'INFJ', 'INTJ', 'ISTP', 'ISFP', 'INFP', 'INTP',
     'ESTP', 'ESFP', 'ENFP', 'ENTP', 'ESTJ', 'ESFJ', 'ENFJ', 'ENTJ'
   )),
-  profile_payload jsonb not null constraint group_members_profile_payload_check check (
+  profile_payload jsonb not null constraint group_members_profile_payload_check check (coalesce(
     jsonb_typeof(profile_payload) = 'object'
+    and profile_payload ->> 'calculationMode' is not null
     and profile_payload = jsonb_build_object(
       'version', 1,
       'animalId', animal_id,
@@ -36,8 +37,9 @@ create table public.group_members (
       'mbti', mbti,
       'calculationMode', profile_payload ->> 'calculationMode'
     )
-    and profile_payload ->> 'calculationMode' in ('date-time', 'date-only')
-  ),
+    and profile_payload ->> 'calculationMode' in ('date-time', 'date-only'),
+    false
+  )),
   joined_at timestamptz not null default now(),
   constraint group_members_group_user_key unique (group_id, user_id),
   constraint group_members_group_id_id_key unique (group_id, id)

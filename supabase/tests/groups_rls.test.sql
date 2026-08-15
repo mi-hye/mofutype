@@ -158,6 +158,30 @@ select throws_ok(
   format($sql$insert into public.group_members(group_id,user_id,nickname,animal_id,animal_group,mbti,profile_payload) values (%L,'00000000-0000-0000-0000-000000000003','Extra payload','fawn','MOON',null,'{"version":1,"animalId":"fawn","animalGroup":"MOON","mbti":null,"calculationMode":"date-only","secret":"x"}')$sql$, (select group_id from created_group)),
   '23514', 'new row for relation "group_members" violates check constraint "group_members_profile_payload_check"', 'table enforces exact derived-only profile JSON'
 );
+select throws_ok(
+  format($sql$insert into public.group_members(group_id,user_id,nickname,animal_id,animal_group,mbti,profile_payload) values (%L,'00000000-0000-0000-0000-000000000003','Null mode','fawn','MOON',null,'{"version":1,"animalId":"fawn","animalGroup":"MOON","mbti":null,"calculationMode":null}')$sql$, (select group_id from created_group)),
+  '23514', 'new row for relation "group_members" violates check constraint "group_members_profile_payload_check"', 'table rejects an explicit null calculation mode'
+);
+select throws_ok(
+  format($sql$insert into public.group_members(group_id,user_id,nickname,animal_id,animal_group,mbti,profile_payload) values (%L,'00000000-0000-0000-0000-000000000003','Missing mode','fawn','MOON',null,'{"version":1,"animalId":"fawn","animalGroup":"MOON","mbti":null}')$sql$, (select group_id from created_group)),
+  '23514', 'new row for relation "group_members" violates check constraint "group_members_profile_payload_check"', 'table rejects a missing calculation mode'
+);
+select throws_ok(
+  format($sql$insert into public.group_members(group_id,user_id,nickname,animal_id,animal_group,mbti,profile_payload) values (%L,'00000000-0000-0000-0000-000000000003','Null version','fawn','MOON',null,'{"version":null,"animalId":"fawn","animalGroup":"MOON","mbti":null,"calculationMode":"date-only"}')$sql$, (select group_id from created_group)),
+  '23514', 'new row for relation "group_members" violates check constraint "group_members_profile_payload_check"', 'table rejects a null profile version'
+);
+select throws_ok(
+  format($sql$insert into public.group_members(group_id,user_id,nickname,animal_id,animal_group,mbti,profile_payload) values (%L,'00000000-0000-0000-0000-000000000003','Null animal','fawn','MOON',null,'{"version":1,"animalId":null,"animalGroup":"MOON","mbti":null,"calculationMode":"date-only"}')$sql$, (select group_id from created_group)),
+  '23514', 'new row for relation "group_members" violates check constraint "group_members_profile_payload_check"', 'table rejects a null payload animal'
+);
+select throws_ok(
+  format($sql$insert into public.group_members(group_id,user_id,nickname,animal_id,animal_group,mbti,profile_payload) values (%L,'00000000-0000-0000-0000-000000000003','Null group','fawn','MOON',null,'{"version":1,"animalId":"fawn","animalGroup":null,"mbti":null,"calculationMode":"date-only"}')$sql$, (select group_id from created_group)),
+  '23514', 'new row for relation "group_members" violates check constraint "group_members_profile_payload_check"', 'table rejects a null payload animal group'
+);
+select throws_ok(
+  format($sql$insert into public.group_members(group_id,user_id,nickname,animal_id,animal_group,mbti,profile_payload) values (%L,'00000000-0000-0000-0000-000000000003','Null MBTI','fawn','MOON','INFP','{"version":1,"animalId":"fawn","animalGroup":"MOON","mbti":null,"calculationMode":"date-only"}')$sql$, (select group_id from created_group)),
+  '23514', 'new row for relation "group_members" violates check constraint "group_members_profile_payload_check"', 'table rejects null payload MBTI when scalar MBTI is non-null'
+);
 delete from public.group_members where user_id = '00000000-0000-0000-0000-000000000003';
 
 select is((select name from public.groups where id = (select group_id from created_group)), 'Best Friends', 'create trims group name');
