@@ -115,8 +115,12 @@ describe("production source safety", () => {
 
     expect(globalStyles).toContain(".profile-step .ui-card {");
     expect(globalStyles).toContain("max-width: 38rem;");
-    expect(globalStyles).toContain(".profile-step .unknown-toggle input {");
-    expect(globalStyles).toContain("width: 1.15rem;");
+    expect(globalStyles).toContain(
+      ".profile-step .unknown-toggle { min-height: 36px;",
+    );
+    expect(globalStyles).toContain(
+      ".profile-step .unknown-toggle input { width: 1rem; height: 1rem; }",
+    );
     expect(globalStyles).toContain(
       ".profile-step .field-error { max-width: 100%; font-size: 0.75rem;",
     );
