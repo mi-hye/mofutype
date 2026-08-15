@@ -76,6 +76,25 @@ function upsertUnlock(
   return unlocks.map((unlock, itemIndex) => itemIndex === index ? incoming : unlock);
 }
 
+function upsertMember(
+  members: readonly GroupMember[],
+  incoming: GroupMember,
+): GroupMember[] {
+  const index = members.findIndex((member) => member.id === incoming.id);
+  if (index < 0) return [...members, incoming];
+  return members.map((member, itemIndex) => itemIndex === index ? incoming : member);
+}
+
+function updatePairMember(
+  members: readonly [GroupMember, GroupMember],
+  incoming: GroupMember,
+): readonly [GroupMember, GroupMember] {
+  return [
+    members[0].id === incoming.id ? incoming : members[0],
+    members[1].id === incoming.id ? incoming : members[1],
+  ];
+}
+
 export function RelationRouteGate(props: RelationRouteGateProps) {
   return (
     <RelationRouteGateForPair
@@ -102,6 +121,7 @@ function RelationRouteGateForPair({
     if (!validInvite) return;
     let active = true;
     let cleanup: (() => Promise<void>) | undefined;
+    const realtimeMembers: GroupMember[] = [];
     const realtimeUnlocks: RelationUnlock[] = [];
 
     void (async () => {
@@ -121,6 +141,17 @@ function RelationRouteGateForPair({
         setRepository(activeRepository);
         setPair({ groupId: aggregate.group.id, members, unlocks: aggregate.unlocks });
         cleanup = activeRepository.subscribeToGroup(aggregate.group.id, {
+          onMemberChange: ({ new: member }) => {
+            if (active) {
+              const index = realtimeMembers.findIndex((item) => item.id === member.id);
+              if (index < 0) realtimeMembers.push(member);
+              else realtimeMembers[index] = member;
+              setPair((current) => current ? {
+                ...current,
+                members: updatePairMember(current.members, member),
+              } : current);
+            }
+          },
           onUnlockChange: ({ new: unlock }) => {
             if (active) {
               const index = realtimeUnlocks.findIndex((item) => item.id === unlock.id);
@@ -138,7 +169,11 @@ function RelationRouteGateForPair({
         });
         const fresh = await activeRepository.loadGroup(aggregate.group.id);
         if (!active) return;
-        const freshMembers = findPair(fresh.members, normalizedPairKey);
+        const mergedMembers = realtimeMembers.reduce<GroupMember[]>(
+          (current, member) => upsertMember(current, member),
+          [...fresh.members],
+        );
+        const freshMembers = findPair(mergedMembers, normalizedPairKey);
         if (!freshMembers) {
           setPair(null);
           setStatus("pair");

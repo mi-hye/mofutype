@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { StatusBanner, type ConnectionStatus } from "@/components/ui/status-banner";
 import { RelationSheet } from "@/features/relationship/relation-sheet";
 import { GroupShareControls } from "@/features/share/group-share-controls";
+import { createEtoRelationship } from "@/lib/eto/relationship";
 import type {
   GroupAggregate,
   GroupSubscriptionCallbacks,
@@ -294,6 +295,12 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken }: Grou
   const selectedMembers = selectedPair
     ? findSelectedMembers(aggregate.members, selectedPair.memberIds)
     : null;
+  const selectedRelationship = selectedMembers
+    ? createEtoRelationship({
+        memberA: { id: selectedMembers[0].id, profile: selectedMembers[0].profile },
+        memberB: { id: selectedMembers[1].id, profile: selectedMembers[1].profile },
+      })
+    : null;
 
   return (
     <main className="group-member-shell">
@@ -334,9 +341,9 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken }: Grou
       ) : null}
 
       <GroupGraph members={aggregate.members} unlocks={aggregate.unlocks} onPairSelect={setSelectedPair} />
-      {selectedPair && selectedMembers ? (
+      {selectedPair && selectedMembers && selectedRelationship ? (
         <RelationSheet
-          relationship={selectedPair.relationship}
+          relationship={selectedRelationship}
           memberNames={[selectedMembers[0].nickname, selectedMembers[1].nickname]}
           memberProfiles={[selectedMembers[0].profile, selectedMembers[1].profile]}
           unlocked={isPairUnlocked(aggregate.unlocks, selectedPair.memberIds)}

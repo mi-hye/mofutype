@@ -71,6 +71,23 @@ function member(id: string, nickname = id): GroupMember {
   };
 }
 
+function ambiguousMember(id: string, nickname = id): GroupMember {
+  const base = member(id, nickname);
+  return {
+    ...base,
+    zodiacId: "rooster",
+    profile: {
+      ...base.profile,
+      zodiacId: "rooster",
+      dayMaster: { element: "EARTH", polarity: "YIN" },
+      fiveElements: null,
+      yinYang: null,
+      calculationMode: "date-only",
+      boundaryState: "solar-term-ambiguous",
+    },
+  };
+}
+
 function unlock(id: string, status: RelationUnlock["status"] = "pending"): RelationUnlock {
   return {
     id, groupId: "g1", memberLowId: "a", memberHighId: "b", status,
@@ -174,7 +191,29 @@ describe("GroupScreen", () => {
     expect(sessionA.getByText("解放済み")).toBeInTheDocument();
     expect(sessionB.getByText("解放済み")).toBeInTheDocument();
     expect(sessionA.queryByRole("link", { name: "このふたりを300円で解放" })).not.toBeInTheDocument();
-    expect(sessionB.getByText("十二支の本文")).toBeInTheDocument();
+    expect(sessionB.getByText("言葉を交わしながら互いに心地よい進み方を見つけていける組み合わせです。")).toBeInTheDocument();
+  });
+
+  it("recomputes an open relationship from the latest realtime member profiles", async () => {
+    const user = userEvent.setup();
+    const initial = aggregate("g1", [member("a"), member("b")], [unlock("open", "unlocked")]);
+    const repo = repository(initial);
+    render(<GroupScreen initialAggregate={initial} repository={repo.api} inviteToken="token-a" />);
+    await waitFor(() => expect(repo.callbacks()).toBeDefined());
+    await user.click(screen.getByRole("button", { name: "aとbの関係を選択" }));
+
+    act(() => repo.callbacks()?.onMemberChange?.({
+      eventType: "UPDATE",
+      new: ambiguousMember("b", "更新もも"),
+    }));
+
+    expect(screen.getByRole("heading", {
+      name: "たつととりは、自然にかみ合う関係です",
+    })).toBeInTheDocument();
+    expect(screen.getByText("互いの持ち味が無理なくかみ合い、自然な連携を育てやすい組み合わせです。")).toBeInTheDocument();
+    expect(screen.getByText("木の視点を穏やかに伝え、相手の土の選択肢を広げましょう。")).toBeInTheDocument();
+    expect(screen.getByText("節入りの境界に近いため、五行と陰陽の分布は表示していません。")).toBeInTheDocument();
+    expect(screen.queryByText("十二支の本文")).not.toBeInTheDocument();
   });
 
   it("maps connection states to Japanese status and can retry", async () => {

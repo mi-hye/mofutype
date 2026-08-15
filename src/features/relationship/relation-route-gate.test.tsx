@@ -37,6 +37,21 @@ function member(
   };
 }
 
+function ambiguousMember(id: string, nickname: string): GroupMember {
+  const base = member(id, nickname, "rooster");
+  return {
+    ...base,
+    profile: {
+      ...base.profile,
+      dayMaster: { element: "EARTH", polarity: "YIN" },
+      fiveElements: null,
+      yinYang: null,
+      calculationMode: "date-only",
+      boundaryState: "solar-term-ambiguous",
+    },
+  };
+}
+
 function unlocked(): RelationUnlock {
   return {
     id: "unlock-1",
@@ -146,6 +161,34 @@ describe("RelationRouteGate", () => {
     expect(screen.getByRole("heading", { name: "あおさんへのヒント" })).toBeInTheDocument();
   });
 
+  it("recomputes an open shared detail when realtime updates a selected member", async () => {
+    const repo = repository(aggregate([unlocked()]));
+    render(
+      <RelationRouteGate
+        inviteToken={token}
+        pairKey="a:b"
+        mode="detail"
+        repositoryFactory={() => repo.api as never}
+      />,
+    );
+    await screen.findByText("解放済み");
+    await waitFor(() => expect(repo.callbacks()).toBeDefined());
+
+    act(() => repo.callbacks()?.onMemberChange?.({
+      eventType: "UPDATE",
+      new: ambiguousMember("b", "更新もも"),
+    }));
+
+    expect(screen.getByRole("heading", {
+      name: "たつととりは、自然にかみ合う関係です",
+    })).toBeInTheDocument();
+    expect(screen.getByText("あお × 更新もも")).toBeInTheDocument();
+    expect(screen.getByText("互いの持ち味が無理なくかみ合い、自然な連携を育てやすい組み合わせです。")).toBeInTheDocument();
+    expect(screen.getByText("木の視点を穏やかに伝え、相手の土の選択肢を広げましょう。")).toBeInTheDocument();
+    expect(screen.getByText("節入りの境界に近いため、五行と陰陽の分布は表示していません。")).toBeInTheDocument();
+    expect(screen.queryByText("言葉を交わしながら互いに心地よい進み方を見つけていける組み合わせです。")).not.toBeInTheDocument();
+  });
+
   it("does not lose an unlock received while closing the initial subscribe/load gap", async () => {
     let callbacks: GroupSubscriptionCallbacks | undefined;
     let resolveFresh!: (value: GroupAggregate) => void;
@@ -173,6 +216,44 @@ describe("RelationRouteGate", () => {
 
     expect(screen.getByText("解放済み")).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "このふたりを300円で解放" })).not.toBeInTheDocument();
+  });
+
+  it("does not let a fresh load overwrite a member update received in the subscribe/load gap", async () => {
+    let callbacks: GroupSubscriptionCallbacks | undefined;
+    let resolveFresh!: (value: GroupAggregate) => void;
+    const repositoryApi = {
+      findJoinedGroupByInviteToken: vi.fn(async () => aggregate()),
+      loadGroup: vi.fn(() => new Promise<GroupAggregate>((resolve) => { resolveFresh = resolve; })),
+      subscribeToGroup: vi.fn((_groupId: string, next: GroupSubscriptionCallbacks) => {
+        callbacks = next;
+        return vi.fn(async () => undefined);
+      }),
+      unlockPair: vi.fn(async () => unlocked()),
+    };
+    render(
+      <RelationRouteGate
+        inviteToken={token}
+        pairKey="a:b"
+        mode="detail"
+        repositoryFactory={() => repositoryApi as never}
+      />,
+    );
+    await waitFor(() => expect(callbacks).toBeDefined());
+
+    act(() => callbacks?.onMemberChange?.({
+      eventType: "UPDATE",
+      new: ambiguousMember("b", "更新もも"),
+    }));
+    await act(async () => resolveFresh({
+      ...aggregate([unlocked()]),
+      members: [...aggregate([unlocked()]).members, member("c", "無関係メンバー", "rat")],
+    }));
+
+    expect(screen.getByRole("heading", {
+      name: "たつととりは、自然にかみ合う関係です",
+    })).toBeInTheDocument();
+    expect(screen.getByText("あお × 更新もも")).toBeInTheDocument();
+    expect(screen.getByText("節入りの境界に近いため、五行と陰陽の分布は表示していません。")).toBeInTheDocument();
   });
 
   it("runs mock checkout and returns to the canonical shared detail", async () => {
