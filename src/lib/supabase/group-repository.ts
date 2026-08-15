@@ -27,7 +27,7 @@ interface RealtimeChannel {
   on(
     kind: "postgres_changes",
     options: {
-      event: "INSERT" | "UPDATE" | "DELETE";
+      event: "INSERT" | "UPDATE";
       schema: "public";
       table: "group_members" | "relation_unlocks";
       filter: string;
@@ -76,9 +76,10 @@ export interface GroupAggregate {
   unlocks: RelationUnlock[];
 }
 
-export type GroupChangeEvent<T> =
-  | { eventType: "INSERT" | "UPDATE"; new: T }
-  | { eventType: "DELETE"; id: string };
+export type GroupChangeEvent<T> = {
+  eventType: "INSERT" | "UPDATE";
+  new: T;
+};
 
 export interface GroupSubscriptionCallbacks {
   onMemberChange?(change: GroupChangeEvent<GroupMember>): void;
@@ -151,16 +152,8 @@ function mapChange<T>(
   mapper: (row: unknown) => T,
 ): GroupChangeEvent<T> {
   const eventType = payload.eventType;
-  if (eventType !== "INSERT" && eventType !== "UPDATE" && eventType !== "DELETE") {
+  if (eventType !== "INSERT" && eventType !== "UPDATE") {
     throw repositoryError("INVALID_DATA");
-  }
-  if (eventType === "DELETE") {
-    // With the default Supabase replica identity, DELETE payloads contain only
-    // the primary key in `old`; a full row cannot be safely reconstructed.
-    return {
-      eventType,
-      id: requiredString(payload.old as Record<string, unknown>, "id"),
-    };
   }
   return {
     eventType,
@@ -310,7 +303,10 @@ export function createGroupRepository(client: GroupRepositoryClient) {
         mapper: (row: unknown) => T,
         callback: ((change: GroupChangeEvent<T>) => void) | undefined,
       ) => {
-        for (const event of ["INSERT", "UPDATE", "DELETE"] as const) {
+        // PostgreSQL Changes cannot apply the group_id filter to DELETE events.
+        // A future moderation/deletion feature must use a separately authorized
+        // refetch mechanism instead of subscribing to unscoped DELETE payloads.
+        for (const event of ["INSERT", "UPDATE"] as const) {
           channel.on(
             "postgres_changes",
             { event, schema: "public", table, filter },
@@ -375,8 +371,18 @@ const MEMBER_COLUMNS =
 const UNLOCK_COLUMNS =
   "id,group_id,member_low_id,member_high_id,status,payment_provider,payment_reference,unlocked_by,unlocked_at";
 
+export type SupabaseGroupTransport = Pick<
+  SupabaseClient<AppDatabase>,
+  "rpc" | "from" | "channel" | "removeChannel"
+> & {
+  auth: Pick<
+    SupabaseClient<AppDatabase>["auth"],
+    "getSession" | "signInAnonymously"
+  >;
+};
+
 export function createSupabaseGroupRepositoryAdapter(
-  client: SupabaseClient<AppDatabase>,
+  client: SupabaseGroupTransport,
 ): GroupRepositoryClient {
   return {
     auth: {

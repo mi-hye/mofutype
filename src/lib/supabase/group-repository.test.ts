@@ -11,6 +11,7 @@ import {
 import {
   GroupRepositoryError,
   createGroupRepository,
+  createSupabaseGroupRepositoryAdapter,
   type GroupRepositoryClient,
 } from "./group-repository";
 import { mapGroupMember, mapRelationUnlock } from "./models";
@@ -138,8 +139,8 @@ class FakeChannel {
       .forEach((item) =>
         item.callback({
           eventType: event,
-          new: event === "DELETE" ? {} : row,
-          old: event === "DELETE" ? { id: row.id } : {},
+          new: row,
+          old: {},
         }),
       );
   }
@@ -636,7 +637,7 @@ describe("group repository", () => {
     ).rejects.toEqual(expectRepositoryError("INVALID_DATA"));
   });
 
-  it("subscribes once per table/event, maps events, reports status, and cleans up once", async () => {
+  it("subscribes only to group-filtered INSERT/UPDATE events and cleans up once", async () => {
     const client = new FakeSupabaseClient();
     const members = vi.fn();
     const unlocks = vi.fn();
@@ -651,17 +652,16 @@ describe("group repository", () => {
     });
     const channel = client.channels[0];
 
-    expect(channel.registrations).toHaveLength(6);
+    expect(channel.registrations).toHaveLength(4);
     expect(
       channel.registrations.map(({ table, event, filter }) => ({ table, event, filter })),
     ).toEqual([
       { table: "group_members", event: "INSERT", filter: "group_id=eq.group-1" },
       { table: "group_members", event: "UPDATE", filter: "group_id=eq.group-1" },
-      { table: "group_members", event: "DELETE", filter: "group_id=eq.group-1" },
       { table: "relation_unlocks", event: "INSERT", filter: "group_id=eq.group-1" },
       { table: "relation_unlocks", event: "UPDATE", filter: "group_id=eq.group-1" },
-      { table: "relation_unlocks", event: "DELETE", filter: "group_id=eq.group-1" },
     ]);
+    expect(channel.registrations.some(({ event }) => event === "DELETE")).toBe(false);
     channel.emit("group_members", "INSERT", memberRow);
     channel.emit("relation_unlocks", "UPDATE", unlockRow);
     expect(members).toHaveBeenCalledWith(
@@ -696,38 +696,6 @@ describe("group repository", () => {
     );
   });
 
-  it("maps production id-only DELETE payloads without trusting absent old rows", () => {
-    const client = new FakeSupabaseClient();
-    const members = vi.fn();
-    const unlocks = vi.fn();
-    const errors = vi.fn();
-    createGroupRepository(client).subscribeToGroup("group-1", {
-      onMemberChange: members,
-      onUnlockChange: unlocks,
-      onError: errors,
-    });
-    const channel = client.channels[0];
-
-    channel.emit("group_members", "DELETE", memberRow);
-    channel.emit("relation_unlocks", "DELETE", unlockRow);
-    expect(members).toHaveBeenCalledWith({ eventType: "DELETE", id: "member-1" });
-    expect(unlocks).toHaveBeenCalledWith({ eventType: "DELETE", id: "unlock-1" });
-    expect(errors).not.toHaveBeenCalled();
-
-    channel.emitRaw("group_members", "DELETE", {
-      eventType: "DELETE",
-      new: {},
-      old: {},
-    });
-    channel.emitRaw("relation_unlocks", "DELETE", {
-      eventType: "DELETE",
-      new: {},
-      old: { id: 42 },
-    });
-    expect(errors).toHaveBeenCalledTimes(2);
-    expect(errors).toHaveBeenCalledWith(expectRepositoryError("INVALID_DATA"));
-  });
-
   it("wraps synchronous registration failures", () => {
     const client = new FakeSupabaseClient();
     client.channelRegistrationError = new Error("private registration detail");
@@ -754,5 +722,174 @@ describe("group repository", () => {
     expect(errors).toHaveBeenCalledTimes(1);
     expect(errors).toHaveBeenCalledWith(expectRepositoryError("SUBSCRIPTION_FAILED"));
     expect((errors.mock.calls[0][0] as Error).message).not.toContain("private cleanup detail");
+  });
+});
+
+describe("production Supabase adapter", () => {
+  it("forwards exact typed operations, selects, realtime status, and cleanup", async () => {
+    const calls: Array<{ kind: string; value: unknown }> = [];
+    let realtimeCallback: ((payload: Record<string, unknown>) => void) | undefined;
+    let statusCallback: ((status: string, error?: unknown) => void) | undefined;
+    const nativeChannel = {
+      on(kind: string, options: unknown, callback: (payload: Record<string, unknown>) => void) {
+        calls.push({ kind: "channel.on", value: { kind, options } });
+        realtimeCallback = callback;
+        return this;
+      },
+      subscribe(callback: (status: string, error?: unknown) => void) {
+        statusCallback = callback;
+        return this;
+      },
+    };
+    class AdapterQuery {
+      private columns = "";
+      private filter: [string, unknown] | undefined;
+
+      constructor(private readonly table: string) {}
+
+      select(columns: string) {
+        this.columns = columns;
+        return this;
+      }
+
+      eq(column: string, value: unknown) {
+        this.filter = [column, value];
+        return this;
+      }
+
+      maybeSingle() {
+        calls.push({
+          kind: "query",
+          value: { table: this.table, columns: this.columns, filter: this.filter, single: true },
+        });
+        return Promise.resolve({ data: groupRow, error: null });
+      }
+
+      then<TResult1 = Result, TResult2 = never>(
+        onfulfilled?: ((value: Result) => TResult1 | PromiseLike<TResult1>) | null,
+        onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
+      ) {
+        calls.push({
+          kind: "query",
+          value: { table: this.table, columns: this.columns, filter: this.filter, single: false },
+        });
+        return Promise.resolve({ data: [], error: null }).then(onfulfilled, onrejected);
+      }
+    }
+    const transport = {
+      auth: {
+        getSession: async () => ({ data: { session: null }, error: null }),
+        signInAnonymously: async () => ({ data: { user: null }, error: null }),
+      },
+      rpc: async (name: string, args: Record<string, unknown>) => {
+        calls.push({ kind: "rpc", value: { name, args } });
+        return { data: [], error: null };
+      },
+      from: (table: string) => new AdapterQuery(table),
+      channel: (name: string) => {
+        calls.push({ kind: "channel", value: name });
+        return nativeChannel;
+      },
+      removeChannel: async (channel: unknown) => {
+        calls.push({ kind: "removeChannel", value: channel });
+      },
+    };
+    const adapter = createSupabaseGroupRepositoryAdapter(
+      transport as unknown as Parameters<
+        typeof createSupabaseGroupRepositoryAdapter
+      >[0],
+    );
+    const createArgs = {
+      p_name: "Friends",
+      p_nickname: "Mofu",
+      p_animal_id: "fawn",
+      p_animal_group: "MOON",
+      p_mbti: null,
+      p_profile_payload: { ...profile },
+    };
+    const joinArgs = {
+      p_invite_token: "token",
+      p_nickname: "Mofu",
+      p_animal_id: "fawn",
+      p_animal_group: "MOON",
+      p_mbti: null,
+      p_profile_payload: { ...profile },
+    };
+
+    await adapter.createGroupAndJoin(createArgs);
+    await adapter.joinGroup(joinArgs);
+    await adapter.unlockRelation({
+      p_group_id: "group-1",
+      p_member_a: "member-1",
+      p_member_b: "member-2",
+    });
+    await adapter.loadGroup("group-1");
+    await adapter.loadGroupMembers("group-1");
+    await adapter.loadRelationUnlocks("group-1");
+
+    expect(calls.filter(({ kind }) => kind === "rpc").map(({ value }) => value)).toEqual([
+      { name: "create_group_and_join", args: createArgs },
+      { name: "join_group", args: joinArgs },
+      {
+        name: "unlock_relation_mock",
+        args: { p_group_id: "group-1", p_member_a: "member-1", p_member_b: "member-2" },
+      },
+    ]);
+    expect(calls.filter(({ kind }) => kind === "query").map(({ value }) => value)).toEqual([
+      {
+        table: "groups",
+        columns: "id,name,max_members,created_at",
+        filter: ["id", "group-1"],
+        single: true,
+      },
+      {
+        table: "group_members",
+        columns:
+          "id,group_id,user_id,nickname,animal_id,animal_group,mbti,profile_payload,joined_at",
+        filter: ["group_id", "group-1"],
+        single: false,
+      },
+      {
+        table: "relation_unlocks",
+        columns:
+          "id,group_id,member_low_id,member_high_id,status,payment_provider,payment_reference,unlocked_by,unlocked_at",
+        filter: ["group_id", "group-1"],
+        single: false,
+      },
+    ]);
+
+    const channel = adapter.channel("group:group-1");
+    const changes = vi.fn();
+    const statuses = vi.fn();
+    channel.on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "group_members",
+        filter: "group_id=eq.group-1",
+      },
+      changes,
+    );
+    channel.subscribe(statuses);
+    realtimeCallback?.({ eventType: "INSERT", new: memberRow, old: {} });
+    statusCallback?.("SUBSCRIBED");
+    expect(calls).toContainEqual({ kind: "channel", value: "group:group-1" });
+    expect(calls).toContainEqual({
+      kind: "channel.on",
+      value: {
+        kind: "postgres_changes",
+        options: {
+          event: "INSERT",
+          schema: "public",
+          table: "group_members",
+          filter: "group_id=eq.group-1",
+        },
+      },
+    });
+    expect(changes).toHaveBeenCalledWith({ eventType: "INSERT", new: memberRow, old: {} });
+    expect(statuses).toHaveBeenCalledWith("SUBSCRIBED", undefined);
+    await channel.remove();
+    expect(calls).toContainEqual({ kind: "removeChannel", value: nativeChannel });
   });
 });
