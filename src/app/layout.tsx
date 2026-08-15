@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import "@xyflow/react/dist/style.css";
 
+import { DevLocaleToggle } from "@/components/dev-locale-toggle";
+
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -20,7 +22,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="ja">
-      <body>{children}</body>
+      <body>
+        {children}
+        <DevLocaleToggle />
+      </body>
     </html>
   );
 }

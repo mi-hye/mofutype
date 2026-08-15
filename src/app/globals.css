@@ -201,6 +201,40 @@ button, input, textarea, select { font: inherit; }
 .profile-step-missing a { text-decoration: none; }
 .profile-step-loading { margin: 0; border-left: 3px solid #6e9486; padding: 0.55rem 0.75rem; background: var(--surface-mint); font-weight: 650; }
 
+.dev-locale-toggle {
+  position: fixed;
+  right: max(0.75rem, env(safe-area-inset-right));
+  bottom: max(0.75rem, env(safe-area-inset-bottom));
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid rgb(18 38 52 / 24%);
+  border-radius: 999px;
+  padding: 0.25rem 0.3rem 0.25rem 0.55rem;
+  background: rgb(255 255 255 / 88%);
+  box-shadow: 0 8px 24px rgb(18 38 52 / 16%);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  backdrop-filter: blur(12px);
+}
+.dev-locale-toggle > span { color: var(--text-muted); font-size: 0.58rem; font-weight: 800; letter-spacing: 0.1em; }
+.dev-locale-toggle > div { display: flex; gap: 0.15rem; }
+.dev-locale-toggle button {
+  min-width: 2.25rem;
+  min-height: 2.25rem;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.35rem;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+.dev-locale-toggle button[aria-pressed="true"] { background: var(--accent-navy); color: #fff; }
+.dev-locale-toggle button:focus-visible { outline: 3px solid rgb(184 68 56 / 28%); outline-offset: 2px; }
+
 .join-panel { width: min(100%, 40rem); border: var(--border-subtle); border-radius: var(--radius-18); padding: clamp(1.1rem, 5vw, 2.25rem); background: var(--surface-raised); box-shadow: var(--shadow-soft); }
 .join-panel > h1 { margin: 0; font-size: clamp(2rem, 7vw, 3.2rem); font-weight: 740; letter-spacing: -0.05em; line-height: 1.1; }
 .join-panel > p { color: var(--text-muted); }
