@@ -32,7 +32,7 @@ describe("GroupShareControls", () => {
     expect(screen.getByRole("status")).toHaveTextContent("共有しました");
   });
 
-  it("falls back to clipboard and exposes a safely encoded X intent", async () => {
+  it("falls back to clipboard and renders only one share action", async () => {
     const user = userEvent.setup();
     const writeClipboard = vi.fn(async () => undefined);
     render(
@@ -51,14 +51,9 @@ describe("GroupShareControls", () => {
       `https://mofu.example/g/${token}?name=${encodeURIComponent("なかよし")}&count=3`,
     );
     expect(screen.getByRole("status")).toHaveTextContent("招待リンクをコピーしました");
-
-    const xLink = screen.getByRole("link", { name: "Xで共有" });
-    const xUrl = new URL(xLink.getAttribute("href")!);
-    expect(xUrl.searchParams.get("text")).toBe("なかよしの関係マップに参加しよう。");
-    expect(xUrl.searchParams.get("url")).toBe(
-      `https://mofu.example/g/${token}?name=${encodeURIComponent("なかよし")}&count=3`,
-    );
-    expect(xLink).toHaveAttribute("rel", "noopener noreferrer");
+    expect(screen.getAllByRole("button", { name: "招待リンクを共有" })).toHaveLength(1);
+    expect(screen.queryByRole("link", { name: "Xで共有" })).not.toBeInTheDocument();
+    expect(screen.getByTestId("share-icon")).toHaveAttribute("aria-hidden", "true");
   });
 
   it("shows only a public failure and can retry after a rejected share", async () => {

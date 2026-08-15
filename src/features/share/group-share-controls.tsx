@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import {
   createGroupSharePayload,
   createInviteUrl,
-  createXIntent,
   type GroupSharePayload,
 } from "@/lib/share/x-intent";
 
@@ -100,19 +99,23 @@ export function GroupShareControls({
 
   return (
     <div className="group-share-controls">
-      <Button type="button" variant="secondary" loading={loading} onClick={() => void share()}>
-        招待リンクを共有
-      </Button>
-      <a
-        className="ui-button"
-        data-size="sm"
-        data-variant="ghost"
-        href={createXIntent(payload.text, payload.url)}
-        rel="noopener noreferrer"
-        target="_blank"
+      <Button
+        type="button"
+        className="group-share-button"
+        variant="secondary"
+        size="sm"
+        loading={loading}
+        aria-label="招待リンクを共有"
+        title="招待リンクを共有"
+        onClick={() => void share()}
       >
-        Xで共有
-      </a>
+        <svg data-testid="share-icon" aria-hidden="true" viewBox="0 0 24 24" focusable="false">
+          <circle cx="18" cy="5" r="2.5" />
+          <circle cx="6" cy="12" r="2.5" />
+          <circle cx="18" cy="19" r="2.5" />
+          <path d="m8.25 10.9 7.5-4.5M8.25 13.1l7.5 4.5" />
+        </svg>
+      </Button>
       {message === "shared" ? <p role="status">共有しました</p> : null}
       {message === "copied" ? <p role="status">招待リンクをコピーしました</p> : null}
       {message === "error" ? (
