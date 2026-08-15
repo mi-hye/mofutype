@@ -57,6 +57,7 @@ export interface GroupRepositoryClient {
   joinGroup(args: JoinGroupArgs): Promise<ClientResult>;
   unlockRelation(args: UnlockRelationArgs): Promise<ClientResult>;
   loadGroup(groupId: string): Promise<ClientResult>;
+  findJoinedGroupId(inviteTokenHash: string): Promise<ClientResult>;
   loadGroupMembers(groupId: string): Promise<ClientResult>;
   loadRelationUnlocks(groupId: string): Promise<ClientResult>;
   channel(name: string): RealtimeChannel;
@@ -304,6 +305,34 @@ export function createGroupRepository(client: GroupRepositoryClient) {
     };
   }
 
+  async function findJoinedGroupByInviteToken(
+    inviteToken: string,
+  ): Promise<GroupAggregate | null> {
+    await ensureAnonymousSession();
+    let lookupResult: ClientResult;
+    try {
+      const bytes = new TextEncoder().encode(inviteToken);
+      const digest = await globalThis.crypto.subtle.digest("SHA-256", bytes);
+      const inviteTokenHash = Array.from(new Uint8Array(digest), (byte) =>
+        byte.toString(16).padStart(2, "0"),
+      ).join("");
+      lookupResult = await client.findJoinedGroupId(inviteTokenHash);
+    } catch (cause) {
+      throw repositoryError("LOAD_FAILED", cause);
+    }
+    if (lookupResult.error) throw repositoryError("LOAD_FAILED", lookupResult.error);
+    if (lookupResult.data === null) return null;
+    if (
+      typeof lookupResult.data !== "object" ||
+      Array.isArray(lookupResult.data)
+    ) throw repositoryError("INVALID_DATA");
+    const groupId = requiredString(
+      lookupResult.data as Record<string, unknown>,
+      "id",
+    );
+    return await loadGroup(groupId);
+  }
+
   async function unlockPair(
     groupId: string,
     memberA: string,
@@ -398,6 +427,7 @@ export function createGroupRepository(client: GroupRepositoryClient) {
     ensureAnonymousSession,
     createGroup,
     joinGroup,
+    findJoinedGroupByInviteToken,
     loadGroup,
     unlockPair,
     subscribeToGroup,
@@ -460,6 +490,12 @@ export function createSupabaseGroupRepositoryAdapter(
         .from("groups")
         .select(GROUP_COLUMNS)
         .eq("id", groupId)
+        .maybeSingle(),
+    findJoinedGroupId: async (inviteTokenHash) =>
+      await client
+        .from("groups")
+        .select("id")
+        .eq("invite_token_hash", inviteTokenHash)
         .maybeSingle(),
     loadGroupMembers: async (groupId) =>
       await client

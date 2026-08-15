@@ -190,6 +190,35 @@ select {
 .feature-card__number { display: block; margin-bottom: 2rem; font-size: 0.75rem; font-weight: 900; letter-spacing: 0.1em; }
 .feature-grid h2 { margin: 0 0 0.5rem; font-size: 1.35rem; line-height: 1.25; }
 .feature-grid p { margin: 0; color: var(--text-muted); }
+.create-section { display: grid; gap: var(--space-26); margin: 0 0 4rem; scroll-margin-top: 1.5rem; }
+.create-section__intro { max-width: 35rem; }
+.create-section__intro h2 { margin: 0; font-size: clamp(2rem, 7vw, 3.5rem); line-height: 1.1; }
+.create-section__intro p:last-child { color: var(--text-muted); }
+.onboarding-form, .profile-fields { display: grid; gap: var(--space-18); }
+.form-field { display: grid; gap: 0.4rem; }
+.form-field > label { font-weight: 850; }
+.form-field input, .form-field select {
+  width: 100%;
+  min-height: 48px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-12);
+  padding: 0.65rem 0.8rem;
+  background: var(--surface-raised);
+  color: var(--ink);
+}
+.form-field input:disabled, .form-field select:disabled { background: #eeeae0; color: var(--text-muted); }
+.unknown-toggle { display: flex; min-height: 44px; align-items: center; gap: 0.7rem; font-weight: 700; cursor: pointer; }
+.unknown-toggle input { width: 1.35rem; height: 1.35rem; accent-color: var(--coral-deep); }
+.field-error, .form-error { margin: 0; color: var(--coral-deep); font-weight: 750; }
+.join-panel { width: min(100%, 38rem); }
+.join-panel > h1 { margin: 0; font-size: clamp(2rem, 8vw, 3.5rem); line-height: 1.1; }
+.join-panel > p { color: var(--text-muted); }
+.group-gate-shell, .group-gate-message, .group-member-shell { width: min(100% - 2rem, 72rem); margin-inline: auto; padding: 3rem 0; }
+.group-gate-message { min-height: 70vh; display: grid; place-content: center; justify-items: start; gap: 1rem; }
+.group-gate-message h1, .group-gate-message p { margin: 0; }
+.group-member-shell h1 { margin: 0; font-size: clamp(2.4rem, 10vw, 5rem); line-height: 1; }
+.graph-placeholder { min-height: 20rem; margin-top: 2rem; border: 2px dashed var(--border); border-radius: var(--radius-18); padding: var(--space-26); background: var(--surface-mint); }
+.graph-placeholder h2 { margin-top: 0; }
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -197,6 +226,7 @@ select {
   .landing-shell { padding-top: 2rem; }
   .hero__actions { flex-direction: row; }
   .feature-grid { grid-template-columns: repeat(3, 1fr); }
+  .create-section { grid-template-columns: minmax(0, 0.85fr) minmax(20rem, 1.15fr); align-items: start; }
 }
 
 @media (prefers-reduced-motion: reduce) {

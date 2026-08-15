@@ -1,4 +1,5 @@
 import { Card } from "@/components/ui/card";
+import { CreateGroupForm } from "@/features/onboarding/create-group-form";
 
 export default function Home() {
   return (
@@ -29,6 +30,17 @@ export default function Home() {
             できることを見る
           </a>
         </div>
+      </section>
+
+      <section className="create-section" id="create" aria-labelledby="create-title">
+        <div className="create-section__intro">
+          <p className="hero__eyebrow">はじめる</p>
+          <h2 id="create-title">グループを作る</h2>
+          <p>あなたのプロフィールを入力して、みんなを招待するグループを作りましょう。</p>
+        </div>
+        <Card variant="accent">
+          <CreateGroupForm />
+        </Card>
       </section>
 
       <section

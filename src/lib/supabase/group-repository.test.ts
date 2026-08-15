@@ -238,6 +238,13 @@ class FakeSupabaseClient implements GroupRepositoryClient {
       .maybeSingle();
   }
 
+  findJoinedGroupId(inviteTokenHash: string): Promise<Result> {
+    return this.from("groups")
+      .select("id")
+      .eq("invite_token_hash", inviteTokenHash)
+      .maybeSingle();
+  }
+
   async loadGroupMembers(groupId: string): Promise<Result> {
     return await this.from("group_members")
       .select(
