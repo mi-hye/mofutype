@@ -16,14 +16,15 @@ describe("Home", () => {
     expect(screen.getByRole("button", { name: "グループを作成" })).toBeInTheDocument();
   });
 
-  it("uses the approved Kawaii Zine headline and sticker copy", () => {
+  it("uses the approved Kawaii Zine headline and zodiac sticker copy", () => {
     render(<Home />);
 
     expect(
       screen.getByRole("heading", { name: "わたしたち、こんな感じ。" }),
     ).toBeInTheDocument();
     expect(screen.getByText("#MBTI")).toBeInTheDocument();
-    expect(screen.getByText("#動物うらない")).toBeInTheDocument();
+    expect(screen.getByText("性格タイプ × 十二支キャラクター")).toBeInTheDocument();
+    expect(screen.getByText("#十二支")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "グループを作る" })).toHaveAttribute(
       "href",
       "#create",

@@ -17,13 +17,13 @@ export default function Home() {
           <span className="hero__dots" />
           <span className="hero__stripe" />
         </div>
-        <p className="hero__eyebrow">性格タイプ × 動物キャラクター</p>
+        <p className="hero__eyebrow">性格タイプ × 十二支キャラクター</p>
         <h1 aria-label="わたしたち、こんな感じ。">
           わたしたち、<span>こんな感じ。</span>
         </h1>
         <div className="hero__stickers" aria-label="ムード">
           <span>#MBTI</span>
-          <span>#動物うらない</span>
+          <span>#十二支</span>
         </div>
         <p className="hero__copy">
           誕生日と性格タイプで、友だちとの空気感を一枚の関係マップに。

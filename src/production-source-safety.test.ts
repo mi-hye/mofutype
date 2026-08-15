@@ -152,6 +152,25 @@ describe("production source safety", () => {
     ]);
   });
 
+  it("detects legacy animal CSS hooks", () => {
+    expect(findLegacyProductionSource(
+      ".animal-graph-node__nickname .animal-avatar",
+    )).toEqual([
+      "legacy CSS hook animal-graph-node",
+      "legacy CSS hook animal-avatar",
+    ]);
+  });
+
+  it("detects legacy Japanese animal presentation copy", () => {
+    expect(findLegacyProductionSource(
+      "動物占い 動物うらない 動物キャラクター",
+    )).toEqual([
+      "legacy copy 動物占い",
+      "legacy copy 動物うらない",
+      "legacy copy 動物キャラクター",
+    ]);
+  });
+
   it("keeps production source free of the legacy animal relationship model", () => {
     const violations = productionSourceFiles(sourceRoot).flatMap((filePath) => {
       const source = readFileSync(filePath, "utf8");

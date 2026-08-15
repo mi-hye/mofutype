@@ -282,12 +282,12 @@ select {
 .relationship-edge--unlocked .react-flow__edge-path { stroke: var(--edge-unlocked); stroke-dasharray: 12 5; }
 .relationship-edge--incident.relationship-edge--locked .react-flow__edge-path { stroke: var(--edge-hot-pink); }
 .relationship-edge--incident.relationship-edge--unlocked .react-flow__edge-path { stroke: var(--edge-mint); }
-.animal-graph-node { position: relative; display: grid; min-width: 7rem; justify-items: center; gap: 0.22rem; text-align: center; transition: transform 150ms ease; }
-.animal-graph-node[data-selected="true"] { z-index: 2; transform: scale(1.06) rotate(-1deg); }
-.animal-graph-node__handle { width: 1px !important; height: 1px !important; border: 0 !important; opacity: 0; pointer-events: none; }
-.animal-graph-node__selected-sticker { position: absolute; top: -0.55rem; right: 0.1rem; z-index: 2; border: 2px solid var(--ink); padding: 0.05rem 0.32rem; background: var(--hot-pink); box-shadow: 2px 2px 0 var(--ink); color: var(--ink); font-size: 0.52rem; font-weight: 1000; letter-spacing: 0.06em; transform: rotate(7deg); }
-.animal-graph-node__nickname { max-width: 9rem; overflow: hidden; border: 2px solid var(--border); border-radius: 0.4rem 0.7rem 0.45rem 0.65rem; padding: 0.12rem 0.55rem; background: var(--surface-raised); box-shadow: 2px 2px 0 var(--ink); font-size: 0.8rem; font-weight: 950; text-overflow: ellipsis; white-space: nowrap; transform: rotate(-0.5deg); }
-.animal-graph-node__discriminator { color: var(--text-muted); font-size: 0.65rem; font-weight: 800; }
+.zodiac-graph-node { position: relative; display: grid; min-width: 7rem; justify-items: center; gap: 0.22rem; text-align: center; transition: transform 150ms ease; }
+.zodiac-graph-node[data-selected="true"] { z-index: 2; transform: scale(1.06) rotate(-1deg); }
+.zodiac-graph-node__handle { width: 1px !important; height: 1px !important; border: 0 !important; opacity: 0; pointer-events: none; }
+.zodiac-graph-node__selected-sticker { position: absolute; top: -0.55rem; right: 0.1rem; z-index: 2; border: 2px solid var(--ink); padding: 0.05rem 0.32rem; background: var(--hot-pink); box-shadow: 2px 2px 0 var(--ink); color: var(--ink); font-size: 0.52rem; font-weight: 1000; letter-spacing: 0.06em; transform: rotate(7deg); }
+.zodiac-graph-node__nickname { max-width: 9rem; overflow: hidden; border: 2px solid var(--border); border-radius: 0.4rem 0.7rem 0.45rem 0.65rem; padding: 0.12rem 0.55rem; background: var(--surface-raised); box-shadow: 2px 2px 0 var(--ink); font-size: 0.8rem; font-weight: 950; text-overflow: ellipsis; white-space: nowrap; transform: rotate(-0.5deg); }
+.zodiac-graph-node__discriminator { color: var(--text-muted); font-size: 0.65rem; font-weight: 800; }
 .group-graph__selection, .group-pair-selection { width: fit-content; margin: 0; border: 3px solid var(--ink); padding: 0.45rem 0.8rem; background: var(--hot-pink); box-shadow: 3px 3px 0 var(--ink); font-weight: 950; transform: rotate(-0.45deg); }
 .group-pair-selection { background: var(--butter); }
 .group-graph__accessible { border: 3px solid var(--border); border-radius: 1rem 1.6rem 1rem 1.35rem; padding: var(--space-18); background: var(--surface-raised); box-shadow: 5px 5px 0 var(--mint-pop); }

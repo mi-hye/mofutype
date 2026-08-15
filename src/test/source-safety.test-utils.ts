@@ -41,7 +41,11 @@ const LEGACY_PRODUCTION_PATTERNS = [
   ["legacy animal lion", /\blion\b/],
   ["legacy animal elephant", /\belephant\b/],
   ["legacy asset directory /animals/", /\/animals\//],
+  ["legacy CSS hook animal-graph-node", /\banimal-graph-node(?:__[-a-z]+)?\b/],
+  ["legacy CSS hook animal-avatar", /\banimal-avatar(?:__[-a-z]+)?\b/],
   ["legacy copy 動物占い", /動物占い/],
+  ["legacy copy 動物うらない", /動物うらない/],
+  ["legacy copy 動物キャラクター", /動物キャラクター/],
   ["legacy copy 動物タイプ", /動物タイプ/],
 ] as const satisfies readonly (readonly [string, RegExp])[];
 
