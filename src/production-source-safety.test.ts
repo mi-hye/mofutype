@@ -77,10 +77,11 @@ describe("production source safety", () => {
       "--button-background: radial-gradient(circle, #fff5f2 0%, #f7ede2 100%)",
     );
     expect(globalStyles).toContain(
-      "--button-background-hover: radial-gradient(circle, #ffeded 0%, #f5cac3 100%)",
+      "--button-background-hover: var(--button-background)",
     );
-    expect(globalStyles).toContain("animation: squigglevision 0.32s infinite steps(1)");
-    expect(globalStyles).toContain("@keyframes squigglevision");
+    expect(globalStyles).not.toContain("animation: squigglevision");
+    expect(globalStyles).not.toContain("@keyframes squigglevision");
+    expect(globalStyles).toMatch(/\.ui-button::before[^}]*animation:\s*none[^}]*filter:\s*url\(#squiggle-1\)/);
     for (const filterId of ["squiggle-1", "squiggle-2", "squiggle-3", "squiggle-4"]) {
       expect(squiggleFilters).toContain(`id="${filterId}"`);
     }
@@ -235,7 +236,7 @@ describe("production source safety", () => {
     expect(globalStyles).toMatch(/\.hero__node\[aria-pressed="true"\] \.hero__node-frame::before[^}]*box-shadow:\s*0 12px 24px/);
     expect(globalStyles).not.toMatch(/\.hero__node\[aria-pressed="true"\] \.hero__node-frame::before[^}]*0 0 0 4px/);
     expect(globalStyles).toMatch(/\.hero__connectors line[^}]*stroke-width:\s*1\.25[^}]*stroke-opacity:\s*0\.72/);
-    expect(globalStyles).toMatch(/\.ui-button::before[^}]*animation:\s*squigglevision/);
+    expect(globalStyles).toMatch(/\.ui-button::before[^}]*animation:\s*none/);
     expect(globalStyles).toContain(".ui-button > span { position: relative; z-index: 1; }");
     expect(globalStyles).toContain("@keyframes float-orbit");
     expect(globalStyles).toContain("@keyframes rise-in");
