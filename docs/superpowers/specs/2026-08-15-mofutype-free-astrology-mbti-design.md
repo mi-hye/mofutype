@@ -1,4 +1,10 @@
-# MofuType 무료 사주·동물 타입·MBTI 관계 엔진 설계
+# [폐기됨] MofuType 무료 사주·동물 타입·MBTI 관계 엔진 설계
+
+> **폐기 안내 (2026-08-15):** 이 문서의 기존 12동물, `AnimalId`,
+> `animalGroup`, MOON/EARTH/SUN 및 독자 동물 배정 공식은 더 이상 제품
+> 방향이 아니다. 새 기준은
+> `2026-08-15-mofutype-eto-five-elements-mbti-design.md`를 따른다. 이 문서는
+> 결정 이력 확인만을 위해 보존한다.
 
 작성일: 2026-08-15
 상태: 사용자 설계 승인 완료, 구현 계획 작성 전

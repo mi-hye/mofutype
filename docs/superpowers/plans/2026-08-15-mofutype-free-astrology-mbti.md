@@ -1,4 +1,9 @@
-# MofuType Free Astrology and MBTI Engine Implementation Plan
+# [폐기됨] MofuType Free Astrology and MBTI Engine Implementation Plan
+
+> **폐기 안내 (2026-08-15):** 이 계획은 기존 12동물과
+> MOON/EARTH/SUN 데이터 모델을 전제로 하므로 실행하지 않는다. 새 설계는
+> `../specs/2026-08-15-mofutype-eto-five-elements-mbti-design.md`를 따른다.
+> 새 구현 계획은 사용자의 새 설계 문서 검토가 끝난 뒤 별도로 작성한다.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
