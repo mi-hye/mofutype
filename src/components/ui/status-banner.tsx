@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, type HTMLAttributes } from "react";
+import { forwardRef, useId, type HTMLAttributes } from "react";
 
 export type ConnectionStatus =
   | "connecting"
@@ -43,31 +43,33 @@ const STATUS_CONTENT: Record<
 export interface StatusBannerProps extends HTMLAttributes<HTMLDivElement> {
   status: ConnectionStatus;
 }
-export function StatusBanner({
-  status,
-  className = "",
-  children,
-  ...props
-}: StatusBannerProps) {
-  const content = STATUS_CONTENT[status];
-  const accessibleId = useId();
-  const labelId = `${accessibleId}-label`;
-  const messageId = `${accessibleId}-message`;
+export const StatusBanner = forwardRef<HTMLDivElement, StatusBannerProps>(
+  function StatusBanner(
+    { status, className = "", children, ...props },
+    ref,
+  ) {
+    const content = STATUS_CONTENT[status];
+    const accessibleId = useId();
+    const labelId = `${accessibleId}-label`;
+    const messageId = `${accessibleId}-message`;
 
-  return (
-    <div
-      className={`status-banner ${className}`.trim()}
-      data-status={status}
-      role={content.urgent ? "alert" : "status"}
-      aria-labelledby={labelId}
-      aria-describedby={messageId}
-      {...props}
-    >
-      <span className="status-banner__mark" aria-hidden="true" />
-      <span>
-        <strong id={labelId}>{content.label}</strong>
-        <span id={messageId}>{children ?? content.message}</span>
-      </span>
-    </div>
-  );
-}
+    return (
+      <div
+        ref={ref}
+        {...props}
+        className={`status-banner ${className}`.trim()}
+        data-status={status}
+        role={content.urgent ? "alert" : "status"}
+        aria-label={undefined}
+        aria-labelledby={labelId}
+        aria-describedby={messageId}
+      >
+        <span className="status-banner__mark" aria-hidden="true" />
+        <span>
+          <strong id={labelId}>{content.label}</strong>
+          <span id={messageId}>{children ?? content.message}</span>
+        </span>
+      </div>
+    );
+  },
+);

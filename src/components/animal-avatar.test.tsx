@@ -46,8 +46,23 @@ describe("AnimalAvatar", () => {
 
     fireEvent.error(screen.getByRole("img"));
 
-    expect(screen.queryByRole("img")).not.toBeInTheDocument();
-    expect(screen.getByLabelText("はなのゾウ")).toBeInTheDocument();
+    expect(
+      screen.getByRole("img", { name: "はなのゾウ" }),
+    ).toBeInTheDocument();
     expect(screen.getAllByText("ゾウ")).toHaveLength(1);
+  });
+
+  it("tries the next catalog asset after a failed animal is replaced", () => {
+    const { rerender } = render(
+      <AnimalAvatar animalId="elephant" nickname="はな" />,
+    );
+
+    fireEvent.error(screen.getByRole("img", { name: "はなのゾウ" }));
+    rerender(<AnimalAvatar animalId="wolf" nickname="るな" />);
+
+    expect(screen.getByRole("img", { name: "るなの狼" })).toHaveAttribute(
+      "src",
+      "/animals/wolf.svg",
+    );
   });
 });

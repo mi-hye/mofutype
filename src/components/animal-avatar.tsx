@@ -22,9 +22,10 @@ export function AnimalAvatar({
   size = "md",
   selected = false,
 }: AnimalAvatarProps) {
-  const [imageFailed, setImageFailed] = useState(false);
+  const [failedAsset, setFailedAsset] = useState<string | null>(null);
   const animal = ANIMALS[animalId];
   const accessibleName = `${nickname}の${animal.nameJa}`;
+  const imageFailed = failedAsset === animal.asset;
 
   return (
     <span
@@ -34,7 +35,11 @@ export function AnimalAvatar({
       data-testid="animal-avatar"
     >
       {imageFailed ? (
-        <span className="animal-avatar__fallback" aria-label={accessibleName}>
+        <span
+          className="animal-avatar__fallback"
+          role="img"
+          aria-label={accessibleName}
+        >
           <span aria-hidden="true">{animal.nameJa}</span>
         </span>
       ) : (
@@ -44,9 +49,12 @@ export function AnimalAvatar({
           className="animal-avatar__image"
           src={animal.asset}
           alt={accessibleName}
-          onError={() => setImageFailed(true)}
+          onError={() => setFailedAsset(animal.asset)}
         />
       )}
+      {selected ? (
+        <span className="animal-avatar__selected-mark" aria-hidden="true" />
+      ) : null}
     </span>
   );
 }

@@ -10,6 +10,10 @@
   --ink: #25231f;
   --surface: #fffdf7;
   --surface-raised: #ffffff;
+  --surface-coral: #fff1ed;
+  --surface-mint: #edf9f3;
+  --surface-lilac: #f3ecff;
+  --glow-butter: rgb(248 216 103 / 45%);
   --text: var(--ink);
   --text-muted: #625e55;
   --border: #3d3932;
@@ -38,8 +42,8 @@ body {
   min-height: 100vh;
   margin: 0;
   background:
-    radial-gradient(circle at 8% 8%, rgb(248 216 103 / 45%) 0 5rem, transparent 5.1rem),
-    linear-gradient(165deg, var(--cream), #fffdf8 58%, #f3ecff);
+    radial-gradient(circle at 8% 8%, var(--glow-butter) 0 5rem, transparent 5.1rem),
+    linear-gradient(165deg, var(--cream), var(--surface) 58%, var(--surface-lilac));
   color: var(--text);
   font-family: ui-rounded, "Hiragino Maru Gothic ProN", "Hiragino Kaku Gothic ProN",
     "Yu Gothic", Meiryo, system-ui, sans-serif;
@@ -135,8 +139,8 @@ select {
   box-shadow: var(--shadow-sm);
 }
 
-.ui-card[data-variant="accent"] { background: #fff1ed; }
-.ui-card[data-variant="subtle"] { background: #edf9f3; }
+.ui-card[data-variant="accent"] { background: var(--surface-coral); }
+.ui-card[data-variant="subtle"] { background: var(--surface-mint); }
 
 .status-banner {
   display: flex;
@@ -166,9 +170,10 @@ select {
 .animal-avatar[data-size="sm"] { width: 44px; height: 44px; }
 .animal-avatar[data-size="md"] { width: 72px; height: 72px; }
 .animal-avatar[data-size="lg"] { width: 112px; height: 112px; }
-.animal-avatar[data-selected="true"] { outline: 4px solid var(--coral); outline-offset: 3px; }
+.animal-avatar[data-selected="true"] { outline: 4px solid var(--ink); outline-offset: 3px; transform: scale(1.04); }
 .animal-avatar__image { width: 100%; height: 100%; object-fit: cover; }
 .animal-avatar__fallback { display: grid; width: 100%; height: 100%; place-items: center; padding: 0.25rem; text-align: center; font-size: 0.72em; font-weight: 900; }
+.animal-avatar__selected-mark { position: absolute; right: 5%; bottom: 5%; width: 22%; min-width: 0.75rem; aspect-ratio: 1; border: 2px solid var(--ink); border-radius: 50%; background: var(--coral); }
 
 .landing-shell { width: min(100% - 2rem, 72rem); margin-inline: auto; padding: 1.25rem 0 4rem; }
 .landing-nav { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
@@ -180,6 +185,7 @@ select {
 .hero h1 span { color: var(--coral-deep); }
 .hero__copy { max-width: 39rem; margin: 1.75rem 0; color: var(--text-muted); font-size: 1.05rem; font-weight: 650; }
 .hero__actions { display: flex; flex-direction: column; align-items: stretch; gap: 1rem; }
+.hero__cta { text-decoration: none; }
 .feature-grid { display: grid; gap: var(--space-18); }
 .feature-card__number { display: block; margin-bottom: 2rem; font-size: 0.75rem; font-weight: 900; letter-spacing: 0.1em; }
 .feature-grid h2 { margin: 0 0 0.5rem; font-size: 1.35rem; line-height: 1.25; }

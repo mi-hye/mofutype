@@ -1,20 +1,20 @@
-import type { HTMLAttributes } from "react";
+import { forwardRef, type HTMLAttributes } from "react";
 
 type CardVariant = "default" | "accent" | "subtle";
 
 export interface CardProps extends HTMLAttributes<HTMLDivElement> {
   variant?: CardVariant;
 }
-export function Card({
-  className = "",
-  variant = "default",
-  ...props
-}: CardProps) {
+export const Card = forwardRef<HTMLDivElement, CardProps>(function Card(
+  { className = "", variant = "default", ...props },
+  ref,
+) {
   return (
     <div
+      ref={ref}
       className={`ui-card ${className}`.trim()}
       data-variant={variant}
       {...props}
     />
   );
-}
+});

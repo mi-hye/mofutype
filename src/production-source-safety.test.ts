@@ -18,7 +18,7 @@ function productionSourceFiles(directory: string): string[] {
       return productionSourceFiles(absolutePath);
     }
 
-    if (!/\.tsx?$/.test(entry.name) || /\.test(?:-d)?\.tsx?$/.test(entry.name)) {
+    if (!/\.(?:tsx?|css)$/.test(entry.name) || /\.test(?:-d)?\.tsx?$/.test(entry.name)) {
       return [];
     }
 
@@ -30,6 +30,12 @@ describe("production source safety", () => {
   it("detects a forbidden animal symbol in supplied source", () => {
     expect(findUnsafeProductionSource("const avatar = '🐯';")).toEqual([
       "animal emoji 🐯",
+    ]);
+  });
+
+  it("detects a forbidden animal symbol in supplied CSS", () => {
+    expect(findUnsafeProductionSource('.avatar::after { content: "🦁"; }')).toEqual([
+      "animal emoji 🦁",
     ]);
   });
 

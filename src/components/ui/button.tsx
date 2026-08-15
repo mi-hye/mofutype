@@ -24,12 +24,13 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
   return (
     <button
       ref={ref}
+      {...props}
       className={`ui-button ${className}`.trim()}
       data-size={size}
       data-variant={variant}
+      role="button"
       disabled={disabled || loading}
       aria-busy={loading || undefined}
-      {...props}
     >
       <span>{children}</span>
       {loading ? (

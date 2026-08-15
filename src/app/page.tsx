@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
 export default function Home() {
@@ -21,14 +20,22 @@ export default function Home() {
           誕生日と性格タイプから、グループの個性やつながりをやさしく可視化します。
         </p>
         <div className="hero__actions">
-          <Button size="lg">はじめる</Button>
-          <Button size="lg" variant="secondary">
-            グループに参加
-          </Button>
+          <a
+            className="ui-button hero__cta"
+            data-size="lg"
+            data-variant="primary"
+            href="#features"
+          >
+            できることを見る
+          </a>
         </div>
       </section>
 
-      <section className="feature-grid" aria-label="MofuTypeでできること">
+      <section
+        className="feature-grid"
+        id="features"
+        aria-label="MofuTypeでできること"
+      >
         <Card variant="accent">
           <span className="feature-card__number">01</span>
           <h2>わたしを知る</h2>
