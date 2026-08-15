@@ -8,7 +8,7 @@ export interface CharacterCopy {
   descriptionJa: string;
 }
 
-export const MBTI_MODIFIERS_JA: Readonly<Record<MbtiType, string>> = Object.freeze({
+export const MBTI_MODIFIERS: Readonly<Record<MbtiType, string>> = Object.freeze({
   INTJ: "戦略的な",
   INTP: "探究心あふれる",
   ENTJ: "大胆に道を切り開く",
@@ -61,24 +61,21 @@ const MBTI_CONTRIBUTIONS_JA: Readonly<Record<MbtiType, string>> = Object.freeze(
   ESFP: "持ち前の明るさを生かし、その場に楽しい彩りを届けます。",
 });
 
-const ZODIAC_BY_ID = new Map<ZodiacId, ZodiacCatalogEntry>(
-  ZODIACS.map((entry) => [entry.id, entry]),
-);
 const VALID_MBTI_TYPES: ReadonlySet<string> = new Set(MBTI_TYPES);
 
 export function createCharacterCopy(
   zodiacId: ZodiacId,
   mbti: MbtiType | null,
 ): CharacterCopy {
-  const zodiac = ZODIAC_BY_ID.get(zodiacId);
-  if (!zodiac) {
+  if (!Object.hasOwn(ZODIACS, zodiacId)) {
     throw new RangeError("Invalid zodiac ID");
   }
+  const zodiac: ZodiacCatalogEntry = ZODIACS[zodiacId];
   if (mbti !== null && !VALID_MBTI_TYPES.has(mbti)) {
     throw new RangeError("Invalid MBTI");
   }
 
-  const modifier = mbti === null ? null : MBTI_MODIFIERS_JA[mbti];
+  const modifier = mbti === null ? null : MBTI_MODIFIERS[mbti];
   const descriptionJa = mbti === null
     ? BASE_DESCRIPTIONS_JA[zodiacId]
     : `${BASE_DESCRIPTIONS_JA[zodiacId]}${MBTI_CONTRIBUTIONS_JA[mbti]}`;

@@ -2,7 +2,8 @@ import { describe, expect, expectTypeOf, it } from "vitest";
 
 import { MBTI_TYPES, ZODIAC_IDS, type MbtiType, type ZodiacId } from "./types";
 import { ZODIACS } from "./zodiac";
-import { createCharacterCopy, MBTI_MODIFIERS_JA, type CharacterCopy } from "./character";
+import * as characterModule from "./character";
+import { createCharacterCopy, type CharacterCopy } from "./character";
 
 type IfExactly<X, Y, Then, Else> =
   (<T>() => T extends X ? 1 : 2) extends
@@ -37,16 +38,21 @@ const EXPECTED_MODIFIERS = {
 } as const;
 
 describe("createCharacterCopy", () => {
-  it("uses every approved MBTI modifier", () => {
-    expect(MBTI_MODIFIERS_JA).toEqual(EXPECTED_MODIFIERS);
-    expect(Object.isFrozen(MBTI_MODIFIERS_JA)).toBe(true);
+  it("exports every approved MBTI modifier under the exact public name", () => {
+    expectTypeOf(characterModule).toHaveProperty("MBTI_MODIFIERS");
+    expectTypeOf(characterModule.MBTI_MODIFIERS).toEqualTypeOf<
+      Readonly<Record<MbtiType, string>>
+    >();
+    expect(characterModule).toHaveProperty("MBTI_MODIFIERS");
+    expect(characterModule.MBTI_MODIFIERS).toEqual(EXPECTED_MODIFIERS);
+    expect(Object.isFrozen(characterModule.MBTI_MODIFIERS)).toBe(true);
   });
 
   it("creates all 192 unique, deterministic and complete character copies", () => {
     const inputKeys = new Set<string>();
 
-    for (const [index, zodiacId] of ZODIAC_IDS.entries()) {
-      const zodiac = ZODIACS[index];
+    for (const zodiacId of ZODIAC_IDS) {
+      const zodiac = ZODIACS[zodiacId];
       for (const mbti of MBTI_TYPES) {
         inputKeys.add(`${zodiacId}:${mbti}`);
         const first = createCharacterCopy(zodiacId, mbti);
@@ -66,7 +72,7 @@ describe("createCharacterCopy", () => {
   });
 
   it.each(ZODIAC_IDS)("creates a positive zodiac-only copy for %s", (zodiacId) => {
-    const zodiac = ZODIACS.find(({ id }) => id === zodiacId)!;
+    const zodiac = ZODIACS[zodiacId];
     const copy = createCharacterCopy(zodiacId, null);
 
     expect(copy.titleJa).toBe(`${zodiac.nameJa}タイプ`);

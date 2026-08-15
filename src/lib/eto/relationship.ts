@@ -125,7 +125,7 @@ const ELEMENT_NAMES: Readonly<Record<FiveElement, string>> = {
 };
 
 const ZODIAC_NAMES = new Map(
-  ZODIACS.map(({ id, nameJa }) => [id, nameJa] as const),
+  ZODIAC_IDS.map((id) => [id, ZODIACS[id].nameJa] as const),
 );
 
 function pair(a: ZodiacId, b: ZodiacId): string {
