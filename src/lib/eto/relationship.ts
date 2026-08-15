@@ -180,10 +180,6 @@ const CONTROLLING_NEXT: Readonly<Record<FiveElement, FiveElement>> = {
   METAL: "WOOD",
 };
 
-function isObject(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === "object" && !Array.isArray(value);
-}
-
 function isOneOf<T extends string>(
   value: unknown,
   values: readonly T[],
@@ -191,87 +187,131 @@ function isOneOf<T extends string>(
   return typeof value === "string" && values.includes(value as T);
 }
 
-function isPlainObjectWithExactKeys(
-  value: unknown,
-  keys: readonly string[],
-): value is Record<string, unknown> {
-  if (!isObject(value) || Object.getPrototypeOf(value) !== Object.prototype) {
-    return false;
-  }
-
-  const ownKeys = Reflect.ownKeys(value);
-  if (ownKeys.some((field) => typeof field !== "string")) return false;
-
-  const actual = (ownKeys as string[]).sort();
-  const expected = [...keys].sort();
-  return (
-    actual.length === expected.length &&
-    actual.every((field, index) => field === expected[index])
-  );
+function invalidRelationshipInput(): never {
+  throw new RelationshipValidationError();
 }
 
-function isCounts(
+function inspectDataObject(
   value: unknown,
-  keys: readonly string[],
-): value is Record<string, number> {
-  return (
-    isPlainObjectWithExactKeys(value, keys) &&
-    keys.every(
-      (field) =>
-        Number.isInteger(value[field]) && (value[field] as number) >= 0,
-    )
-  );
+  requiredKeys: readonly string[],
+  exact = true,
+): Record<string, unknown> {
+  try {
+    if (value === null || typeof value !== "object" || Array.isArray(value)) {
+      return invalidRelationshipInput();
+    }
+    if (Object.getPrototypeOf(value) !== Object.prototype) {
+      return invalidRelationshipInput();
+    }
+
+    const ownKeys = Reflect.ownKeys(value);
+    if (ownKeys.some((field) => typeof field !== "string")) {
+      return invalidRelationshipInput();
+    }
+
+    const stringKeys = ownKeys as string[];
+    const required = new Set(requiredKeys);
+    if (
+      requiredKeys.some((field) => !stringKeys.includes(field)) ||
+      (exact && stringKeys.some((field) => !required.has(field)))
+    ) {
+      return invalidRelationshipInput();
+    }
+
+    const descriptors = Object.getOwnPropertyDescriptors(value);
+    const snapshot: Record<string, unknown> = {};
+    for (const field of stringKeys) {
+      const descriptor = descriptors[field];
+      if (descriptor === undefined || !("value" in descriptor)) {
+        return invalidRelationshipInput();
+      }
+      snapshot[field] = descriptor.value;
+    }
+    return snapshot;
+  } catch {
+    return invalidRelationshipInput();
+  }
 }
 
 function total(counts: Record<string, number>, keys: readonly string[]) {
   return keys.reduce((sum, field) => sum + counts[field], 0);
 }
 
-function isProfile(value: unknown): value is DerivedEtoProfile {
+function snapshotCounts(
+  value: unknown,
+  keys: readonly string[],
+): Record<string, number> {
+  const counts = inspectDataObject(value, keys);
   if (
-    !isPlainObjectWithExactKeys(value, PROFILE_KEYS) ||
-    !isPlainObjectWithExactKeys(value.dayMaster, DAY_MASTER_KEYS)
+    !keys.every(
+      (field) =>
+        Number.isInteger(counts[field]) && (counts[field] as number) >= 0,
+    )
   ) {
-    return false;
+    return invalidRelationshipInput();
   }
+  return counts as Record<string, number>;
+}
 
-  const fiveElementsValid =
-    value.fiveElements === null || isCounts(value.fiveElements, ELEMENTS);
-  const yinYangValid =
-    value.yinYang === null || isCounts(value.yinYang, POLARITIES);
-
-  const fieldsValid =
-    value.version === 1 &&
-    isOneOf(value.zodiacId, ZODIAC_IDS) &&
-    (value.mbti === null || isOneOf(value.mbti, MBTI_TYPES)) &&
-    isOneOf(value.dayMaster.element, ELEMENTS) &&
-    isOneOf(value.dayMaster.polarity, POLARITIES) &&
-    fiveElementsValid &&
-    yinYangValid &&
-    isOneOf(value.calculationMode, CALCULATION_MODES) &&
-    isOneOf(value.boundaryState, BOUNDARY_STATES) &&
-    value.engineVersion === ENGINE_VERSION;
-  if (!fieldsValid) return false;
-
-  if (value.boundaryState === "solar-term-ambiguous") {
-    return (
-      value.calculationMode === "date-only" &&
-      value.fiveElements === null &&
-      value.yinYang === null
-    );
-  }
+function snapshotProfile(value: unknown): DerivedEtoProfile {
+  const source = inspectDataObject(value, PROFILE_KEYS);
+  const dayMaster = inspectDataObject(source.dayMaster, DAY_MASTER_KEYS);
 
   if (
-    !isCounts(value.fiveElements, ELEMENTS) ||
-    !isCounts(value.yinYang, POLARITIES)
+    source.version !== 1 ||
+    !isOneOf(source.zodiacId, ZODIAC_IDS) ||
+    (source.mbti !== null && !isOneOf(source.mbti, MBTI_TYPES)) ||
+    !isOneOf(dayMaster.element, ELEMENTS) ||
+    !isOneOf(dayMaster.polarity, POLARITIES) ||
+    !isOneOf(source.calculationMode, CALCULATION_MODES) ||
+    !isOneOf(source.boundaryState, BOUNDARY_STATES) ||
+    source.engineVersion !== ENGINE_VERSION
   ) {
-    return false;
+    return invalidRelationshipInput();
   }
-  const expectedTotal = value.calculationMode === "date-time" ? 8 : 6;
-  return (
-    total(value.fiveElements, ELEMENTS) === expectedTotal &&
-    total(value.yinYang, POLARITIES) === expectedTotal
-  );
+
+  if (source.boundaryState === "solar-term-ambiguous") {
+    if (
+      source.calculationMode !== "date-only" ||
+      source.fiveElements !== null ||
+      source.yinYang !== null
+    ) {
+      return invalidRelationshipInput();
+    }
+    return {
+      version: 1,
+      zodiacId: source.zodiacId,
+      mbti: source.mbti,
+      dayMaster: { element: dayMaster.element, polarity: dayMaster.polarity },
+      fiveElements: null,
+      yinYang: null,
+      calculationMode: source.calculationMode,
+      boundaryState: source.boundaryState,
+      engineVersion: ENGINE_VERSION,
+    };
+  }
+
+  const fiveElements = snapshotCounts(source.fiveElements, ELEMENTS);
+  const yinYang = snapshotCounts(source.yinYang, POLARITIES);
+  const expectedTotal = source.calculationMode === "date-time" ? 8 : 6;
+  if (
+    total(fiveElements, ELEMENTS) !== expectedTotal ||
+    total(yinYang, POLARITIES) !== expectedTotal
+  ) {
+    return invalidRelationshipInput();
+  }
+
+  return {
+    version: 1,
+    zodiacId: source.zodiacId,
+    mbti: source.mbti,
+    dayMaster: { element: dayMaster.element, polarity: dayMaster.polarity },
+    fiveElements: fiveElements as unknown as ElementCounts,
+    yinYang: yinYang as unknown as DerivedEtoProfile["yinYang"],
+    calculationMode: source.calculationMode,
+    boundaryState: source.boundaryState,
+    engineVersion: ENGINE_VERSION,
+  };
 }
 
 function isUriEncodable(value: string) {
@@ -283,25 +323,24 @@ function isUriEncodable(value: string) {
   }
 }
 
-function assertInput(
-  input: unknown,
-): asserts input is CreateEtoRelationshipInput {
+function snapshotMember(value: unknown): EtoRelationshipMember {
+  const source = inspectDataObject(value, ["id", "profile"]);
   if (
-    !isObject(input) ||
-    !isObject(input.memberA) ||
-    !isObject(input.memberB) ||
-    typeof input.memberA.id !== "string" ||
-    input.memberA.id.trim() === "" ||
-    !isUriEncodable(input.memberA.id) ||
-    typeof input.memberB.id !== "string" ||
-    input.memberB.id.trim() === "" ||
-    !isUriEncodable(input.memberB.id) ||
-    input.memberA.id === input.memberB.id ||
-    !isProfile(input.memberA.profile) ||
-    !isProfile(input.memberB.profile)
+    typeof source.id !== "string" ||
+    source.id.trim() === "" ||
+    !isUriEncodable(source.id)
   ) {
-    throw new RelationshipValidationError();
+    return invalidRelationshipInput();
   }
+  return { id: source.id, profile: snapshotProfile(source.profile) };
+}
+
+function snapshotInput(input: unknown): CreateEtoRelationshipInput {
+  const source = inspectDataObject(input, ["memberA", "memberB"]);
+  const memberA = snapshotMember(source.memberA);
+  const memberB = snapshotMember(source.memberB);
+  if (memberA.id === memberB.id) return invalidRelationshipInput();
+  return { memberA, memberB };
 }
 
 function zodiacInsight(
@@ -524,19 +563,26 @@ function directionalElementTip(
 export function createEtoRelationship(
   input: CreateEtoRelationshipInput,
 ): EtoRelationshipResult {
-  assertInput(input);
+  let safeInput: CreateEtoRelationshipInput;
+  let pairKey: string;
+  try {
+    safeInput = snapshotInput(input);
+    pairKey = canonicalPairKey(safeInput.memberA.id, safeInput.memberB.id);
+  } catch {
+    throw new RelationshipValidationError();
+  }
 
   const zodiac = zodiacInsight(
-    input.memberA.profile.zodiacId,
-    input.memberB.profile.zodiacId,
+    safeInput.memberA.profile.zodiacId,
+    safeInput.memberB.profile.zodiacId,
   );
   const element = fiveElementInsight(
-    input.memberA.profile,
-    input.memberB.profile,
+    safeInput.memberA.profile,
+    safeInput.memberB.profile,
   );
   const mbti = mbtiInsight(
-    input.memberA.profile.mbti,
-    input.memberB.profile.mbti,
+    safeInput.memberA.profile.mbti,
+    safeInput.memberB.profile.mbti,
   );
   const category = balancedCategory(
     zodiac.category,
@@ -544,12 +590,12 @@ export function createEtoRelationship(
     mbti?.category ?? null,
   );
   const zodiacNames = [
-    ZODIAC_NAMES.get(input.memberA.profile.zodiacId) ?? "十二支",
-    ZODIAC_NAMES.get(input.memberB.profile.zodiacId) ?? "十二支",
+    ZODIAC_NAMES.get(safeInput.memberA.profile.zodiacId) ?? "十二支",
+    ZODIAC_NAMES.get(safeInput.memberB.profile.zodiacId) ?? "十二支",
   ].sort();
 
   return {
-    pairKey: canonicalPairKey(input.memberA.id, input.memberB.id),
+    pairKey,
     category,
     categoryLabelJa: CATEGORY_LABELS[category],
     headlineJa: `${zodiacNames[0]}と${zodiacNames[1]}は、${CATEGORY_LABELS[category]}です`,
@@ -559,12 +605,12 @@ export function createEtoRelationship(
     tips: {
       togetherJa: "結論を急がず、共通点と違いの両方を言葉にしてみましょう。",
       forPersonAJa: directionalElementTip(
-        input.memberA.profile,
-        input.memberB.profile,
+        safeInput.memberA.profile,
+        safeInput.memberB.profile,
       ),
       forPersonBJa: directionalElementTip(
-        input.memberB.profile,
-        input.memberA.profile,
+        safeInput.memberB.profile,
+        safeInput.memberA.profile,
       ),
     },
   };

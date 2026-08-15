@@ -516,6 +516,25 @@ describe("relationship validation", () => {
     "engineVersion",
   ] as const;
 
+  function expectStableValidationFailure(run: () => unknown, secret: string) {
+    let thrown: unknown;
+    try {
+      run();
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown?.constructor).toBe(RelationshipValidationError);
+    expect(thrown).toMatchObject({
+      name: "RelationshipValidationError",
+      code: "INVALID_RELATIONSHIP_INPUT",
+      message: "Relationship input is invalid",
+    });
+    expect(thrown).not.toBeInstanceOf(URIError);
+    expect(String(thrown)).not.toContain(secret);
+    expect(JSON.stringify(thrown)).not.toContain(secret);
+  }
+
   it("rejects identical member IDs with a stable typed error", () => {
     expect(() =>
       createEtoRelationship({
@@ -649,6 +668,21 @@ describe("relationship validation", () => {
     expect(() => relationship(dateTime, dateTime)).not.toThrow();
   });
 
+  it("accepts deeply frozen valid profiles and boundary objects", () => {
+    const frozenProfile = Object.freeze({
+      ...exactProfile(),
+      dayMaster: Object.freeze({ element: "WOOD" as const, polarity: "YANG" as const }),
+      fiveElements: Object.freeze({ WOOD: 2, FIRE: 1, EARTH: 1, METAL: 1, WATER: 1 }),
+      yinYang: Object.freeze({ YIN: 3, YANG: 3 }),
+    });
+    const input = Object.freeze({
+      memberA: Object.freeze({ id: "frozen-a", profile: frozenProfile }),
+      memberB: Object.freeze({ id: "frozen-b", profile: frozenProfile }),
+    });
+
+    expect(() => createEtoRelationship(input)).not.toThrow();
+  });
+
   it("wraps URI-unsafe member IDs in the stable validation error", () => {
     let thrown: unknown;
     try {
@@ -672,5 +706,173 @@ describe("relationship validation", () => {
     expect(() => createEtoRelationship(null as never)).toThrowError(
       RelationshipValidationError,
     );
+  });
+
+  describe("hostile runtime objects", () => {
+    const secret = "secret-from-hostile-object";
+    const throwingProxy = <T extends object>(
+      target: T,
+      trap: "prototype" | "keys" | "descriptor",
+    ) =>
+      new Proxy(
+        target,
+        {
+          getPrototypeOf() {
+            if (trap === "prototype") throw new Error(secret);
+            return Reflect.getPrototypeOf(target);
+          },
+          ownKeys() {
+            if (trap === "keys") throw new Error(secret);
+            return Reflect.ownKeys(target);
+          },
+          getOwnPropertyDescriptor(_object, field) {
+            if (trap === "descriptor") throw new Error(secret);
+            return Reflect.getOwnPropertyDescriptor(target, field);
+          },
+        },
+      );
+
+    const accessor = <T extends object, K extends keyof T>(
+      object: T,
+      field: K,
+    ): T => {
+      Object.defineProperty(object, field, {
+        configurable: true,
+        enumerable: true,
+        get() {
+          throw new Error(secret);
+        },
+      });
+      return object;
+    };
+
+    const setterAccessor = (object: DerivedEtoProfile) => {
+      Object.defineProperty(object, "mbti", {
+        configurable: true,
+        enumerable: true,
+        set() {
+          throw new Error(secret);
+        },
+      });
+      return object;
+    };
+
+    it.each([
+      [
+        "input accessor",
+        () =>
+          createEtoRelationship(
+            accessor(
+              {
+                memberA: { id: "a", profile: profile() },
+                memberB: { id: "b", profile: profile() },
+              },
+              "memberA",
+            ),
+          ),
+      ],
+      [
+        "member accessor",
+        () =>
+          createEtoRelationship({
+            memberA: accessor({ id: "a", profile: profile() }, "profile"),
+            memberB: { id: "b", profile: profile() },
+          }),
+      ],
+      [
+        "profile accessor",
+        () =>
+          relationship(
+            profile(),
+            accessor(profile(), "zodiacId"),
+          ),
+      ],
+      [
+        "profile setter",
+        () => relationship(profile(), setterAccessor(profile())),
+      ],
+      [
+        "day-master accessor",
+        () =>
+          relationship(
+            profile(),
+            profile({
+              dayMaster: accessor(
+                { element: "WOOD" as const, polarity: "YANG" as const },
+                "element",
+              ),
+            }),
+          ),
+      ],
+      [
+        "count accessor",
+        () =>
+          relationship(
+            profile(),
+            exactProfile({
+              fiveElements: accessor(
+                { WOOD: 2, FIRE: 1, EARTH: 1, METAL: 1, WATER: 1 },
+                "WOOD",
+              ),
+            }),
+          ),
+      ],
+      [
+        "input proxy",
+        () =>
+          createEtoRelationship(
+            throwingProxy(
+              {
+                memberA: { id: "a", profile: profile() },
+                memberB: { id: "b", profile: profile() },
+              },
+              "prototype",
+            ),
+          ),
+      ],
+      [
+        "member proxy",
+        () =>
+          createEtoRelationship({
+            memberA: throwingProxy(
+              { id: "a", profile: profile() },
+              "keys",
+            ),
+            memberB: { id: "b", profile: profile() },
+          }),
+      ],
+      [
+        "profile proxy",
+        () => relationship(profile(), throwingProxy(profile(), "descriptor")),
+      ],
+      [
+        "day-master proxy",
+        () =>
+          relationship(
+            profile(),
+            profile({
+              dayMaster: throwingProxy(
+                { element: "WOOD", polarity: "YANG" } as const,
+                "prototype",
+              ),
+            }),
+          ),
+      ],
+      [
+        "count proxy",
+        () =>
+          relationship(
+            profile(),
+            exactProfile({
+              fiveElements: throwingProxy(
+                { WOOD: 2, FIRE: 1, EARTH: 1, METAL: 1, WATER: 1 },
+                "keys",
+              ),
+            }),
+          ),
+      ],
+    ])("translates a secret-throwing %s", (_label, run) => {
+      expectStableValidationFailure(run, secret);
+    });
   });
 });
