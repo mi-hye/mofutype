@@ -4,25 +4,34 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { GroupAggregate, GroupSubscriptionCallbacks } from "@/lib/supabase/group-repository";
 import type { GroupMember, RelationUnlock } from "@/lib/supabase/models";
+import type { MbtiType, ZodiacId } from "@/lib/eto/types";
 import { RelationRouteGate } from "./relation-route-gate";
 
 const token = "a".repeat(64);
 
-function member(id: string, nickname: string, animalId: "fawn" | "sheep" = "fawn"): GroupMember {
+function member(
+  id: string,
+  nickname: string,
+  zodiacId: ZodiacId = "dragon",
+  mbti: MbtiType | null = null,
+): GroupMember {
   return {
     id,
     groupId: "g1",
     userId: `u-${id}`,
     nickname,
-    animalId,
-    animalGroup: "MOON",
-    mbti: null,
+    zodiacId,
+    mbti,
     profile: {
       version: 1,
-      animalId,
-      animalGroup: "MOON",
-      mbti: null,
-      calculationMode: "date-only",
+      zodiacId,
+      mbti,
+      dayMaster: { element: zodiacId === "dragon" ? "WOOD" : "FIRE", polarity: "YANG" },
+      fiveElements: { WOOD: 2, FIRE: 2, EARTH: 1, METAL: 1, WATER: 2 },
+      yinYang: { YIN: 4, YANG: 4 },
+      calculationMode: "date-time",
+      boundaryState: "exact",
+      engineVersion: "mofu-eto-four-pillars-v1",
     },
     joinedAt: "2026-08-15T00:00:00Z",
   };
@@ -45,7 +54,7 @@ function unlocked(): RelationUnlock {
 function aggregate(unlocks: RelationUnlock[] = []): GroupAggregate {
   return {
     group: { id: "g1", name: "なかよし", maxMembers: 30, createdAt: "2026-08-15T00:00:00Z" },
-    members: [member("a", "あお"), member("b", "もも", "sheep")],
+    members: [member("a", "あお", "dragon", "INFP"), member("b", "もも", "rabbit", "ENTJ")],
     unlocks,
   };
 }
@@ -80,7 +89,7 @@ describe("RelationRouteGate", () => {
       />,
     );
 
-    expect(await screen.findByRole("heading", { name: /似たもの同士で話が早い/ })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: /お互いのペースを学ぶ関係です/ })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "このふたりを300円で解放" })).toHaveAttribute(
       "href",
       `/checkout/a%3Ab?invite=${token}`,
@@ -132,7 +141,9 @@ describe("RelationRouteGate", () => {
 
     act(() => repo.callbacks()?.onUnlockChange?.({ eventType: "INSERT", new: unlocked() }));
     expect(screen.getByText("解放済み")).toBeInTheDocument();
-    expect(screen.getByText(/同じ景色に反応しやすく/)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "十二支の関係" })).toBeInTheDocument();
+    expect(screen.getByText("歩幅を確かめ合う十二支")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "あおさんへのヒント" })).toBeInTheDocument();
   });
 
   it("does not lose an unlock received while closing the initial subscribe/load gap", async () => {

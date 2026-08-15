@@ -97,6 +97,15 @@ function isPairUnlocked(
   );
 }
 
+function findSelectedMembers(
+  members: readonly GroupMember[],
+  memberIds: readonly [string, string],
+): readonly [GroupMember, GroupMember] | null {
+  const memberA = members.find((member) => member.id === memberIds[0]);
+  const memberB = members.find((member) => member.id === memberIds[1]);
+  return memberA && memberB ? [memberA, memberB] : null;
+}
+
 export function GroupScreen(props: GroupScreenProps) {
   return <GroupScreenForGroup key={props.initialAggregate.group.id} {...props} />;
 }
@@ -282,6 +291,10 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken }: Grou
     }
   }, [initialAggregate.group.id, repository]);
 
+  const selectedMembers = selectedPair
+    ? findSelectedMembers(aggregate.members, selectedPair.memberIds)
+    : null;
+
   return (
     <main className="group-member-shell">
       <header className="group-member-header">
@@ -321,12 +334,11 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken }: Grou
       ) : null}
 
       <GroupGraph members={aggregate.members} unlocks={aggregate.unlocks} onPairSelect={setSelectedPair} />
-      {selectedPair ? (
+      {selectedPair && selectedMembers ? (
         <RelationSheet
           relationship={selectedPair.relationship}
-          memberNames={selectedPair.memberIds.map((memberId) =>
-            aggregate.members.find((member) => member.id === memberId)?.nickname ?? "メンバー"
-          ) as [string, string]}
+          memberNames={[selectedMembers[0].nickname, selectedMembers[1].nickname]}
+          memberProfiles={[selectedMembers[0].profile, selectedMembers[1].profile]}
           unlocked={isPairUnlocked(aggregate.unlocks, selectedPair.memberIds)}
           checkoutHref={inviteToken
             ? `/checkout/${encodeURIComponent(selectedPair.pairKey)}?invite=${encodeURIComponent(inviteToken)}`

@@ -22,16 +22,26 @@ vi.mock("./group-graph", () => ({
           unlocked: false,
           relationship: {
             pairKey: "a:b",
-            dynamic: "SAME_GROUP",
-            freeTitleJa: "ふたりの無料タイトル",
-            freeSummaryJa: "ふたりの無料まとめ",
-            detail: {
-              attractionJa: "惹かれ合う理由の本文",
-              frictionJa: "すれ違いの本文",
-              unspokenJa: "本音の本文",
-              communicationJa: "会話の本文",
-              reconciliationJa: "仲直りの本文",
-              longTermJa: "長期の本文",
+            category: "NATURAL_INTERLOCK",
+            categoryLabelJa: "自然にかみ合う関係",
+            headlineJa: "たつとうさぎは、自然にかみ合う関係です",
+            zodiacInsight: {
+              relation: "LIUHE",
+              category: "NATURAL_INTERLOCK",
+              title: "自然に支え合う十二支",
+              summary: "十二支の本文",
+            },
+            fiveElementInsight: {
+              relation: "COMPLEMENT",
+              category: "NATURAL_INTERLOCK",
+              title: "五行を補い合う関係",
+              summary: "五行と陰陽の本文",
+            },
+            mbtiInsight: null,
+            tips: {
+              togetherJa: "ふたりで試すヒント",
+              forPersonAJa: "aへのヒント",
+              forPersonBJa: "bへのヒント",
             },
           },
         })}>aとbの関係を選択</button>
@@ -45,8 +55,18 @@ import { GroupScreen } from "./group-screen";
 function member(id: string, nickname = id): GroupMember {
   return {
     id, groupId: "g1", userId: `u-${id}`, nickname,
-    animalId: "fawn", animalGroup: "MOON", mbti: null,
-    profile: { version: 1, animalId: "fawn", animalGroup: "MOON", mbti: null, calculationMode: "date-only" },
+    zodiacId: id === "b" ? "rabbit" : "dragon", mbti: null,
+    profile: {
+      version: 1,
+      zodiacId: id === "b" ? "rabbit" : "dragon",
+      mbti: null,
+      dayMaster: { element: id === "b" ? "FIRE" : "WOOD", polarity: "YANG" },
+      fiveElements: { WOOD: 2, FIRE: 2, EARTH: 1, METAL: 1, WATER: 2 },
+      yinYang: { YIN: 4, YANG: 4 },
+      calculationMode: "date-time",
+      boundaryState: "exact",
+      engineVersion: "mofu-eto-four-pillars-v1",
+    },
     joinedAt: "2026-08-15T00:00:00Z",
   };
 }
@@ -154,7 +174,7 @@ describe("GroupScreen", () => {
     expect(sessionA.getByText("解放済み")).toBeInTheDocument();
     expect(sessionB.getByText("解放済み")).toBeInTheDocument();
     expect(sessionA.queryByRole("link", { name: "このふたりを300円で解放" })).not.toBeInTheDocument();
-    expect(sessionB.getByText("惹かれ合う理由の本文")).toBeInTheDocument();
+    expect(sessionB.getByText("十二支の本文")).toBeInTheDocument();
   });
 
   it("maps connection states to Japanese status and can retry", async () => {

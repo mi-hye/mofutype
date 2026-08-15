@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 import { CheckoutPanel } from "@/features/checkout/checkout-panel";
 import { MockPaymentProvider } from "@/features/checkout/mock-payment-provider";
-import { createRelationship } from "@/lib/relationship/local-provider";
+import { createEtoRelationship } from "@/lib/eto/relationship";
 import { canonicalPairKey } from "@/lib/relationship/pair-key";
 import { createBrowserGroupRepository } from "@/lib/supabase/group-repository";
 import type { GroupMember, RelationUnlock } from "@/lib/supabase/models";
@@ -187,7 +187,10 @@ function RelationRouteGateForPair({
   }
 
   const [memberA, memberB] = pair.members;
-  const relationship = createRelationship({ memberA, memberB });
+  const relationship = createEtoRelationship({
+    memberA: { id: memberA.id, profile: memberA.profile },
+    memberB: { id: memberB.id, profile: memberB.profile },
+  });
   const unlocked = pairIsUnlocked(pair.unlocks, pair.members);
   const encodedPairKey = encodeURIComponent(normalizedPairKey);
   const encodedInvite = encodeURIComponent(inviteToken);
@@ -211,6 +214,7 @@ function RelationRouteGateForPair({
       <RelationSheet
         relationship={relationship}
         memberNames={[memberA.nickname, memberB.nickname]}
+        memberProfiles={[memberA.profile, memberB.profile]}
         unlocked={unlocked}
         checkoutHref={`/checkout/${encodedPairKey}?invite=${encodedInvite}`}
         detailHref={detailHref}
