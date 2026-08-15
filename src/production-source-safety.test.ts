@@ -158,6 +158,9 @@ describe("production source safety", () => {
     expect(globalStyles).toContain(".hero__connectors line");
     expect(pageSource).toContain('className="hero__connectors"');
     expect(pageSource.match(/<line /g)).toHaveLength(3);
+    expect(pageSource).toContain("#12干支");
+    expect(pageSource).not.toContain("#動物うらない");
+    expect(pageSource).not.toContain("性格タイプ × 動物キャラクター");
     expect(globalStyles).toContain("@keyframes float-orbit");
     expect(globalStyles).toContain("@keyframes rise-in");
   });

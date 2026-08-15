@@ -28,13 +28,12 @@ export default function Home() {
           <span className="hero__stripe" />
         </div>
         <span className="hero__cutout" aria-hidden="true">MOFU / 01</span>
-        <p className="hero__eyebrow">性格タイプ × 動物キャラクター</p>
         <h1 aria-label="わたしたち、こんな感じ。">
           わたしたち、<span>こんな感じ。</span>
         </h1>
         <div className="hero__stickers" aria-label="ムード">
           <span>#MBTI</span>
-          <span>#動物うらない</span>
+          <span>#12干支</span>
         </div>
         <span className="hero__issue-note" aria-hidden="true">
           FRIENDS FILE<br />ISSUE 01
