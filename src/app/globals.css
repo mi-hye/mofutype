@@ -49,6 +49,7 @@ body {
     "Yu Gothic", Meiryo, system-ui, sans-serif;
   line-height: 1.6;
   text-rendering: optimizeLegibility;
+  overflow-x: hidden;
 }
 
 button,
@@ -216,9 +217,37 @@ select {
 .group-gate-shell, .group-gate-message, .group-member-shell { width: min(100% - 2rem, 72rem); margin-inline: auto; padding: 3rem 0; }
 .group-gate-message { min-height: 70vh; display: grid; place-content: center; justify-items: start; gap: 1rem; }
 .group-gate-message h1, .group-gate-message p { margin: 0; }
+.group-member-shell { width: min(100% - 1rem, 86rem); padding-top: 1.25rem; }
 .group-member-shell h1 { margin: 0; font-size: clamp(2.4rem, 10vw, 5rem); line-height: 1; }
-.graph-placeholder { min-height: 20rem; margin-top: 2rem; border: 2px dashed var(--border); border-radius: var(--radius-18); padding: var(--space-26); background: var(--surface-mint); }
-.graph-placeholder h2 { margin-top: 0; }
+.group-member-header { display: grid; gap: var(--space-18); margin-bottom: var(--space-18); }
+.group-member-header p { margin-block: 0.5rem 0; }
+.group-member-actions { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--space-12); }
+.group-graph { display: grid; gap: var(--space-18); }
+.group-graph__canvas {
+  width: 100%;
+  height: clamp(30rem, 68svh, 52rem);
+  min-height: 30rem;
+  overflow: hidden;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-18);
+  background: var(--surface-mint);
+  box-shadow: var(--shadow-sm);
+  touch-action: none;
+}
+.group-graph__canvas .react-flow__controls button { width: 46px; height: 46px; color: var(--ink); background: var(--surface-raised); }
+.group-graph__canvas .react-flow__attribution { border-radius: 0.3rem 0 0 0; background: rgb(255 253 247 / 88%); font-size: 0.65rem; }
+.animal-graph-node { display: grid; min-width: 7rem; justify-items: center; gap: 0.22rem; text-align: center; }
+.animal-graph-node[data-selected="true"] { transform: scale(1.04); }
+.animal-graph-node__handle { width: 1px !important; height: 1px !important; border: 0 !important; opacity: 0; pointer-events: none; }
+.animal-graph-node__nickname { max-width: 9rem; overflow: hidden; border: 1.5px solid var(--border); border-radius: 999px; padding: 0.12rem 0.5rem; background: var(--surface-raised); font-size: 0.8rem; font-weight: 900; text-overflow: ellipsis; white-space: nowrap; }
+.animal-graph-node__discriminator { color: var(--text-muted); font-size: 0.65rem; font-weight: 800; }
+.group-graph__selection, .group-pair-selection { margin: 0; border-left: 5px solid var(--coral); padding: 0.55rem 0.8rem; background: var(--surface-coral); font-weight: 850; }
+.group-graph__accessible { border: 2px solid var(--border); border-radius: var(--radius-18); padding: var(--space-18); background: var(--surface-raised); }
+.group-graph__accessible h2, .group-graph__accessible p { margin-top: 0; }
+.group-graph__member-list, .group-graph__relationship-list { display: flex; flex-wrap: wrap; gap: 0.65rem; margin: 0; padding: 0; list-style: none; }
+.group-graph__relationship-list { margin-top: var(--space-18); }
+.group-graph__accessible button { min-height: 44px; border: 2px solid var(--border); border-radius: 999px; padding: 0.5rem 0.85rem; background: var(--surface); color: var(--ink); font-weight: 800; cursor: pointer; }
+.group-graph__accessible button[aria-pressed="true"] { background: var(--butter); box-shadow: var(--shadow-sm); }
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -227,6 +256,9 @@ select {
   .hero__actions { flex-direction: row; }
   .feature-grid { grid-template-columns: repeat(3, 1fr); }
   .create-section { grid-template-columns: minmax(0, 0.85fr) minmax(20rem, 1.15fr); align-items: start; }
+  .group-member-shell { width: min(100% - 2rem, 86rem); padding-top: 2rem; }
+  .group-member-header { grid-template-columns: minmax(0, 1fr) auto; align-items: end; }
+  .group-member-actions { justify-content: flex-end; }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -1,0 +1,148 @@
+import { act, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { describe, expect, it, vi } from "vitest";
+
+import type { GroupAggregate, GroupSubscriptionCallbacks } from "@/lib/supabase/group-repository";
+import type { GroupMember, RelationUnlock } from "@/lib/supabase/models";
+
+vi.mock("./group-graph", () => ({
+  GroupGraph: ({ members, unlocks }: { members: GroupMember[]; unlocks: RelationUnlock[] }) => (
+    <div data-testid="graph-state">
+      members:{members.map((member) => `${member.id}:${member.nickname}`).join(",")};
+      pairs:{members.length * (members.length - 1) / 2};
+      unlocks:{unlocks.map((unlock) => `${unlock.id}:${unlock.status}`).join(",")}
+    </div>
+  ),
+}));
+
+import { GroupScreen } from "./group-screen";
+
+function member(id: string, nickname = id): GroupMember {
+  return {
+    id, groupId: "g1", userId: `u-${id}`, nickname,
+    animalId: "fawn", animalGroup: "MOON", mbti: null,
+    profile: { version: 1, animalId: "fawn", animalGroup: "MOON", mbti: null, calculationMode: "date-only" },
+    joinedAt: "2026-08-15T00:00:00Z",
+  };
+}
+
+function unlock(id: string, status: RelationUnlock["status"] = "pending"): RelationUnlock {
+  return {
+    id, groupId: "g1", memberLowId: "a", memberHighId: "b", status,
+    paymentProvider: "mock", paymentReference: null, unlockedBy: "a", unlockedAt: null,
+  };
+}
+
+function aggregate(groupId = "g1", members = [member("a"), member("b")], unlocks: RelationUnlock[] = []): GroupAggregate {
+  return {
+    group: { id: groupId, name: `グループ${groupId}`, maxMembers: 30, createdAt: "2026-08-15T00:00:00Z" },
+    members: members.map((item) => ({ ...item, groupId })),
+    unlocks: unlocks.map((item) => ({ ...item, groupId })),
+  };
+}
+
+function repository(initial: GroupAggregate) {
+  let callbacks: GroupSubscriptionCallbacks | undefined;
+  const cleanup = vi.fn(async () => undefined);
+  const loadGroup = vi.fn(async () => initial);
+  const subscribeToGroup = vi.fn((_groupId: string, nextCallbacks: GroupSubscriptionCallbacks) => {
+    callbacks = nextCallbacks;
+    return cleanup;
+  });
+  return {
+    api: { loadGroup, subscribeToGroup } as never,
+    loadGroup,
+    subscribeToGroup,
+    cleanup,
+    callbacks: () => callbacks,
+  };
+}
+
+describe("GroupScreen", () => {
+  it("subscribes once with the group filter, refreshes initial data, and cleans up", async () => {
+    const initial = aggregate();
+    const repo = repository(initial);
+    const view = render(<GroupScreen initialAggregate={initial} repository={repo.api} />);
+
+    expect(repo.subscribeToGroup).toHaveBeenCalledOnce();
+    expect(repo.subscribeToGroup).toHaveBeenCalledWith("g1", expect.any(Object));
+    await waitFor(() => expect(repo.loadGroup).toHaveBeenCalledOnce());
+    view.rerender(<GroupScreen initialAggregate={initial} repository={repo.api} />);
+    expect(repo.subscribeToGroup).toHaveBeenCalledOnce();
+    view.unmount();
+    expect(repo.cleanup).toHaveBeenCalledOnce();
+  });
+
+  it("immutably upserts realtime member and unlock INSERT/UPDATE events", async () => {
+    const initial = aggregate();
+    const repo = repository(initial);
+    render(<GroupScreen initialAggregate={initial} repository={repo.api} />);
+    await waitFor(() => expect(repo.callbacks()).toBeDefined());
+
+    act(() => repo.callbacks()?.onMemberChange?.({ eventType: "INSERT", new: member("c", "しろ") }));
+    expect(screen.getByTestId("graph-state")).toHaveTextContent(/members:a:a,b:b,c:しろ;\s*pairs:3/);
+    act(() => repo.callbacks()?.onMemberChange?.({ eventType: "UPDATE", new: member("c", "くろ") }));
+    expect(screen.getByTestId("graph-state")).toHaveTextContent(/members:a:a,b:b,c:くろ;\s*pairs:3/);
+
+    act(() => repo.callbacks()?.onUnlockChange?.({ eventType: "INSERT", new: unlock("u1") }));
+    expect(screen.getByTestId("graph-state")).toHaveTextContent("unlocks:u1:pending");
+    act(() => repo.callbacks()?.onUnlockChange?.({ eventType: "UPDATE", new: unlock("u1", "unlocked") }));
+    expect(screen.getByTestId("graph-state")).toHaveTextContent("unlocks:u1:unlocked");
+  });
+
+  it("maps connection states to Japanese status and can retry", async () => {
+    const user = userEvent.setup();
+    const initial = aggregate();
+    const repo = repository(initial);
+    render(<GroupScreen initialAggregate={initial} repository={repo.api} />);
+
+    expect(screen.getByRole("status")).toHaveTextContent("接続中");
+    act(() => repo.callbacks()?.onConnectionStatus?.("SUBSCRIBED"));
+    expect(screen.getByRole("status")).toHaveTextContent("接続完了");
+    act(() => repo.callbacks()?.onConnectionStatus?.("TIMED_OUT"));
+    expect(screen.getByRole("alert")).toHaveTextContent("オフライン");
+    await user.click(screen.getByRole("button", { name: "接続を再試行" }));
+    expect(repo.cleanup).toHaveBeenCalledOnce();
+    expect(repo.subscribeToGroup).toHaveBeenCalledTimes(2);
+  });
+
+  it("offers manual refresh and hides raw load failures", async () => {
+    const user = userEvent.setup();
+    const initial = aggregate();
+    const repo = repository(initial);
+    repo.loadGroup.mockRejectedValueOnce(new Error("secret database detail"));
+    render(<GroupScreen initialAggregate={initial} repository={repo.api} />);
+
+    expect(await screen.findByText("グループを更新できませんでした。通信環境を確認してください。")).toBeInTheDocument();
+    expect(screen.queryByText(/secret database detail/)).not.toBeInTheDocument();
+    repo.loadGroup.mockResolvedValueOnce(aggregate("g1", [member("a"), member("b"), member("c")]));
+    await user.click(screen.getByRole("button", { name: "最新の情報に更新" }));
+    await waitFor(() => expect(screen.getByTestId("graph-state")).toHaveTextContent("pairs:3"));
+  });
+
+  it("ignores stale events and load results after a group change", async () => {
+    let resolveFirst!: (value: GroupAggregate) => void;
+    const first = aggregate("g1");
+    const second = aggregate("g2", [member("x")]);
+    const oldCallbacks: { value?: GroupSubscriptionCallbacks } = {};
+    const cleanupFirst = vi.fn(async () => undefined);
+    const cleanupSecond = vi.fn(async () => undefined);
+    const repositoryApi = {
+      loadGroup: vi.fn((groupId: string) => groupId === "g1"
+        ? new Promise<GroupAggregate>((resolve) => { resolveFirst = resolve; })
+        : Promise.resolve(second)),
+      subscribeToGroup: vi.fn((groupId: string, callbacks: GroupSubscriptionCallbacks) => {
+        if (groupId === "g1") oldCallbacks.value = callbacks;
+        return groupId === "g1" ? cleanupFirst : cleanupSecond;
+      }),
+    } as never;
+    const view = render(<GroupScreen initialAggregate={first} repository={repositoryApi} />);
+    view.rerender(<GroupScreen initialAggregate={second} repository={repositoryApi} />);
+    await waitFor(() => expect(screen.getByRole("heading", { name: "グループg2" })).toBeInTheDocument());
+
+    act(() => oldCallbacks.value?.onMemberChange?.({ eventType: "INSERT", new: member("stale") }));
+    await act(async () => resolveFirst(aggregate("g1", [member("stale-load")] )));
+    expect(screen.getByTestId("graph-state")).toHaveTextContent(/members:x:x;\s*pairs:0/);
+    expect(cleanupFirst).toHaveBeenCalledOnce();
+  });
+});

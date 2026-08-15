@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { GroupScreen } from "@/features/group-graph/group-screen";
 import { SupabaseConfigurationError } from "@/lib/supabase/browser";
 import { createBrowserGroupRepository, type GroupAggregate, type GroupInvitePreview } from "@/lib/supabase/group-repository";
 import { INVITE_TOKEN_PATTERN } from "./create-group-form";
@@ -15,23 +16,6 @@ interface GroupGateProps {
   repositoryFactory?: () => BrowserRepository;
 }
 
-function MemberGraphPlaceholder({ aggregate }: { aggregate: GroupAggregate }) {
-  return (
-    <main className="group-member-shell">
-      <header>
-        <p className="hero__eyebrow">MofuType グループ</p>
-        <h1>{aggregate.group.name}</h1>
-        <p>メンバー {aggregate.members.length}人</p>
-      </header>
-      <section className="graph-placeholder" aria-label="関係性グラフ準備中"
-        data-testid="relationship-graph-placeholder" data-task8-seam="relationship-graph">
-        <h2>関係性グラフ</h2>
-        <p>グループの関係性を表示する準備をしています。</p>
-      </section>
-    </main>
-  );
-}
-
 export function GroupGate(props: GroupGateProps) {
   return <GroupGateForInvite key={props.inviteToken} {...props} />;
 }
@@ -39,6 +23,7 @@ export function GroupGate(props: GroupGateProps) {
 function GroupGateForInvite({ inviteToken, repositoryFactory = createBrowserGroupRepository }: GroupGateProps) {
   const validToken = INVITE_TOKEN_PATTERN.test(inviteToken);
   const [aggregate, setAggregate] = useState<GroupAggregate | null>(null);
+  const [repository, setRepository] = useState<BrowserRepository | null>(null);
   const [preview, setPreview] = useState<GroupInvitePreview | null>(null);
   const [status, setStatus] = useState<"loading" | "join" | "missing" | "full" | "error">("loading");
   const [errorMessage, setErrorMessage] = useState("");
@@ -49,14 +34,15 @@ function GroupGateForInvite({ inviteToken, repositoryFactory = createBrowserGrou
     let current = true;
     (async () => {
       try {
-        const repository = repositoryFactory();
-        const foundPreview = await repository.previewGroupInvite(inviteToken);
+        const activeRepository = repositoryFactory();
+        setRepository(activeRepository);
+        const foundPreview = await activeRepository.previewGroupInvite(inviteToken);
         if (!current) return;
         if (!foundPreview) {
           setStatus("missing");
           return;
         }
-        const match = await repository.findJoinedGroupByInviteToken(inviteToken);
+        const match = await activeRepository.findJoinedGroupByInviteToken(inviteToken);
         if (!current) return;
         if (match) {
           setAggregate(match);
@@ -91,7 +77,9 @@ function GroupGateForInvite({ inviteToken, repositoryFactory = createBrowserGrou
       </main>
     );
   }
-  if (aggregate) return <MemberGraphPlaceholder aggregate={aggregate} />;
+  if (aggregate && repository) {
+    return <GroupScreen initialAggregate={aggregate} repository={repository} />;
+  }
   if (status === "loading") return <main className="group-gate-message" role="status">参加状況を確認しています</main>;
   if (status === "missing") {
     return <main className="group-gate-message"><h1>招待リンクが無効か、削除されています</h1></main>;
@@ -117,7 +105,7 @@ function GroupGateForInvite({ inviteToken, repositoryFactory = createBrowserGrou
   }
   return (
     <main className="group-gate-shell">
-      <JoinGroupForm inviteToken={inviteToken} repositoryFactory={repositoryFactory}
+      <JoinGroupForm inviteToken={inviteToken} repositoryFactory={() => repository ?? repositoryFactory()}
         preview={preview ?? undefined} onJoined={(joined) => setAggregate(joined)} />
     </main>
   );

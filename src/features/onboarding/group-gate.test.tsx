@@ -4,6 +4,15 @@ import { describe, expect, it, vi } from "vitest";
 
 import { SupabaseConfigurationError } from "@/lib/supabase/browser";
 import type { GroupAggregate, GroupInvitePreview } from "@/lib/supabase/group-repository";
+
+const groupScreenProps = vi.hoisted(() => ({ current: null as null | { initialAggregate: GroupAggregate; repository: unknown } }));
+vi.mock("@/features/group-graph/group-screen", () => ({
+  GroupScreen: (props: { initialAggregate: GroupAggregate; repository: unknown }) => {
+    groupScreenProps.current = props;
+    return <main data-testid="group-screen"><h1>{props.initialAggregate.group.name}</h1><p>メンバー {props.initialAggregate.members.length}人</p></main>;
+  },
+}));
+
 import { GroupGate } from "./group-gate";
 
 const token = "d".repeat(64);
@@ -27,18 +36,20 @@ describe("GroupGate", () => {
     },
   );
 
-  it("previews first, then renders the Task 8 seam for an existing member", async () => {
+  it("previews first, then renders GroupScreen with the same repository for an existing member", async () => {
     let resolve!: (value: GroupAggregate) => void;
     const previewGroupInvite = vi.fn(async () => preview);
     const findJoinedGroupByInviteToken = vi.fn(() => new Promise<GroupAggregate>((done) => { resolve = done; }));
-    render(<GroupGate inviteToken={token} repositoryFactory={() => ({ previewGroupInvite, findJoinedGroupByInviteToken } as never)} />);
+    const repository = { previewGroupInvite, findJoinedGroupByInviteToken } as never;
+    render(<GroupGate inviteToken={token} repositoryFactory={() => repository} />);
     expect(screen.getByRole("status")).toHaveTextContent("参加状況を確認しています");
     await waitFor(() => expect(findJoinedGroupByInviteToken).toHaveBeenCalledOnce());
     expect(previewGroupInvite.mock.invocationCallOrder[0]).toBeLessThan(findJoinedGroupByInviteToken.mock.invocationCallOrder[0]);
     resolve(aggregate);
     expect(await screen.findByRole("heading", { name: "なかまたち" })).toBeInTheDocument();
     expect(screen.getByText("メンバー 2人")).toBeInTheDocument();
-    expect(screen.getByTestId("relationship-graph-placeholder")).toHaveAttribute("data-task8-seam", "relationship-graph");
+    expect(screen.getByTestId("group-screen")).toBeInTheDocument();
+    expect(groupScreenProps.current?.repository).toBe(repository);
   });
 
   it("shows safe preview metadata with the join form for a nonmember", async () => {
