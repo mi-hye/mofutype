@@ -110,12 +110,15 @@ type RealtimeRegistration = {
 class FakeChannel {
   registrations: RealtimeRegistration[] = [];
   statusCallback?: (status: string, error?: unknown) => void;
+  registrationError?: unknown;
+  removeCallback?: () => Promise<void>;
 
   on(
     _kind: "postgres_changes",
     options: { event: string; schema: string; table: string; filter: string },
     callback: (payload: Record<string, unknown>) => void,
   ) {
+    if (this.registrationError !== undefined) throw this.registrationError;
     this.registrations.push({ ...options, callback });
     return this;
   }
@@ -125,6 +128,10 @@ class FakeChannel {
     return this;
   }
 
+  async remove(): Promise<void> {
+    await this.removeCallback?.();
+  }
+
   emit(table: string, event: string, row: Record<string, unknown>) {
     this.registrations
       .filter((item) => item.table === table && item.event === event)
@@ -132,9 +139,15 @@ class FakeChannel {
         item.callback({
           eventType: event,
           new: event === "DELETE" ? {} : row,
-          old: event === "DELETE" ? row : {},
+          old: event === "DELETE" ? { id: row.id } : {},
         }),
       );
+  }
+
+  emitRaw(table: string, event: string, payload: Record<string, unknown>) {
+    this.registrations
+      .filter((item) => item.table === table && item.event === event)
+      .forEach((item) => item.callback(payload));
   }
 }
 
@@ -153,6 +166,8 @@ class FakeSupabaseClient implements GroupRepositoryClient {
   queries = new Map<string, FakeQuery>();
   channels: FakeChannel[] = [];
   removedChannels: FakeChannel[] = [];
+  channelRegistrationError?: unknown;
+  removeChannelError?: unknown;
 
   auth = {
     getSession: async () => ({
@@ -172,6 +187,18 @@ class FakeSupabaseClient implements GroupRepositoryClient {
     );
   }
 
+  createGroupAndJoin(args: Record<string, unknown>): Promise<Result> {
+    return this.rpc("create_group_and_join", args);
+  }
+
+  joinGroup(args: Record<string, unknown>): Promise<Result> {
+    return this.rpc("join_group", args);
+  }
+
+  unlockRelation(args: Record<string, unknown>): Promise<Result> {
+    return this.rpc("unlock_relation_mock", args);
+  }
+
   from(table: string): FakeQuery {
     const query = new FakeQuery(
       this.tableResults.get(table) ?? { data: null, error: new Error("not configured") },
@@ -181,14 +208,40 @@ class FakeSupabaseClient implements GroupRepositoryClient {
     return query;
   }
 
+  loadGroup(groupId: string): Promise<Result> {
+    return this.from("groups")
+      .select("id,name,max_members,created_at")
+      .eq("id", groupId)
+      .maybeSingle();
+  }
+
+  async loadGroupMembers(groupId: string): Promise<Result> {
+    return await this.from("group_members")
+      .select(
+        "id,group_id,user_id,nickname,animal_id,animal_group,mbti,profile_payload,joined_at",
+      )
+      .eq("group_id", groupId);
+  }
+
+  async loadRelationUnlocks(groupId: string): Promise<Result> {
+    return await this.from("relation_unlocks")
+      .select(
+        "id,group_id,member_low_id,member_high_id,status,payment_provider,payment_reference,unlocked_by,unlocked_at",
+      )
+      .eq("group_id", groupId);
+  }
+
   channel(name: string): FakeChannel {
     void name;
     const channel = new FakeChannel();
+    channel.registrationError = this.channelRegistrationError;
+    channel.removeCallback = () => this.removeChannel(channel);
     this.channels.push(channel);
     return channel;
   }
 
   async removeChannel(channel: FakeChannel): Promise<void> {
+    if (this.removeChannelError !== undefined) throw this.removeChannelError;
     this.removedChannels.push(channel);
   }
 }
@@ -237,6 +290,29 @@ describe("Supabase browser configuration", () => {
       "publishable-secret-value",
     );
     expect(SupabaseConfigurationError).toBeDefined();
+  });
+
+  it("wraps a throwing browser client factory without leaking its secrets", () => {
+    process.env.NEXT_PUBLIC_SUPABASE_URL = "https://secret-project.supabase.co";
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = "secret-key-value";
+    const cause = new Error("factory saw secret-key-value");
+    const factory = vi.fn(() => {
+      throw cause;
+    });
+
+    try {
+      createSupabaseBrowserClient(factory);
+      throw new Error("expected configuration failure");
+    } catch (error) {
+      expect(error).toEqual(
+        expect.objectContaining({
+          name: "SupabaseConfigurationError",
+          code: "MISSING_SUPABASE_CONFIG",
+          cause,
+        }),
+      );
+      expect((error as Error).message).not.toMatch(/secret-key-value|secret-project/);
+    }
   });
 });
 
@@ -303,6 +379,25 @@ describe("group repository", () => {
     expect(JSON.stringify(client.rpcCalls)).not.toMatch(/birthDate|birthTime/);
   });
 
+  it("recursively excludes raw birth keys from create payloads", async () => {
+    const client = new FakeSupabaseClient();
+    const source = Object.assign({}, profile) as DerivedProfile & {
+      raw?: { birthDate: string; nested: { birthTime: string } };
+    };
+    source.raw = { birthDate: "2000-01-01", nested: { birthTime: "12:00" } };
+    client.rpcResults.set("create_group_and_join", {
+      data: [{ group_id: "group-1", member_id: "member-1", invite_token: "token" }],
+      error: null,
+    });
+
+    await createGroupRepository(client).createGroup({
+      name: "Friends",
+      nickname: "Mofu",
+      profile: source,
+    });
+    expect(JSON.stringify(client.rpcCalls)).not.toMatch(/birthDate|birthTime|raw|nested/);
+  });
+
   it("joins a group with the exact safe payload and no nested raw birth keys", async () => {
     const client = new FakeSupabaseClient();
     const nestedSource = Object.assign({}, profile) as DerivedProfile & {
@@ -335,15 +430,20 @@ describe("group repository", () => {
     expect(JSON.stringify(client.rpcCalls)).not.toMatch(/birthDate|birthTime|ignored/);
   });
 
-  it.each(invalidRpcRowSets)(
-    "rejects empty or multiple RPC rows",
-    async (data) => {
-      const client = new FakeSupabaseClient();
-      client.rpcResults.set("join_group", { data, error: null });
+  it.each(["create_group_and_join", "join_group"] as const)(
+    "rejects empty or multiple %s RPC rows",
+    async (rpcName) => {
+      for (const data of invalidRpcRowSets) {
+        const client = new FakeSupabaseClient();
+        client.rpcResults.set(rpcName, { data, error: null });
+        const repository = createGroupRepository(client);
 
-      await expect(
-        createGroupRepository(client).joinGroup({ inviteToken: "token", nickname: "Mofu", profile }),
-      ).rejects.toEqual(expectRepositoryError("INVALID_DATA"));
+        await expect(
+          rpcName === "create_group_and_join"
+            ? repository.createGroup({ name: "Friends", nickname: "Mofu", profile })
+            : repository.joinGroup({ inviteToken: "token", nickname: "Mofu", profile }),
+        ).rejects.toEqual(expectRepositoryError("INVALID_DATA"));
+      }
     },
   );
 
@@ -420,6 +520,52 @@ describe("group repository", () => {
     expect(client.queries.get("groups")?.selected).not.toMatch(/invite_token_hash|created_by/);
   });
 
+  it("rejects invalid group rows", async () => {
+    const client = new FakeSupabaseClient();
+    client.tableResults.set("groups", {
+      data: { ...groupRow, max_members: "thirty" },
+      error: null,
+    });
+    client.tableResults.set("group_members", { data: [], error: null });
+    client.tableResults.set("relation_unlocks", { data: [], error: null });
+
+    await expect(createGroupRepository(client).loadGroup("group-1")).rejects.toEqual(
+      expectRepositoryError("INVALID_DATA"),
+    );
+  });
+
+  it.each(["group_members", "relation_unlocks"])(
+    "wraps %s query errors as LOAD_FAILED",
+    async (table) => {
+      const client = new FakeSupabaseClient();
+      client.tableResults.set("groups", { data: groupRow, error: null });
+      client.tableResults.set("group_members", { data: [], error: null });
+      client.tableResults.set("relation_unlocks", { data: [], error: null });
+      client.tableResults.set(table, { data: null, error: new Error("private load detail") });
+
+      await expect(createGroupRepository(client).loadGroup("group-1")).rejects.toEqual(
+        expectRepositoryError("LOAD_FAILED"),
+      );
+    },
+  );
+
+  it.each([
+    ["group_members", null],
+    ["relation_unlocks", {}],
+    ["group_members", [{ ...memberRow, profile_payload: { version: 9 } }]],
+    ["relation_unlocks", [{ ...unlockRow, status: "unknown" }]],
+  ])("rejects invalid %s collections or rows", async (table, data) => {
+    const client = new FakeSupabaseClient();
+    client.tableResults.set("groups", { data: groupRow, error: null });
+    client.tableResults.set("group_members", { data: [], error: null });
+    client.tableResults.set("relation_unlocks", { data: [], error: null });
+    client.tableResults.set(table, { data, error: null });
+
+    await expect(createGroupRepository(client).loadGroup("group-1")).rejects.toEqual(
+      expectRepositoryError("INVALID_DATA"),
+    );
+  });
+
   it("distinguishes a missing group from other load errors", async () => {
     const missing = new FakeSupabaseClient();
     missing.tableResults.set("groups", { data: null, error: null });
@@ -442,6 +588,9 @@ describe("group repository", () => {
 
   it.each([
     [{ ...memberRow, profile_payload: "not-json-object" }],
+    [{ ...memberRow, profile_payload: { ...profile, version: 2 } }],
+    [{ ...memberRow, profile_payload: { ...profile, mbti: "XXXX" } }],
+    [{ ...memberRow, profile_payload: { ...profile, calculationMode: "approximate" } }],
     [{ ...memberRow, animal_group: "STARS" }],
     [{ ...memberRow, animal_id: "dragon" }],
     [{ ...memberRow, profile_payload: { ...profile, animalId: "wolf" } }],
@@ -476,6 +625,15 @@ describe("group repository", () => {
     await expect(
       createGroupRepository(client).unlockPair("group-1", "member-1", "member-2"),
     ).rejects.toEqual(expectRepositoryError("UNLOCK_FAILED"));
+  });
+
+  it.each(invalidRpcRowSets)("rejects empty or multiple unlock rows", async (data) => {
+    const client = new FakeSupabaseClient();
+    client.rpcResults.set("unlock_relation_mock", { data, error: null });
+
+    await expect(
+      createGroupRepository(client).unlockPair("group-1", "member-1", "member-2"),
+    ).rejects.toEqual(expectRepositoryError("INVALID_DATA"));
   });
 
   it("subscribes once per table/event, maps events, reports status, and cleans up once", async () => {
@@ -531,5 +689,70 @@ describe("group repository", () => {
     expect(errors).toHaveBeenCalledWith(expectRepositoryError("INVALID_DATA"));
     channel.statusCallback?.("CHANNEL_ERROR", new Error("private socket detail"));
     expect(errors).toHaveBeenCalledWith(expectRepositoryError("SUBSCRIPTION_FAILED"));
+    channel.statusCallback?.("TIMED_OUT", new Error("private timeout detail"));
+    expect(errors).toHaveBeenCalledWith(expectRepositoryError("SUBSCRIPTION_FAILED"));
+    expect(errors.mock.calls.flatMap((call) => call).map(String).join(" ")).not.toMatch(
+      /private socket detail|private timeout detail/,
+    );
+  });
+
+  it("maps production id-only DELETE payloads without trusting absent old rows", () => {
+    const client = new FakeSupabaseClient();
+    const members = vi.fn();
+    const unlocks = vi.fn();
+    const errors = vi.fn();
+    createGroupRepository(client).subscribeToGroup("group-1", {
+      onMemberChange: members,
+      onUnlockChange: unlocks,
+      onError: errors,
+    });
+    const channel = client.channels[0];
+
+    channel.emit("group_members", "DELETE", memberRow);
+    channel.emit("relation_unlocks", "DELETE", unlockRow);
+    expect(members).toHaveBeenCalledWith({ eventType: "DELETE", id: "member-1" });
+    expect(unlocks).toHaveBeenCalledWith({ eventType: "DELETE", id: "unlock-1" });
+    expect(errors).not.toHaveBeenCalled();
+
+    channel.emitRaw("group_members", "DELETE", {
+      eventType: "DELETE",
+      new: {},
+      old: {},
+    });
+    channel.emitRaw("relation_unlocks", "DELETE", {
+      eventType: "DELETE",
+      new: {},
+      old: { id: 42 },
+    });
+    expect(errors).toHaveBeenCalledTimes(2);
+    expect(errors).toHaveBeenCalledWith(expectRepositoryError("INVALID_DATA"));
+  });
+
+  it("wraps synchronous registration failures", () => {
+    const client = new FakeSupabaseClient();
+    client.channelRegistrationError = new Error("private registration detail");
+
+    try {
+      createGroupRepository(client).subscribeToGroup("group-1", {});
+      throw new Error("expected subscription failure");
+    } catch (error) {
+      expect(error).toEqual(expectRepositoryError("SUBSCRIPTION_FAILED"));
+      expect((error as Error).message).not.toContain("private registration detail");
+    }
+  });
+
+  it("reports cleanup failures once with a stable error and remains idempotent", async () => {
+    const client = new FakeSupabaseClient();
+    client.removeChannelError = new Error("private cleanup detail");
+    const errors = vi.fn();
+    const cleanup = createGroupRepository(client).subscribeToGroup("group-1", {
+      onError: errors,
+    });
+
+    await cleanup();
+    await cleanup();
+    expect(errors).toHaveBeenCalledTimes(1);
+    expect(errors).toHaveBeenCalledWith(expectRepositoryError("SUBSCRIPTION_FAILED"));
+    expect((errors.mock.calls[0][0] as Error).message).not.toContain("private cleanup detail");
   });
 });

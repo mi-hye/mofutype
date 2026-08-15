@@ -1,4 +1,7 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+
 import type { DerivedProfile } from "../astrology/types";
+import type { AppDatabase } from "./app-database.types";
 import { createSupabaseBrowserClient } from "./browser";
 import {
   GroupRepositoryError,
@@ -15,11 +18,10 @@ export { GroupRepositoryError, type GroupRepositoryErrorCode } from "./models";
 
 type ClientResult = { data: unknown; error: unknown };
 
-interface QueryBuilder extends PromiseLike<ClientResult> {
-  select(columns: string): QueryBuilder;
-  eq(column: string, value: unknown): QueryBuilder;
-  maybeSingle(): Promise<ClientResult>;
-}
+type Functions = AppDatabase["public"]["Functions"];
+type CreateGroupArgs = Functions["create_group_and_join"]["Args"];
+type JoinGroupArgs = Functions["join_group"]["Args"];
+type UnlockRelationArgs = Functions["unlock_relation_mock"]["Args"];
 
 interface RealtimeChannel {
   on(
@@ -33,6 +35,7 @@ interface RealtimeChannel {
     callback: (payload: RealtimePayload) => void,
   ): RealtimeChannel;
   subscribe(callback: (status: string, error?: unknown) => void): RealtimeChannel;
+  remove(): Promise<void>;
 }
 
 export interface GroupRepositoryClient {
@@ -46,10 +49,13 @@ export interface GroupRepositoryClient {
       error: unknown;
     }>;
   };
-  rpc(name: string, args: Record<string, unknown>): Promise<ClientResult>;
-  from(table: string): QueryBuilder;
+  createGroupAndJoin(args: CreateGroupArgs): Promise<ClientResult>;
+  joinGroup(args: JoinGroupArgs): Promise<ClientResult>;
+  unlockRelation(args: UnlockRelationArgs): Promise<ClientResult>;
+  loadGroup(groupId: string): Promise<ClientResult>;
+  loadGroupMembers(groupId: string): Promise<ClientResult>;
+  loadRelationUnlocks(groupId: string): Promise<ClientResult>;
   channel(name: string): RealtimeChannel;
-  removeChannel(channel: RealtimeChannel): Promise<unknown> | unknown;
 }
 
 export interface CreateGroupInput {
@@ -70,11 +76,9 @@ export interface GroupAggregate {
   unlocks: RelationUnlock[];
 }
 
-export type GroupChangeEvent<T> = {
-  eventType: "INSERT" | "UPDATE" | "DELETE";
-  new: T | null;
-  old: T | null;
-};
+export type GroupChangeEvent<T> =
+  | { eventType: "INSERT" | "UPDATE"; new: T }
+  | { eventType: "DELETE"; id: string };
 
 export interface GroupSubscriptionCallbacks {
   onMemberChange?(change: GroupChangeEvent<GroupMember>): void;
@@ -111,9 +115,9 @@ function repositoryError(
   );
 }
 
-function safeProfile(profile: DerivedProfile): DerivedProfile {
+function safeProfile(profile: DerivedProfile) {
   return {
-    version: 1,
+    version: 1 as const,
     animalId: profile.animalId,
     animalGroup: profile.animalGroup,
     mbti: profile.mbti,
@@ -150,21 +154,27 @@ function mapChange<T>(
   if (eventType !== "INSERT" && eventType !== "UPDATE" && eventType !== "DELETE") {
     throw repositoryError("INVALID_DATA");
   }
+  if (eventType === "DELETE") {
+    // With the default Supabase replica identity, DELETE payloads contain only
+    // the primary key in `old`; a full row cannot be safely reconstructed.
+    return {
+      eventType,
+      id: requiredString(payload.old as Record<string, unknown>, "id"),
+    };
+  }
   return {
     eventType,
-    new: eventType === "DELETE" ? null : mapper(payload.new),
-    old: eventType === "DELETE" ? mapper(payload.old) : null,
+    new: mapper(payload.new),
   };
 }
 
 export function createGroupRepository(client: GroupRepositoryClient) {
-  async function callRpc(
-    name: string,
-    args: Record<string, unknown>,
+  async function callOperation(
+    operation: () => Promise<ClientResult>,
     errorCode: "CREATE_FAILED" | "JOIN_FAILED" | "UNLOCK_FAILED",
   ): Promise<ClientResult> {
     try {
-      const result = await client.rpc(name, args);
+      const result = await operation();
       if (result.error) throw repositoryError(errorCode, result.error);
       return result;
     } catch (cause) {
@@ -197,14 +207,18 @@ export function createGroupRepository(client: GroupRepositoryClient) {
   async function createGroup(input: CreateGroupInput) {
     await ensureAnonymousSession();
     const payload = safeProfile(input.profile);
-    const result = await callRpc("create_group_and_join", {
+    const args: CreateGroupArgs = {
       p_name: input.name,
       p_nickname: input.nickname,
       p_animal_id: payload.animalId,
       p_animal_group: payload.animalGroup,
       p_mbti: payload.mbti,
       p_profile_payload: payload,
-    }, "CREATE_FAILED");
+    };
+    const result = await callOperation(
+      () => client.createGroupAndJoin(args),
+      "CREATE_FAILED",
+    );
     const row = exactlyOneRow(result.data);
     return {
       groupId: requiredString(row, "group_id"),
@@ -216,14 +230,15 @@ export function createGroupRepository(client: GroupRepositoryClient) {
   async function joinGroup(input: JoinGroupInput) {
     await ensureAnonymousSession();
     const payload = safeProfile(input.profile);
-    const result = await callRpc("join_group", {
+    const args: JoinGroupArgs = {
       p_invite_token: input.inviteToken,
       p_nickname: input.nickname,
       p_animal_id: payload.animalId,
       p_animal_group: payload.animalGroup,
       p_mbti: payload.mbti,
       p_profile_payload: payload,
-    }, "JOIN_FAILED");
+    };
+    const result = await callOperation(() => client.joinGroup(args), "JOIN_FAILED");
     const row = exactlyOneRow(result.data);
     return {
       groupId: requiredString(row, "group_id"),
@@ -235,11 +250,7 @@ export function createGroupRepository(client: GroupRepositoryClient) {
     await ensureAnonymousSession();
     let groupResult: ClientResult;
     try {
-      groupResult = await client
-        .from("groups")
-        .select("id,name,max_members,created_at")
-        .eq("id", groupId)
-        .maybeSingle();
+      groupResult = await client.loadGroup(groupId);
     } catch (cause) {
       throw repositoryError("LOAD_FAILED", cause);
     }
@@ -250,18 +261,8 @@ export function createGroupRepository(client: GroupRepositoryClient) {
     let unlocksResult: ClientResult;
     try {
       [membersResult, unlocksResult] = await Promise.all([
-        client
-          .from("group_members")
-          .select(
-            "id,group_id,user_id,nickname,animal_id,animal_group,mbti,profile_payload,joined_at",
-          )
-          .eq("group_id", groupId),
-        client
-          .from("relation_unlocks")
-          .select(
-            "id,group_id,member_low_id,member_high_id,status,payment_provider,payment_reference,unlocked_by,unlocked_at",
-          )
-          .eq("group_id", groupId),
+        client.loadGroupMembers(groupId),
+        client.loadRelationUnlocks(groupId),
       ]);
     } catch (cause) {
       throw repositoryError("LOAD_FAILED", cause);
@@ -285,11 +286,15 @@ export function createGroupRepository(client: GroupRepositoryClient) {
     memberB: string,
   ): Promise<RelationUnlock> {
     await ensureAnonymousSession();
-    const result = await callRpc("unlock_relation_mock", {
+    const args: UnlockRelationArgs = {
       p_group_id: groupId,
       p_member_a: memberA,
       p_member_b: memberB,
-    }, "UNLOCK_FAILED");
+    };
+    const result = await callOperation(
+      () => client.unlockRelation(args),
+      "UNLOCK_FAILED",
+    );
     return mapRelationUnlock(exactlyOneRow(result.data));
   }
 
@@ -338,7 +343,7 @@ export function createGroupRepository(client: GroupRepositoryClient) {
         if (cleaned) return;
         cleaned = true;
         try {
-          await client.removeChannel(channel);
+          await channel.remove();
         } catch (cause) {
           callbacks.onError?.(repositoryError("SUBSCRIPTION_FAILED", cause));
         }
@@ -360,6 +365,83 @@ export function createGroupRepository(client: GroupRepositoryClient) {
 
 export function createBrowserGroupRepository() {
   return createGroupRepository(
-    createSupabaseBrowserClient() as unknown as GroupRepositoryClient,
+    createSupabaseGroupRepositoryAdapter(createSupabaseBrowserClient()),
   );
+}
+
+const GROUP_COLUMNS = "id,name,max_members,created_at";
+const MEMBER_COLUMNS =
+  "id,group_id,user_id,nickname,animal_id,animal_group,mbti,profile_payload,joined_at";
+const UNLOCK_COLUMNS =
+  "id,group_id,member_low_id,member_high_id,status,payment_provider,payment_reference,unlocked_by,unlocked_at";
+
+export function createSupabaseGroupRepositoryAdapter(
+  client: SupabaseClient<AppDatabase>,
+): GroupRepositoryClient {
+  return {
+    auth: {
+      async getSession() {
+        const { data, error } = await client.auth.getSession();
+        return {
+          data: {
+            session: data.session
+              ? { user: { id: data.session.user.id } }
+              : null,
+          },
+          error,
+        };
+      },
+      async signInAnonymously() {
+        const { data, error } = await client.auth.signInAnonymously();
+        return {
+          data: { user: data.user ? { id: data.user.id } : null },
+          error,
+        };
+      },
+    },
+    createGroupAndJoin: async (args) =>
+      await client.rpc("create_group_and_join", args),
+    joinGroup: async (args) => await client.rpc("join_group", args),
+    unlockRelation: async (args) =>
+      await client.rpc("unlock_relation_mock", args),
+    loadGroup: async (groupId) =>
+      await client
+        .from("groups")
+        .select(GROUP_COLUMNS)
+        .eq("id", groupId)
+        .maybeSingle(),
+    loadGroupMembers: async (groupId) =>
+      await client
+        .from("group_members")
+        .select(MEMBER_COLUMNS)
+        .eq("group_id", groupId),
+    loadRelationUnlocks: async (groupId) =>
+      await client
+        .from("relation_unlocks")
+        .select(UNLOCK_COLUMNS)
+        .eq("group_id", groupId),
+    channel(name) {
+      const supabaseChannel = client.channel(name);
+      const channel: RealtimeChannel = {
+        on(kind, options, callback) {
+          supabaseChannel.on(kind, options, (payload) =>
+            callback({
+              eventType: payload.eventType,
+              new: payload.new,
+              old: payload.old,
+            }),
+          );
+          return channel;
+        },
+        subscribe(callback) {
+          supabaseChannel.subscribe((status, error) => callback(status, error));
+          return channel;
+        },
+        async remove() {
+          await client.removeChannel(supabaseChannel);
+        },
+      };
+      return channel;
+    },
+  };
 }

@@ -1,4 +1,5 @@
 import { createBrowserClient } from "@supabase/ssr";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { AppDatabase } from "./app-database.types";
 
@@ -11,7 +12,15 @@ export class SupabaseConfigurationError extends Error {
   }
 }
 
-export function createSupabaseBrowserClient() {
+export type SupabaseBrowserClientFactory = (
+  url: string,
+  publishableKey: string,
+) => SupabaseClient<AppDatabase>;
+
+export function createSupabaseBrowserClient(
+  factory: SupabaseBrowserClientFactory = (url, publishableKey) =>
+    createBrowserClient<AppDatabase>(url, publishableKey),
+) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() ?? "";
   const publishableKey =
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim() ?? "";
@@ -28,5 +37,9 @@ export function createSupabaseBrowserClient() {
     throw new SupabaseConfigurationError({ cause });
   }
 
-  return createBrowserClient<AppDatabase>(url, publishableKey);
+  try {
+    return factory(url, publishableKey);
+  } catch (cause) {
+    throw new SupabaseConfigurationError({ cause });
+  }
 }
