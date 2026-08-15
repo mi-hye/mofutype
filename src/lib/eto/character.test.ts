@@ -1,8 +1,21 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, expectTypeOf, it } from "vitest";
 
 import { MBTI_TYPES, ZODIAC_IDS, type MbtiType, type ZodiacId } from "./types";
 import { ZODIACS } from "./zodiac";
-import { createCharacterCopy, MBTI_MODIFIERS_JA } from "./character";
+import { createCharacterCopy, MBTI_MODIFIERS_JA, type CharacterCopy } from "./character";
+
+type IfExactly<X, Y, Then, Else> =
+  (<T>() => T extends X ? 1 : 2) extends
+  (<T>() => T extends Y ? 1 : 2) ? Then : Else;
+
+type ReadonlyKeys<T> = {
+  [Key in keyof T]-?: IfExactly<
+    Pick<T, Key>,
+    { -readonly [WritableKey in Key]: T[WritableKey] },
+    never,
+    Key
+  >;
+}[keyof T];
 
 const EXPECTED_MODIFIERS = {
   INTJ: "戦略的な",
@@ -40,8 +53,7 @@ describe("createCharacterCopy", () => {
         const second = createCharacterCopy(zodiacId, mbti);
 
         expect(first).toEqual(second);
-        expect(first.titleJa).toContain(zodiac.nameJa);
-        expect(first.titleJa).toContain(EXPECTED_MODIFIERS[mbti]);
+        expect(first.titleJa).toBe(`${EXPECTED_MODIFIERS[mbti]}${zodiac.nameJa}`);
         expect(first.titleJa.trim().length).toBeGreaterThan(0);
         expect(first.descriptionJa.trim().length).toBeGreaterThan(0);
         expect(first.descriptionJa).toMatch(/[。！？]$/);
@@ -69,6 +81,13 @@ describe("createCharacterCopy", () => {
     expect(Object.isFrozen(copy.zodiacTraitsJa)).toBe(true);
     expect(() => (copy.zodiacTraitsJa as unknown as string[]).push("変更")).toThrow();
     expect(createCharacterCopy("rat", "INTJ").zodiacTraitsJa).toEqual(["機転", "観察", "工夫"]);
+  });
+
+  it("keeps properties writable at the type level while traits remain a readonly tuple", () => {
+    expectTypeOf<ReadonlyKeys<CharacterCopy>>().toEqualTypeOf<never>();
+    expectTypeOf<CharacterCopy["zodiacTraitsJa"]>().toEqualTypeOf<
+      readonly [string, string, string]
+    >();
   });
 
   it.each([

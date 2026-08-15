@@ -2,10 +2,10 @@ import { MBTI_TYPES, type MbtiType, type ZodiacId } from "./types";
 import { ZODIACS, type ZodiacCatalogEntry } from "./zodiac";
 
 export interface CharacterCopy {
-  readonly titleJa: string;
-  readonly zodiacTraitsJa: readonly [string, string, string];
-  readonly mbtiModifierJa: string | null;
-  readonly descriptionJa: string;
+  titleJa: string;
+  zodiacTraitsJa: readonly [string, string, string];
+  mbtiModifierJa: string | null;
+  descriptionJa: string;
 }
 
 export const MBTI_MODIFIERS_JA: Readonly<Record<MbtiType, string>> = Object.freeze({
@@ -84,7 +84,7 @@ export function createCharacterCopy(
     : `${BASE_DESCRIPTIONS_JA[zodiacId]}${MBTI_CONTRIBUTIONS_JA[mbti]}`;
 
   return Object.freeze({
-    titleJa: modifier === null ? `${zodiac.nameJa}タイプ` : `${modifier}${zodiac.nameJa}タイプ`,
+    titleJa: modifier === null ? `${zodiac.nameJa}タイプ` : `${modifier}${zodiac.nameJa}`,
     zodiacTraitsJa: zodiac.keywordsJa,
     mbtiModifierJa: modifier,
     descriptionJa,
