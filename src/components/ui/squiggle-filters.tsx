@@ -71,6 +71,21 @@ export function SquiggleFilters() {
             yChannelSelector="G"
           />
         </filter>
+        <filter id="wrinkle-effect" x="-10%" y="-10%" width="120%" height="120%">
+          <feTurbulence
+            type="fractalNoise"
+            baseFrequency="0.03"
+            numOctaves={3}
+            result="wrinkle-noise"
+          />
+          <feDisplacementMap
+            in="SourceGraphic"
+            in2="wrinkle-noise"
+            scale={9}
+            xChannelSelector="R"
+            yChannelSelector="G"
+          />
+        </filter>
       </defs>
     </svg>
   );

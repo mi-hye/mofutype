@@ -84,6 +84,13 @@ describe("production source safety", () => {
     for (const filterId of ["squiggle-1", "squiggle-2", "squiggle-3", "squiggle-4"]) {
       expect(squiggleFilters).toContain(`id="${filterId}"`);
     }
+    expect(squiggleFilters).toContain('id="wrinkle-effect"');
+    expect(squiggleFilters).toContain('baseFrequency="0.03"');
+    expect(squiggleFilters).toContain("numOctaves={3}");
+    expect(squiggleFilters).toContain("scale={9}");
+    expect(globalStyles).toMatch(
+      /\.ui-button\[data-variant="secondary"\]::before[^}]*animation:\s*none[^}]*filter:\s*url\(#wrinkle-effect\)/,
+    );
     expect(globalStyles).toContain("@media (prefers-reduced-motion: reduce)");
     expect(globalStyles).toContain('.animal-avatar[data-selected="true"]');
     expect(globalStyles).toMatch(
