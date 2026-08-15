@@ -20,7 +20,7 @@ describe("Home", () => {
     render(<Home />);
 
     expect(
-      screen.getByRole("heading", { name: "みんなの関係、ぜんぶ丸見え。" }),
+      screen.getByRole("heading", { name: "わたしたち、こんな感じ。" }),
     ).toBeInTheDocument();
     expect(screen.getByText("#かわいい")).toBeInTheDocument();
     expect(screen.getByText("#ちょい毒")).toBeInTheDocument();

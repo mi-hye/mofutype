@@ -18,8 +18,8 @@ export default function Home() {
           <span className="hero__stripe" />
         </div>
         <p className="hero__eyebrow">性格タイプ × 動物キャラクター</p>
-        <h1 aria-label="みんなの関係、ぜんぶ丸見え。">
-          みんなの関係、<span>ぜんぶ丸見え。</span>
+        <h1 aria-label="わたしたち、こんな感じ。">
+          わたしたち、<span>こんな感じ。</span>
         </h1>
         <div className="hero__stickers" aria-label="ムード">
           <span>#かわいい</span>
