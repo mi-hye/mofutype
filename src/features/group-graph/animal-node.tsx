@@ -12,6 +12,11 @@ export function AnimalNode({ data }: { data: AnimalNodeData }) {
       <Handle type="target" position={Position.Top} className="animal-graph-node__handle" />
       <AnimalAvatar animalId={data.member.animalId} nickname={data.member.nickname}
         size={data.size} selected={data.selected} />
+      {data.selected ? (
+        <span className="animal-graph-node__selected-sticker" aria-hidden="true">
+          SELECTED
+        </span>
+      ) : null}
       <span className="animal-graph-node__nickname">{data.member.nickname}</span>
       {data.discriminator ? (
         <span className="animal-graph-node__discriminator">{data.discriminator}</span>

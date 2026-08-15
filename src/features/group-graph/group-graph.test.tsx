@@ -75,6 +75,8 @@ describe("GroupGraph", () => {
     render(<GroupGraph members={[member("a", "あお"), member("b", "べに"), member("c", "ちゃ")]} unlocks={[]} onPairSelect={vi.fn()} />);
 
     await user.click(screen.getByTestId("canvas-node-b"));
+    expect(within(screen.getByTestId("canvas-node-b")).getByText("SELECTED"))
+      .toHaveClass("animal-graph-node__selected-sticker");
     expect(screen.getByRole("status", { name: "選択中のメンバー" })).toHaveTextContent("べに");
     expect(screen.getByRole("status", { name: "選択中のメンバー" })).toHaveTextContent("2本");
     await user.click(screen.getByTestId("canvas-pane"));
