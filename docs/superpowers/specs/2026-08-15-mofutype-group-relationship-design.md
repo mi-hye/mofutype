@@ -1,32 +1,32 @@
-# MofuType Group Relationship Graph Design
+# MofuType 그룹 관계 그래프 설계
 
-## 1. Product goal
+## 1. 제품 목표
 
-MofuType is a mobile-first Japanese web app for groups of friends, classmates, coworkers, or partners. A group creator shares one link. Each participant enters a nickname, birth date, optional birth time, and optional MBTI. The group page renders every participant as a custom animal character and visualizes all pairwise relationships as an interactive graph.
+MofuType은 친구, 동급생, 직장 동료, 연인 등 여러 사람이 함께 사용하는 모바일 우선 일본어 웹 앱이다. 그룹 생성자가 하나의 링크를 공유하면 각 참여자는 닉네임, 생년월일, 선택 항목인 출생시간과 MBTI를 입력한다. 그룹 화면은 모든 참여자를 전용 동물 캐릭터로 표시하고, 참여자 사이의 모든 관계를 인터랙티브 그래프로 시각화한다.
 
-The product does not reduce a relationship to a percentage. Free users see the graph and a short summary for each pair. A group member may pay 300 JPY to unlock one pair's detailed relationship report. Once unlocked, that report is visible to every member of the same group.
+이 제품은 관계를 궁합 퍼센트로 단순화하지 않는다. 무료 사용자는 관계 그래프와 각 관계의 짧은 요약을 볼 수 있다. 그룹 구성원은 두 사람의 상세 관계 리포트를 300엔에 해제할 수 있다. 한 번 해제된 리포트는 같은 그룹의 모든 구성원에게 공개된다.
 
-The first release completes the full user flow and UI with local astrology/relationship calculation and mock payment. Supabase provides shared group persistence and realtime updates from the start. A later release replaces the local astrology provider and mock payment provider with production webhooks without changing the UI contracts.
+첫 번째 릴리스에서는 로컬 사주·관계 계산과 모의 결제를 사용해 전체 사용자 흐름과 UI를 완성한다. 그룹 공유 저장과 실시간 갱신에는 처음부터 Supabase를 사용한다. 이후 로컬 사주 제공자와 모의 결제 제공자를 실제 Webhook으로 교체하되 UI 계약은 변경하지 않는다.
 
-## 2. Audience and language
+## 2. 대상 사용자와 언어
 
-- Primary audience: Japanese Gen Z and millennials arriving from X.
-- All user-facing interface, validation, results, and share copy are Japanese.
-- Internal types, code symbols, and developer documentation use English.
-- Copy is conversational, punchy, and shareable rather than formal or clinical.
+- 주요 대상은 X를 통해 유입되는 일본 Gen Z와 밀레니얼 세대다.
+- 사용자에게 노출되는 UI, 검증 메시지, 결과, 공유 문구는 모두 일본어로 작성한다.
+- 내부 타입, 코드 심볼, 개발자 문서는 영어를 사용한다.
+- 카피는 형식적이거나 임상적인 표현보다 대화체, 강한 한 줄 표현, 공유하기 좋은 문장을 사용한다.
 
-## 3. Visual direction
+## 3. 비주얼 방향
 
-Use Soft Pop as the base style and add Zine Punch accents:
+Soft Pop을 기본 스타일로 사용하고 Zine Punch 요소를 더한다.
 
-- Warm cream surfaces with coral, butter yellow, mint, and lilac accents.
-- Rounded cards and friendly controls combined with bold Japanese headlines, sticker-like highlights, and strong dark outlines.
-- Twelve original SVG animal characters replace emoji and third-party icons.
-- Animal assets share a `0 0 256 256` viewBox, transparent background, rounded outlines, flat colors, and a consistent visual system.
-- The design system exposes color, spacing, radius, shadow, type, and motion tokens so visual polish can be adjusted after functional implementation.
-- Motion clarifies state: new members enter, selected nodes lift, connected edges brighten, and detail panels slide up. Motion respects reduced-motion preferences.
+- 따뜻한 크림색 표면에 코랄, 버터 옐로, 민트, 라일락을 포인트로 사용한다.
+- 둥근 카드와 친근한 컨트롤에 굵은 일본어 헤드라인, 스티커형 강조, 진한 외곽선을 조합한다.
+- 이모지나 서드파티 아이콘 대신 자체 제작 SVG 동물 캐릭터 12종을 사용한다.
+- 모든 동물 자산은 `0 0 256 256` viewBox, 투명 배경, 둥근 외곽선, 플랫 컬러, 통일된 비주얼 체계를 공유한다.
+- 기능 구현 후 비주얼을 쉽게 조정할 수 있도록 색상, 간격, 모서리, 그림자, 타이포그래피, 모션을 디자인 토큰으로 분리한다.
+- 새 멤버가 나타나고, 선택된 노드가 들리고, 연결선이 밝아지며, 상세 패널이 올라오는 식으로 상태를 설명하는 모션을 사용한다. 사용자의 동작 줄이기 설정을 존중한다.
 
-Required animal files under `public/animals/`:
+`public/animals/`에 필요한 동물 파일은 다음과 같다.
 
 1. `fawn.svg`
 2. `raccoon.svg`
@@ -41,200 +41,200 @@ Required animal files under `public/animals/`:
 11. `elephant.svg`
 12. `pegasus.svg`
 
-Temporary code-native placeholders may be used until the final SVG files arrive, but the public asset contract remains fixed.
+최종 SVG 파일을 전달받기 전까지 코드 기반 임시 자산을 사용할 수 있지만, 공개 자산 경로와 파일 계약은 고정한다.
 
-## 4. Core user flow
+## 4. 핵심 사용자 흐름
 
-### 4.1 Create a group
+### 4.1 그룹 생성
 
-The creator enters:
+그룹 생성자는 다음 항목을 입력한다.
 
-- Group name, required.
-- Display nickname, required.
-- Birth date through `input[type="date"]`, required.
-- Birth time through `input[type="time"]`, optional, with a mutually exclusive `わからない` control.
-- MBTI from the sixteen types, optional, with a mutually exclusive `わからない` control.
+- 그룹 이름: 필수
+- 표시할 닉네임: 필수
+- `input[type="date"]`를 사용한 생년월일: 필수
+- `input[type="time"]`을 사용한 출생시간: 선택 사항, 상호 배타적인 `わからない` 컨트롤 제공
+- 16개 유형 중 선택하는 MBTI: 선택 사항, 상호 배타적인 `わからない` 컨트롤 제공
 
-The browser calculates the creator's derived animal profile, calls a transactional `create_group_and_join` Supabase RPC, and navigates to the group graph. The RPC creates the group and first member atomically. The page exposes a shareable, unguessable invitation URL.
+브라우저는 생성자의 파생 동물 프로필을 계산한 다음 Supabase의 트랜잭션형 `create_group_and_join` RPC를 호출한다. RPC는 그룹과 첫 번째 멤버를 원자적으로 생성한다. 이후 사용자를 그룹 그래프로 이동시키고, 추측하기 어려운 초대 URL을 제공한다.
 
-### 4.2 Join a group
+### 4.2 그룹 참여
 
-Anyone with a valid invitation link may join without a visible account-registration step. Supabase anonymous authentication supplies an internal user identity. The participant completes the same personal form except for the group name.
+유효한 초대 링크를 가진 사람은 별도 회원가입 화면 없이 참여할 수 있다. 내부 사용자 식별에는 Supabase 익명 인증을 사용한다. 참여자는 그룹 이름을 제외하고 생성자와 동일한 개인 정보 폼을 작성한다.
 
-A transactional `join_group` Supabase RPC validates the invitation, prevents duplicate membership for the same anonymous user, enforces the 30-member limit, and inserts the derived profile. The raw birth date and birth time are not stored in Supabase.
+트랜잭션형 `join_group` Supabase RPC는 초대 링크의 유효성을 확인하고, 같은 익명 사용자의 중복 참여를 방지하며, 30명 제한을 검사한 후 파생 프로필을 삽입한다. 생년월일과 출생시간 원문은 Supabase에 저장하지 않는다.
 
-### 4.3 Explore the graph
+### 4.3 그래프 탐색
 
-- Every member appears as an animal node labeled with their nickname.
-- Every unordered member pair has one relationship edge. Thirty members produce at most 435 edges.
-- Selecting a node highlights every incident edge and fades unrelated edges.
-- Selecting an edge opens a pair detail sheet with a free one-line summary and locked report sections.
-- The graph supports touch pan and pinch zoom.
-- Node size adapts to group size: large for 2–6, medium for 7–15, and compact for 16–30 participants.
-- In dense graphs, nonselected edges remain low-opacity while the selected node's connections receive the strongest visual priority.
+- 모든 멤버는 닉네임이 표시된 동물 노드로 나타난다.
+- 순서가 없는 모든 멤버 쌍은 하나의 관계선을 갖는다. 30명일 때 최대 435개의 관계선이 생성된다.
+- 노드를 선택하면 해당 노드에 연결된 모든 선을 강조하고 관련 없는 선은 흐리게 표시한다.
+- 관계선을 선택하면 무료 한 줄 요약과 잠긴 리포트 섹션이 있는 두 사람의 상세 시트를 연다.
+- 그래프는 터치 이동과 핀치 확대·축소를 지원한다.
+- 노드 크기는 2~6명일 때 크게, 7~15명일 때 중간으로, 16~30명일 때 작게 조정한다.
+- 관계가 많은 그래프에서는 선택하지 않은 선을 낮은 불투명도로 유지하고, 선택된 노드의 연결선을 가장 강하게 보여준다.
 
-### 4.4 Unlock a relationship
+### 4.4 관계 해제
 
-The pair detail sheet offers `このふたりを300円で解放`. In the first release this opens a mock checkout and completes a mock payment. The resulting unlock is stored once per group and unordered member pair.
+두 사람의 상세 시트에는 `このふたりを300円で解放` CTA를 표시한다. 첫 번째 릴리스에서는 모의 결제 화면을 열어 결제를 완료한 것처럼 처리한다. 해제 상태는 그룹과 순서가 없는 멤버 쌍을 기준으로 한 번만 저장한다.
 
-An unlocked report is shared by the whole group. All current and future group members can read it. Realtime updates change the edge and detail sheet to `解放済み` without requiring a reload.
+해제된 리포트는 그룹 전체에 공유된다. 현재 구성원과 이후에 참여하는 구성원 모두 해당 리포트를 볼 수 있다. Realtime 이벤트를 받으면 새로고침 없이 관계선과 상세 시트가 `解放済み` 상태로 바뀐다.
 
-## 5. Application architecture
+## 5. 애플리케이션 아키텍처
 
-Use Next.js App Router, TypeScript, Tailwind CSS, Framer Motion, React Flow, Supabase, Vitest, React Testing Library, and Playwright.
+Next.js App Router, TypeScript, Tailwind CSS, Framer Motion, React Flow, Supabase, Vitest, React Testing Library, Playwright를 사용한다.
 
-Primary routes:
+주요 라우트는 다음과 같다.
 
-- `/`: product introduction and group creation form.
-- `/g/[inviteToken]`: group join gate for nonmembers and graph for members.
-- `/g/[inviteToken]/relation/[pairKey]`: shareable pair detail route or modal-backed route state.
-- `/checkout/[pairKey]`: mock checkout in the first release.
-- `/tokushoho`: Japanese commercial transaction disclosure template.
-- `/api/og`: dynamic group or pair Open Graph image.
+- `/`: 제품 소개와 그룹 생성 폼
+- `/g/[inviteToken]`: 비구성원에게는 그룹 참여 화면, 구성원에게는 관계 그래프 표시
+- `/g/[inviteToken]/relation/[pairKey]`: 공유 가능한 두 사람의 상세 관계 라우트 또는 모달 상태와 연결되는 라우트
+- `/checkout/[pairKey]`: 첫 번째 릴리스의 모의 결제 화면
+- `/tokushoho`: 일본 특정상거래법 표기 예시
+- `/api/og`: 그룹 또는 두 사람 관계용 동적 Open Graph 이미지
 
-Primary boundaries:
+주요 경계는 다음과 같다.
 
-- `AstrologyProvider`: converts raw birth input into a safe derived animal profile. `LocalAstrologyProvider` ships first; `WebhookAstrologyProvider` replaces it later.
-- `RelationshipProvider`: creates group dynamics, free pair summaries, and detailed pair reports from derived profiles. It is deterministic and local in the first release.
-- `PaymentProvider`: unlocks a pair. `MockPaymentProvider` ships first; a KOMOJU or Stripe provider replaces it later.
-- `GroupRepository`: wraps Supabase group, membership, realtime, and unlock operations so UI components do not depend on raw database calls.
-- Graph view: converts members into stable nodes and pair results into stable edges. Presentation and selection state remain separate from relationship calculation.
+- `AstrologyProvider`: 생년월일 원문을 안전한 파생 동물 프로필로 변환한다. 첫 릴리스에서는 `LocalAstrologyProvider`를 사용하고 이후 `WebhookAstrologyProvider`로 교체한다.
+- `RelationshipProvider`: 파생 프로필을 이용해 그룹 역학, 무료 관계 요약, 상세 관계 리포트를 생성한다. 첫 릴리스에서는 결정론적 로컬 구현을 사용한다.
+- `PaymentProvider`: 두 사람의 관계를 해제한다. 첫 릴리스에서는 `MockPaymentProvider`를 사용하고 이후 KOMOJU 또는 Stripe 제공자로 교체한다.
+- `GroupRepository`: Supabase 그룹, 멤버십, Realtime, 관계 해제 작업을 감싸 UI 컴포넌트가 원시 데이터베이스 호출에 의존하지 않게 한다.
+- 그래프 뷰: 멤버를 안정적인 노드로, 관계 결과를 안정적인 엣지로 변환한다. 프레젠테이션과 선택 상태는 관계 계산에서 분리한다.
 
-## 6. Data and privacy
+## 6. 데이터와 개인정보 보호
 
-Supabase anonymous authentication is invisible to the user. Row Level Security and RPCs enforce group membership and prevent broad anonymous reads.
+Supabase 익명 인증은 사용자에게 노출하지 않는다. Row Level Security와 RPC를 사용해 그룹 멤버십을 확인하고 익명 사용자의 광범위한 데이터 조회를 차단한다.
 
-### 6.1 Tables
+### 6.1 테이블
 
 `groups`
 
-- `id` UUID primary key
-- `name` text
-- `invite_token_hash` text unique
-- `created_by` UUID
-- `max_members` integer fixed to 30
-- `created_at` timestamptz
+- `id`: UUID 기본 키
+- `name`: text
+- `invite_token_hash`: text unique
+- `created_by`: UUID
+- `max_members`: 30으로 고정된 integer
+- `created_at`: timestamptz
 
 `group_members`
 
-- `id` UUID primary key
-- `group_id` UUID foreign key
-- `user_id` UUID
-- `nickname` text
-- `animal_id` text
-- `animal_group` enum: `MOON`, `EARTH`, or `SUN`
-- `mbti` text nullable; null represents unknown
-- `profile_payload` JSONB containing versioned, non-raw derived traits
-- `joined_at` timestamptz
-- Unique constraint on `(group_id, user_id)`
+- `id`: UUID 기본 키
+- `group_id`: UUID 외래 키
+- `user_id`: UUID
+- `nickname`: text
+- `animal_id`: text
+- `animal_group`: `MOON`, `EARTH`, `SUN` enum
+- `mbti`: nullable text, null은 모름을 의미
+- `profile_payload`: 버전이 포함된 비원문 파생 특성을 담는 JSONB
+- `joined_at`: timestamptz
+- `(group_id, user_id)` 유일 제약
 
 `relation_unlocks`
 
-- `id` UUID primary key
-- `group_id` UUID foreign key
-- `member_low_id` UUID
-- `member_high_id` UUID
-- `status` enum: `pending`, `unlocked`, or `failed`
-- `payment_provider` text
-- `payment_reference` text nullable
-- `unlocked_by` UUID
-- `unlocked_at` timestamptz nullable
-- Unique constraint on `(group_id, member_low_id, member_high_id)`
+- `id`: UUID 기본 키
+- `group_id`: UUID 외래 키
+- `member_low_id`: UUID
+- `member_high_id`: UUID
+- `status`: `pending`, `unlocked`, `failed` enum
+- `payment_provider`: text
+- `payment_reference`: nullable text
+- `unlocked_by`: UUID
+- `unlocked_at`: nullable timestamptz
+- `(group_id, member_low_id, member_high_id)` 유일 제약
 
-The application sorts member IDs before creating a pair key, so A–B and B–A are always the same relationship.
+애플리케이션은 관계 키를 만들기 전에 멤버 ID를 정렬한다. 따라서 A–B와 B–A는 항상 같은 관계다.
 
-### 6.2 Sensitive input
+### 6.2 민감한 입력
 
-- Raw birth date and birth time exist only in form state while the local provider runs.
-- Only the derived animal ID, group, MBTI selection, and versioned traits are sent to Supabase.
-- The later astrology webhook receives raw birth input only for the immediate analysis request and returns derived output. Persistent storage of raw birth data is outside this scope.
-- Environment secrets never enter source control. The implementation creates a documented `.env.local` template location and asks the user to supply the Supabase values.
+- 생년월일과 출생시간 원문은 로컬 제공자가 실행되는 동안 폼 상태에만 존재한다.
+- 파생된 동물 ID, 그룹, MBTI 선택값, 버전이 포함된 특성만 Supabase로 전송한다.
+- 이후 사주 Webhook은 즉시 분석 요청을 처리할 때만 생년 정보를 전달받고 파생 결과를 반환한다. 생년 정보 원문의 영구 저장은 이 범위에 포함하지 않는다.
+- 환경 변수와 비밀 키는 Git에 커밋하지 않는다. 구현 시 `.env.local` 파일을 만들고 사용자에게 `NEXT_PUBLIC_SUPABASE_URL`과 `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` 입력을 요청한다. 데이터베이스 비밀번호나 서비스 역할 키는 브라우저용 환경 변수 파일에 넣지 않는다.
 
-## 7. Relationship logic
+## 7. 관계 계산 로직
 
-The first release uses deterministic local logic so the same input always produces the same profile and pair result.
+첫 번째 릴리스에서는 같은 입력이 항상 같은 프로필과 관계 결과를 만드는 결정론적 로컬 로직을 사용한다.
 
-- Birth date and known birth time feed a versioned mapping function that produces one of the twelve animals.
-- Unknown birth time uses an explicit date-only branch rather than inventing a time.
-- MBTI modifies behavioral copy when known; unknown MBTI produces animal-only copy without a penalty or fake assumption.
-- Animal group dynamics use MOON, EARTH, and SUN superiority rules from the original project specification.
-- Relationship results contain categorical dynamics and written summaries, not numeric compatibility percentages.
-- Detailed reports include attraction, friction, unspoken feelings, communication guidance, reconciliation guidance, and long-term maintenance tips.
+- 생년월일과 입력된 출생시간을 버전 관리되는 매핑 함수에 전달해 12개 동물 중 하나를 결정한다.
+- 출생시간을 모르면 임의 시간을 만들지 않고 명시적인 날짜 전용 분기를 사용한다.
+- MBTI를 알면 행동 카피의 수정값으로 사용한다. 모르는 경우 불이익이나 임의 가정 없이 동물 정보만으로 카피를 생성한다.
+- 동물 그룹 역학은 기존 프로젝트 명세의 MOON, EARTH, SUN 우위 규칙을 사용한다.
+- 관계 결과에는 숫자형 궁합 퍼센트 대신 범주형 역학과 서술형 요약을 사용한다.
+- 상세 리포트에는 끌리는 이유, 갈등 지점, 숨은 본심, 대화 방법, 화해 방법, 관계를 오래 유지하는 방법을 포함한다.
 
-The initial twelve-animal mapping is a product placeholder behind a versioned provider. It must not be presented as a validated traditional fortune-telling calculation. The later webhook can replace the provider without changing persisted profile and relationship interfaces.
+초기 12동물 매핑은 버전 관리되는 제공자 뒤에 있는 제품용 임시 로직이다. 이를 검증된 전통 사주 계산처럼 표현하지 않는다. 이후 Webhook은 저장된 프로필 및 관계 인터페이스를 변경하지 않고 제공자만 교체할 수 있다.
 
-## 8. Supabase realtime and access model
+## 8. Supabase Realtime과 접근 모델
 
-- A new browser session calls Supabase anonymous sign-in.
-- Group creation returns the public invitation token once; Supabase stores only its hash.
-- `create_group_and_join` creates the group and creator membership atomically and returns the invitation token and identifiers.
-- `join_group` accepts the invitation token and derived participant profile, resolves the group, locks the group row, checks capacity, and inserts or returns membership.
-- Clients do not directly insert or update protected group, membership, or unlock rows; all state transitions use narrowly scoped RPCs.
-- Authorized group members may select other members and unlock rows for their group only.
-- Clients subscribe to membership insertions and relation-unlock changes scoped to the joined group.
-- The UI reconciles realtime events by stable IDs and falls back to an explicit refresh control while disconnected.
-- The invitation link is the access mechanism. There is no passcode and no public group directory.
+- 새로운 브라우저 세션은 Supabase 익명 로그인을 호출한다.
+- 그룹 생성 시 공개 초대 토큰을 한 번 반환하고, Supabase에는 해시만 저장한다.
+- `create_group_and_join`은 그룹과 생성자의 멤버십을 원자적으로 만들고 초대 토큰 및 식별자를 반환한다.
+- `join_group`은 초대 토큰과 파생 참여자 프로필을 전달받아 그룹을 찾고, 그룹 행을 잠근 다음, 정원을 확인하고, 멤버십을 삽입하거나 기존 멤버십을 반환한다.
+- 클라이언트는 보호되는 그룹, 멤버십, 관계 해제 행을 직접 삽입하거나 수정하지 않는다. 모든 상태 변경은 범위가 제한된 RPC를 사용한다.
+- 승인된 그룹 구성원만 자기 그룹의 다른 멤버와 관계 해제 행을 조회할 수 있다.
+- 클라이언트는 참여한 그룹으로 범위를 제한해 멤버 추가와 관계 해제 변경을 구독한다.
+- UI는 안정적인 ID를 기준으로 Realtime 이벤트를 반영하며, 연결이 끊기면 명시적인 새로고침 기능을 제공한다.
+- 초대 링크가 유일한 접근 수단이다. 별도 참여 코드는 없으며 공개 그룹 목록도 제공하지 않는다.
 
-## 9. Error handling
+## 9. 오류 처리
 
-- Invalid or deleted invitation: dedicated Japanese error state with a path back to group creation.
-- Full group: RPC rejects the thirty-first unique member and the UI preserves their input while explaining the limit.
-- Duplicate join: returns the existing membership instead of inserting a second node.
-- Nickname collision: duplicate display names are allowed but receive a short visual discriminator derived from member identity.
-- Missing MBTI or birth time: the provider follows its explicit unknown branch.
-- Supabase/network failure: preserve unfinished form values in session storage, show retry UI, and never claim participation succeeded before confirmation.
-- Realtime disconnect: show connection status, retry automatically, and expose manual refresh.
-- Duplicate payment callback: the unique pair constraint and idempotent provider contract return the existing unlock.
-- Failed mock or real payment: keep the detail report locked and allow a safe retry.
+- 잘못되었거나 삭제된 초대 링크: 그룹 생성으로 돌아갈 수 있는 일본어 전용 오류 화면을 표시한다.
+- 그룹 정원 초과: RPC가 31번째 고유 참여자를 거부하고, UI는 입력값을 보존하면서 제한을 설명한다.
+- 중복 참여: 두 번째 노드를 만들지 않고 기존 멤버십을 반환한다.
+- 닉네임 중복: 같은 표시 이름을 허용하되 멤버 ID에서 파생한 짧은 시각적 구분자를 붙인다.
+- MBTI 또는 출생시간 모름: 제공자가 명시적인 모름 분기를 사용한다.
+- Supabase 또는 네트워크 오류: 작성 중인 폼 값을 session storage에 보존하고 재시도 UI를 표시한다. 서버 확인 전에 참여 성공으로 표시하지 않는다.
+- Realtime 연결 끊김: 연결 상태를 표시하고 자동 재시도하며 수동 새로고침을 제공한다.
+- 결제 콜백 중복: 유일 관계 제약과 멱등성을 보장하는 결제 제공자 계약을 통해 기존 해제 결과를 반환한다.
+- 모의 또는 실제 결제 실패: 상세 리포트를 잠긴 상태로 유지하고 안전한 재시도를 제공한다.
 
-## 10. Testing and acceptance criteria
+## 10. 테스트와 승인 기준
 
-### 10.1 Unit tests
+### 10.1 단위 테스트
 
-- Valid and invalid date/time/MBTI inputs.
-- Known and unknown birth-time branches.
-- Deterministic animal mapping.
-- MOON/EARTH/SUN group dynamics.
-- MBTI-known and MBTI-unknown relationship copy.
-- Canonical unordered pair keys.
-- Node sizing thresholds and incident-edge highlighting.
+- 유효하거나 잘못된 날짜, 시간, MBTI 입력
+- 출생시간을 알거나 모르는 분기
+- 결정론적 동물 매핑
+- MOON, EARTH, SUN 그룹 역학
+- MBTI를 알거나 모를 때의 관계 카피
+- 순서에 무관한 표준 관계 키
+- 노드 크기 임계값과 연결선 강조
 
-### 10.2 Component tests
+### 10.2 컴포넌트 테스트
 
-- Group creation and join forms enforce required fields and unknown toggles.
-- Selecting a node highlights exactly its incident edges.
-- Selecting an edge opens the correct pair sheet.
-- Locked and unlocked report states render correctly.
-- Dense graph controls remain keyboard and touch accessible.
+- 그룹 생성 및 참여 폼의 필수 입력과 모름 토글
+- 노드 선택 시 해당 노드의 연결선만 정확히 강조되는지 확인
+- 관계선 선택 시 올바른 두 사람의 상세 시트가 열리는지 확인
+- 잠긴 리포트와 해제된 리포트 상태 렌더링
+- 관계가 많은 그래프 컨트롤의 키보드 및 터치 접근성
 
-### 10.3 Integration and end-to-end tests
+### 10.3 통합 및 End-to-End 테스트
 
-- A creates a group and obtains an invitation link.
-- B and C join through separate anonymous sessions.
-- A receives both additions through realtime updates.
-- C has edges to A and B.
-- The thirty-first participant is rejected transactionally.
-- A mock-pays for A–B and B/C sessions receive the shared unlock.
-- An unrelated group cannot read members or unlocks through RLS or RPCs.
-- Refreshing or reopening the valid group link restores membership for the same anonymous session.
+- A가 그룹을 생성하고 초대 링크를 받는다.
+- B와 C가 각각 독립된 익명 세션으로 참여한다.
+- A가 두 참여자의 추가를 Realtime으로 받는다.
+- C와 A, C와 B 사이에 각각 관계선이 생긴다.
+- 31번째 참여자는 트랜잭션 수준에서 거부된다.
+- A가 A–B 관계를 모의 결제하면 B와 C 세션에도 공동 해제 상태가 반영된다.
+- 관련 없는 그룹은 RLS 또는 RPC를 통해 다른 그룹의 멤버와 해제 정보를 읽을 수 없다.
+- 같은 익명 세션에서 유효한 그룹 링크를 새로고침하거나 다시 열면 기존 멤버십이 복구된다.
 
-### 10.4 Completion criteria
+### 10.4 완료 조건
 
-- Production build, lint, type checking, unit tests, component tests, and the core Playwright flow pass.
-- The mobile experience works at 320 px width and common modern phone sizes.
-- No raw birth date/time or Supabase secret is present in database rows, URLs, client logs, or Git history.
-- The app uses custom SVG asset paths and contains no animal emoji in production UI.
-- Visual detail may be iterated later without changing route, provider, repository, or database contracts.
+- 프로덕션 빌드, 린트, 타입 검사, 단위 테스트, 컴포넌트 테스트, 핵심 Playwright 흐름이 통과한다.
+- 모바일 경험은 320px 너비와 일반적인 최신 휴대전화 크기에서 정상 동작한다.
+- 생년월일·출생시간 원문 또는 Supabase 비밀 키가 데이터베이스 행, URL, 클라이언트 로그, Git 기록에 존재하지 않는다.
+- 프로덕션 UI는 자체 SVG 자산 경로를 사용하며 동물 이모지를 포함하지 않는다.
+- 라우트, 제공자, 저장소, 데이터베이스 계약을 변경하지 않고 이후 비주얼을 조정할 수 있다.
 
-## 11. Delivery sequence
+## 11. 전달 순서
 
-1. Initialize the Next.js project and Git repository, then connect `https://github.com/mi-hye/mofutype.git`.
-2. Install the Supabase CLI locally as a development dependency and link project `xshphvgyehzmwrlfmwjf`.
-3. Create the ignored local environment file and ask the user to populate its documented public and secret values.
-4. Implement schema, RLS, RPCs, and generated database types.
-5. Implement local profile and relationship providers with tests.
-6. Implement forms, group repository, realtime graph, relationship sheets, and mock checkout.
-7. Add legal and Open Graph routes.
-8. Run automated and visual verification, then iterate on visual polish and replace placeholders with the final twelve SVG assets.
+1. Next.js 프로젝트와 Git 저장소를 초기화하고 `https://github.com/mi-hye/mofutype.git`에 연결한다.
+2. Supabase CLI를 로컬 개발 의존성으로 설치하고 `xshphvgyehzmwrlfmwjf` 프로젝트에 연결한다.
+3. Git에서 제외되는 `.env.local` 파일을 만들고 사용자가 `NEXT_PUBLIC_SUPABASE_URL`과 `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`를 입력하도록 안내한다.
+4. 스키마, RLS, RPC, 생성된 데이터베이스 타입을 구현한다.
+5. 로컬 프로필 및 관계 제공자를 테스트와 함께 구현한다.
+6. 폼, 그룹 저장소, Realtime 그래프, 관계 상세 시트, 모의 결제를 구현한다.
+7. 법적 고지 페이지와 Open Graph 라우트를 추가한다.
+8. 자동화 및 시각 검증을 수행하고 비주얼을 다듬은 다음 임시 자산을 최종 SVG 12종으로 교체한다.
 
-Production payment, production astrology webhook, persistent raw birth data, public group discovery, account profiles, group moderation tools, and bundle pricing are explicitly outside the first release.
+첫 번째 릴리스 범위에는 실제 결제, 실제 사주 Webhook, 생년 정보 원문 영구 저장, 공개 그룹 탐색, 계정 프로필, 그룹 관리 도구, 묶음 가격제가 포함되지 않는다.
