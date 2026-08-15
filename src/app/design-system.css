@@ -44,9 +44,12 @@
   --status-danger: var(--color-error-text);
   --edge-strong: #934b43;
   --edge-soft: #55725f;
-  --relationship-warm: #a94338;
+  --relationship-warm: #b87716;
   --relationship-clear: #2f72bd;
   --relationship-calm: #2f7b55;
+  --animal-tiger-pastel: #fff0b8;
+  --animal-rat-pastel: #e4e8ef;
+  --animal-rabbit-pastel: #f8e1e6;
 
   /* Borders and elevation. */
   --border-subtle: 1.5px solid rgb(var(--ink-rgb) / 58%);
