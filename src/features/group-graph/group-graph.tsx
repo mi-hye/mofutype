@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Background,
   ReactFlow,
@@ -42,6 +42,12 @@ interface GroupGraphProps {
 
 const nodeTypes = { zodiac: ZodiacNode };
 
+function removeFromTabOrder(canvas: HTMLDivElement) {
+  for (const element of canvas.querySelectorAll<HTMLElement>("a, button, [tabindex]")) {
+    element.tabIndex = -1;
+  }
+}
+
 function PointerControls() {
   const { fitView, zoomIn, zoomOut } = useReactFlow();
   return (
@@ -70,6 +76,7 @@ function GroupGraphComponent({
   relationshipFactory = createEtoRelationship,
 }: GroupGraphProps) {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const canvasRef = useRef<HTMLDivElement>(null);
   const membersVersion = graphMembersVersion(members);
   const topology = useMemo(
     () => buildGraphTopology(graphMemberSnapshot(members), relationshipFactory),
@@ -101,16 +108,19 @@ function GroupGraphComponent({
     },
     [onPairSelect],
   );
-  const hideCanvasFromKeyboard = useCallback((canvas: HTMLDivElement | null) => {
+  useEffect(() => {
+    const canvas = canvasRef.current;
     if (!canvas) return;
-    for (const element of canvas.querySelectorAll<HTMLElement>("a, button, [tabindex]")) {
-      element.tabIndex = -1;
-    }
-  }, []);
+
+    removeFromTabOrder(canvas);
+    const observer = new MutationObserver(() => removeFromTabOrder(canvas));
+    observer.observe(canvas, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [membersVersion]);
 
   return (
     <section className="group-graph" aria-label="メンバー関係性グラフ">
-      <div ref={hideCanvasFromKeyboard} className="group-graph__canvas"
+      <div ref={canvasRef} className="group-graph__canvas"
         data-testid="group-graph-canvas" aria-hidden="true">
         <ReactFlow<ZodiacGraphNode, RelationshipGraphEdge>
           key={membersVersion}

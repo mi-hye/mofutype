@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -152,6 +152,34 @@ describe("GroupGraph", () => {
     expect(screen.queryByRole("button", { name: "aの関係性ノード" })).not.toBeInTheDocument();
     const accessibleList = screen.getByRole("region", { name: "関係性グラフの操作リスト" });
     expect(within(accessibleList).queryByText("a:b")).not.toBeInTheDocument();
+  });
+
+  it("keeps remounted canvas descendants out of the tab order after a semantic change", () => {
+    const view = render(
+      <GroupGraph members={[member("a")]} unlocks={[]} onPairSelect={vi.fn()} />,
+    );
+
+    view.rerender(
+      <GroupGraph
+        members={[member("a", "semantic-change")]}
+        unlocks={[]}
+        onPairSelect={vi.fn()}
+      />,
+    );
+
+    const canvas = screen.getByTestId("group-graph-canvas");
+    expect(Array.from(canvas.querySelectorAll<HTMLElement>("a, button, [tabindex]"))
+      .every((element) => element.tabIndex === -1)).toBe(true);
+  });
+
+  it("keeps asynchronously inserted canvas descendants out of the tab order", async () => {
+    render(<GroupGraph members={[member("a")]} unlocks={[]} onPairSelect={vi.fn()} />);
+    const canvas = screen.getByTestId("group-graph-canvas");
+    const lateButton = document.createElement("button");
+
+    canvas.append(lateButton);
+
+    await waitFor(() => expect(lateButton.tabIndex).toBe(-1));
   });
 
   it("does not rebuild when a parent rerenders with identical graph inputs", () => {
