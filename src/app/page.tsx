@@ -8,7 +8,6 @@ export default function Home() {
         <a className="wordmark" href="#top" aria-label="MofuType ホーム">
           MofuType
         </a>
-        <span className="edition-label">GROUP EDITION</span>
       </header>
 
       <section className="hero" id="top">

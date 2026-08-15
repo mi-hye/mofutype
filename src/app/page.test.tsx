@@ -27,6 +27,7 @@ describe("Home", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("#MBTI")).toBeInTheDocument();
     expect(screen.getByText("#12干支")).toBeInTheDocument();
+    expect(screen.queryByText("GROUP EDITION")).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "グループを作る" })).toHaveAttribute(
       "href",
       "#create",
