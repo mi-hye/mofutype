@@ -178,6 +178,10 @@ describe("production source safety", () => {
     for (const animalImage of ["tiger.png", "rat.png", "rabbit.png"]) {
       expect(globalStyles).toContain(`/zodiac/${animalImage}`);
     }
+    for (const nodeToken of ["--graph-node-entj", "--graph-node-infp", "--graph-node-isfj"]) {
+      expect(globalStyles).toContain(nodeToken);
+    }
+    expect(globalStyles).toMatch(/\.hero__tape::before[^}]*border:\s*0/);
     expect(globalStyles).toContain("@keyframes float-orbit");
     expect(globalStyles).toContain("@keyframes rise-in");
   });
