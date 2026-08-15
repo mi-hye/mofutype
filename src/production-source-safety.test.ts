@@ -60,8 +60,8 @@ function designStyles(): string {
 describe("production source safety", () => {
   it("defines the warm Mofu design tokens and reduced-motion fallback", () => {
     const globalStyles = designStyles();
-    const squiggleFilters = readFileSync(
-      path.join(sourceRoot, "components/ui/squiggle-filters.tsx"),
+    const buttonEffects = readFileSync(
+      path.join(sourceRoot, "components/ui/button-effects.tsx"),
       "utf8",
     );
 
@@ -79,11 +79,11 @@ describe("production source safety", () => {
     expect(globalStyles).toContain(
       "--button-background-hover: radial-gradient(circle, #ffeded 0%, #f5cac3 100%)",
     );
-    expect(globalStyles).toContain("animation: squigglevision 0.32s infinite steps(1)");
-    expect(globalStyles).toContain("@keyframes squigglevision");
-    for (const filterId of ["squiggle-1", "squiggle-2", "squiggle-3", "squiggle-4"]) {
-      expect(squiggleFilters).toContain(`id="${filterId}"`);
-    }
+    expect(globalStyles).toContain("filter: url(#wrinkle-effect)");
+    expect(buttonEffects).toContain('id="wrinkle-effect"');
+    expect(buttonEffects).toContain('baseFrequency="0.03"');
+    expect(buttonEffects).toContain("numOctaves={3}");
+    expect(buttonEffects).toContain("scale={9}");
     expect(globalStyles).toContain("@media (prefers-reduced-motion: reduce)");
     expect(globalStyles).toContain('.animal-avatar[data-selected="true"]');
     expect(globalStyles).toMatch(
@@ -195,7 +195,7 @@ describe("production source safety", () => {
     }
     expect(globalStyles).toMatch(/\.hero__tape, \.hero__dots, \.hero__stripe[^}]*background:\s*var\(--surface-elevated\)/);
     expect(globalStyles).toMatch(/\.hero__tape::before[^}]*border:\s*0/);
-    expect(globalStyles).toMatch(/\.ui-button::before[^}]*animation:\s*squigglevision/);
+    expect(globalStyles).toMatch(/\.ui-button::before[^}]*filter:\s*url\(#wrinkle-effect\)/);
     expect(globalStyles).toContain(".ui-button > span { position: relative; z-index: 1; }");
     expect(globalStyles).toContain("@keyframes float-orbit");
     expect(globalStyles).toContain("@keyframes rise-in");
