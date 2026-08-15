@@ -78,7 +78,7 @@ function GroupGateForInvite({ inviteToken, repositoryFactory = createBrowserGrou
     );
   }
   if (aggregate && repository) {
-    return <GroupScreen initialAggregate={aggregate} repository={repository} />;
+    return <GroupScreen initialAggregate={aggregate} repository={repository} inviteToken={inviteToken} />;
   }
   if (status === "loading") return <main className="group-gate-message" role="status">参加状況を確認しています</main>;
   if (status === "missing") {

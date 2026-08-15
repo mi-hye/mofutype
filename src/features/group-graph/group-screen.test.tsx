@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
@@ -6,11 +6,36 @@ import type { GroupAggregate, GroupSubscriptionCallbacks } from "@/lib/supabase/
 import type { GroupMember, RelationUnlock } from "@/lib/supabase/models";
 
 vi.mock("./group-graph", () => ({
-  GroupGraph: ({ members, unlocks }: { members: GroupMember[]; unlocks: RelationUnlock[] }) => (
+  GroupGraph: ({ members, unlocks, onPairSelect }: {
+    members: GroupMember[];
+    unlocks: RelationUnlock[];
+    onPairSelect(selection: unknown): void;
+  }) => (
     <div data-testid="graph-state">
       members:{members.map((member) => `${member.id}:${member.nickname}`).join(",")};
       pairs:{members.length * (members.length - 1) / 2};
       unlocks:{unlocks.map((unlock) => `${unlock.id}:${unlock.status}`).join(",")}
+      {members.length >= 2 ? (
+        <button type="button" onClick={() => onPairSelect({
+          pairKey: "a:b",
+          memberIds: ["a", "b"],
+          unlocked: false,
+          relationship: {
+            pairKey: "a:b",
+            dynamic: "SAME_GROUP",
+            freeTitleJa: "ふたりの無料タイトル",
+            freeSummaryJa: "ふたりの無料まとめ",
+            detail: {
+              attractionJa: "惹かれ合う理由の本文",
+              frictionJa: "すれ違いの本文",
+              unspokenJa: "本音の本文",
+              communicationJa: "会話の本文",
+              reconciliationJa: "仲直りの本文",
+              longTermJa: "長期の本文",
+            },
+          },
+        })}>aとbの関係を選択</button>
+      ) : null}
     </div>
   ),
 }));
@@ -88,6 +113,48 @@ describe("GroupScreen", () => {
     expect(screen.getByTestId("graph-state")).toHaveTextContent("unlocks:u1:pending");
     act(() => repo.callbacks()?.onUnlockChange?.({ eventType: "UPDATE", new: unlock("u1", "unlocked") }));
     expect(screen.getByTestId("graph-state")).toHaveTextContent("unlocks:u1:unlocked");
+  });
+
+  it("opens the pair report and shares a realtime unlock across two sessions", async () => {
+    const user = userEvent.setup();
+    const initial = aggregate();
+    const firstRepository = repository(initial);
+    const secondRepository = repository(initial);
+    render(
+      <>
+        <section aria-label="セッションA">
+          <GroupScreen initialAggregate={initial} repository={firstRepository.api} inviteToken="token-a" />
+        </section>
+        <section aria-label="セッションB">
+          <GroupScreen initialAggregate={initial} repository={secondRepository.api} inviteToken="token-a" />
+        </section>
+      </>,
+    );
+    await waitFor(() => {
+      expect(firstRepository.callbacks()).toBeDefined();
+      expect(secondRepository.callbacks()).toBeDefined();
+    });
+
+    const sessionA = within(screen.getByRole("region", { name: "セッションA" }));
+    const sessionB = within(screen.getByRole("region", { name: "セッションB" }));
+    await user.click(sessionA.getByRole("button", { name: "aとbの関係を選択" }));
+    await user.click(sessionB.getByRole("button", { name: "aとbの関係を選択" }));
+    expect(sessionA.getByRole("link", { name: "このふたりを300円で解放" })).toHaveAttribute(
+      "href",
+      "/checkout/a%3Ab?invite=token-a",
+    );
+    expect(sessionB.getByRole("link", { name: "このふたりを300円で解放" })).toBeInTheDocument();
+
+    const sharedUnlock = unlock("shared", "unlocked");
+    act(() => {
+      firstRepository.callbacks()?.onUnlockChange?.({ eventType: "INSERT", new: sharedUnlock });
+      secondRepository.callbacks()?.onUnlockChange?.({ eventType: "INSERT", new: sharedUnlock });
+    });
+
+    expect(sessionA.getByText("解放済み")).toBeInTheDocument();
+    expect(sessionB.getByText("解放済み")).toBeInTheDocument();
+    expect(sessionA.queryByRole("link", { name: "このふたりを300円で解放" })).not.toBeInTheDocument();
+    expect(sessionB.getByText("惹かれ合う理由の本文")).toBeInTheDocument();
   });
 
   it("maps connection states to Japanese status and can retry", async () => {

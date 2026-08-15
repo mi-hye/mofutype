@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { StatusBanner, type ConnectionStatus } from "@/components/ui/status-banner";
+import { RelationSheet } from "@/features/relationship/relation-sheet";
 import type {
   GroupAggregate,
   GroupSubscriptionCallbacks,
@@ -20,6 +21,7 @@ type GroupRepository = Pick<
 interface GroupScreenProps {
   initialAggregate: GroupAggregate;
   repository: GroupRepository;
+  inviteToken?: string;
 }
 
 function upsertById<T extends { id: string }>(items: readonly T[], incoming: T): T[] {
@@ -82,11 +84,23 @@ function connectionStatus(status: string): ConnectionStatus {
   }
 }
 
+function isPairUnlocked(
+  unlocks: readonly RelationUnlock[],
+  memberIds: readonly [string, string],
+): boolean {
+  const [low, high] = [...memberIds].sort();
+  return unlocks.some((unlock) =>
+    unlock.status === "unlocked" &&
+    unlock.memberLowId === low &&
+    unlock.memberHighId === high,
+  );
+}
+
 export function GroupScreen(props: GroupScreenProps) {
   return <GroupScreenForGroup key={props.initialAggregate.group.id} {...props} />;
 }
 
-function GroupScreenForGroup({ initialAggregate, repository }: GroupScreenProps) {
+function GroupScreenForGroup({ initialAggregate, repository, inviteToken }: GroupScreenProps) {
   const [aggregate, setAggregate] = useState(initialAggregate);
   const [status, setStatus] = useState<ConnectionStatus>("connecting");
   const [loadError, setLoadError] = useState(false);
@@ -234,9 +248,20 @@ function GroupScreenForGroup({ initialAggregate, repository }: GroupScreenProps)
 
       <GroupGraph members={aggregate.members} unlocks={aggregate.unlocks} onPairSelect={setSelectedPair} />
       {selectedPair ? (
-        <p className="group-pair-selection" role="status" aria-label="選択中の関係">
-          {selectedPair.relationship.freeTitleJa}
-        </p>
+        <RelationSheet
+          relationship={selectedPair.relationship}
+          memberNames={selectedPair.memberIds.map((memberId) =>
+            aggregate.members.find((member) => member.id === memberId)?.nickname ?? "メンバー"
+          ) as [string, string]}
+          unlocked={isPairUnlocked(aggregate.unlocks, selectedPair.memberIds)}
+          checkoutHref={inviteToken
+            ? `/checkout/${encodeURIComponent(selectedPair.pairKey)}?invite=${encodeURIComponent(inviteToken)}`
+            : "#"}
+          detailHref={inviteToken
+            ? `/g/${encodeURIComponent(inviteToken)}/relation/${encodeURIComponent(selectedPair.pairKey)}`
+            : undefined}
+          onClose={() => setSelectedPair(null)}
+        />
       ) : null}
     </main>
   );
