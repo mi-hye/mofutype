@@ -4,6 +4,7 @@ import "@xyflow/react/dist/style.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
   title: "MofuType | みんなの関係が、ひと目でわかる",
   description:
     "動物キャラクターと性格タイプから、グループの関係性をやさしく見つけるMofuType。",

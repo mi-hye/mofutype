@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { StatusBanner, type ConnectionStatus } from "@/components/ui/status-banner";
 import { RelationSheet } from "@/features/relationship/relation-sheet";
+import { GroupShareControls } from "@/features/share/group-share-controls";
 import type {
   GroupAggregate,
   GroupSubscriptionCallbacks,
@@ -225,6 +226,13 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken }: Grou
         </div>
         <div className="group-member-actions">
           <StatusBanner status={status} />
+          {inviteToken ? (
+            <GroupShareControls
+              groupName={aggregate.group.name}
+              inviteToken={inviteToken}
+              memberCount={aggregate.members.length}
+            />
+          ) : null}
           {status === "offline" || status === "error" ? (
             <Button type="button" variant="secondary" onClick={() => {
               setStatus("connecting");
