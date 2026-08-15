@@ -12,22 +12,30 @@ export default function Home() {
       </header>
 
       <section className="hero" id="top">
+        <div className="hero__decor" aria-hidden="true">
+          <span className="hero__tape" />
+          <span className="hero__dots" />
+          <span className="hero__stripe" />
+        </div>
         <p className="hero__eyebrow">性格タイプ × 動物キャラクター</p>
-        <h1>
-          みんなの関係が、
-          <span>ひと目でわかる。</span>
+        <h1 aria-label="みんなの関係、ぜんぶ丸見え。">
+          みんなの関係、<span>ぜんぶ丸見え。</span>
         </h1>
+        <div className="hero__stickers" aria-label="ムード">
+          <span>#かわいい</span>
+          <span>#ちょい毒</span>
+        </div>
         <p className="hero__copy">
-          誕生日と性格タイプから、グループの個性やつながりをやさしく可視化します。
+          誕生日と性格タイプで、友だちとの空気感を一枚の関係マップに。
         </p>
         <div className="hero__actions">
           <a
             className="ui-button hero__cta"
             data-size="lg"
             data-variant="primary"
-            href="#features"
+            href="#create"
           >
-            できることを見る
+            グループを作る
           </a>
         </div>
       </section>
