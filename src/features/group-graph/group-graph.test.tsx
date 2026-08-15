@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -14,8 +14,8 @@ vi.mock("@xyflow/react", async () => {
   const React = await import("react");
   return {
     Background: () => null,
-    Controls: (props: Record<string, unknown>) => <div data-testid="flow-controls" {...props} />,
     Handle: () => null,
+    useReactFlow: () => ({ zoomIn: vi.fn(), zoomOut: vi.fn(), fitView: vi.fn() }),
     Position: { Top: "top", Bottom: "bottom" },
     ReactFlow: (props: Record<string, unknown>) => {
       flowProps.current = props;
@@ -28,6 +28,7 @@ vi.mock("@xyflow/react", async () => {
             const NodeComponent = nodeTypes[node.type];
             return (
               <button key={node.id} type="button" data-testid={`canvas-node-${node.id}`}
+                tabIndex={props.nodesFocusable === false ? -1 : 0}
                 onClick={(event) => (props.onNodeClick as (event: React.MouseEvent, node: MockNode) => void)(event, node)}>
                 <NodeComponent data={node.data} />
               </button>
@@ -35,10 +36,12 @@ vi.mock("@xyflow/react", async () => {
           })}
           {edges.map((edge) => (
             <button key={edge.id} type="button" data-testid={`canvas-edge-${edge.id}`}
+              tabIndex={props.edgesFocusable === false ? -1 : 0}
               onClick={(event) => (props.onEdgeClick as (event: React.MouseEvent, edge: MockEdge) => void)(event, edge)}>{edge.id}</button>
           ))}
-          <button type="button" data-testid="canvas-pane" onClick={(event) => (props.onPaneClick as (event: React.MouseEvent) => void)(event)}>blank</button>
+          <button type="button" tabIndex={-1} data-testid="canvas-pane" onClick={(event) => (props.onPaneClick as (event: React.MouseEvent) => void)(event)}>blank</button>
           {props.children as React.ReactNode}
+          <a href="https://reactflow.dev/attribution">React Flow</a>
         </div>
       );
     },
@@ -126,7 +129,13 @@ describe("GroupGraph", () => {
       elementsSelectable: true,
       proOptions: { hideAttribution: false },
     }));
-    expect(screen.getByTestId("flow-controls")).toHaveAttribute("data-touch-friendly", "true");
+    const canvas = screen.getByTestId("group-graph-canvas");
+    expect(canvas).toHaveAttribute("aria-hidden", "true");
+    expect(Array.from(canvas.querySelectorAll<HTMLElement>("a, button, [tabindex]"))
+      .every((element) => element.tabIndex === -1)).toBe(true);
+    expect(screen.queryByRole("button", { name: "aの関係性ノード" })).not.toBeInTheDocument();
+    const accessibleList = screen.getByRole("region", { name: "関係性グラフの操作リスト" });
+    expect(within(accessibleList).queryByText("a:b")).not.toBeInTheDocument();
   });
 
   it("does not rebuild when a parent rerenders with identical graph inputs", () => {

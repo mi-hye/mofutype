@@ -3,40 +3,53 @@
 import { memo, useCallback, useMemo, useState } from "react";
 import {
   Background,
-  Controls,
   ReactFlow,
+  useReactFlow,
   type EdgeMouseHandler,
   type NodeMouseHandler,
 } from "@xyflow/react";
 
 import { createRelationship } from "@/lib/relationship/local-provider";
 import type { RelationshipResult } from "@/lib/relationship/types";
-import type { GroupMember, RelationUnlock } from "@/lib/supabase/models";
+import type { RelationUnlock } from "@/lib/supabase/models";
 import { AnimalNode } from "./animal-node";
 import {
   buildGraphTopology,
   decorateGraph,
+  graphMemberSnapshot,
   graphMembersVersion,
   type AnimalGraphNode,
   type RelationshipFactory,
+  type RelationshipGraphMember,
   type RelationshipGraphEdge,
 } from "./build-graph";
 
 export interface PairSelection {
   pairKey: string;
-  memberIds: readonly [string, string];
+  memberIds: readonly [RelationshipGraphMember["id"], RelationshipGraphMember["id"]];
   relationship: RelationshipResult;
   unlocked: boolean;
 }
 
 interface GroupGraphProps {
-  members: readonly GroupMember[];
+  members: readonly RelationshipGraphMember[];
   unlocks: readonly RelationUnlock[];
   onPairSelect: (selection: PairSelection) => void;
   relationshipFactory?: RelationshipFactory;
 }
 
 const nodeTypes = { animal: AnimalNode };
+
+function PointerControls() {
+  const { fitView, zoomIn, zoomOut } = useReactFlow();
+  return (
+    <div className="pointer-flow-controls" data-touch-friendly="true" aria-hidden="true">
+      <button type="button" tabIndex={-1} onClick={() => void zoomIn()}>＋</button>
+      <button type="button" tabIndex={-1} onClick={() => void zoomOut()}>−</button>
+      <button type="button" tabIndex={-1} onClick={() => void fitView({ padding: 0.22 })}>全体</button>
+    </div>
+  );
+}
 
 function selectionFromEdge(edge: RelationshipGraphEdge): PairSelection | null {
   if (!edge.data) return null;
@@ -56,13 +69,11 @@ function GroupGraphComponent({
 }: GroupGraphProps) {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const membersVersion = graphMembersVersion(members);
-  const topologyMembers = useMemo(
-    () => JSON.parse(membersVersion) as GroupMember[],
-    [membersVersion],
-  );
   const topology = useMemo(
-    () => buildGraphTopology(topologyMembers, relationshipFactory),
-    [relationshipFactory, topologyMembers],
+    () => buildGraphTopology(graphMemberSnapshot(members), relationshipFactory),
+    // Raw array identity is intentionally replaced by the complete semantic version.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [membersVersion, relationshipFactory],
   );
   const graph = useMemo(
     () => decorateGraph(topology, selectedNodeId, unlocks),
@@ -88,10 +99,17 @@ function GroupGraphComponent({
     },
     [onPairSelect],
   );
+  const hideCanvasFromKeyboard = useCallback((canvas: HTMLDivElement | null) => {
+    if (!canvas) return;
+    for (const element of canvas.querySelectorAll<HTMLElement>("a, button, [tabindex]")) {
+      element.tabIndex = -1;
+    }
+  }, []);
 
   return (
     <section className="group-graph" aria-label="メンバー関係性グラフ">
-      <div className="group-graph__canvas">
+      <div ref={hideCanvasFromKeyboard} className="group-graph__canvas"
+        data-testid="group-graph-canvas" aria-hidden="true">
         <ReactFlow<AnimalGraphNode, RelationshipGraphEdge>
           nodes={graph.nodes}
           edges={graph.edges}
@@ -114,7 +132,7 @@ function GroupGraphComponent({
           proOptions={{ hideAttribution: false }}
         >
           <Background gap={28} size={1.5} />
-          <Controls showInteractive={false} data-touch-friendly="true" />
+          <PointerControls />
         </ReactFlow>
       </div>
 

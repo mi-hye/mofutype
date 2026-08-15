@@ -161,7 +161,10 @@ function GroupScreenForGroup({ initialAggregate, repository }: GroupScreenProps)
         ));
       }
     }).catch(() => {
-      if (generation.current === currentGeneration) setLoadError(true);
+      if (
+        generation.current === currentGeneration &&
+        loadRequest.current === request
+      ) setLoadError(true);
     });
 
     return () => {
@@ -191,7 +194,10 @@ function GroupScreenForGroup({ initialAggregate, repository }: GroupScreenProps)
         ));
       }
     } catch {
-      if (generation.current === currentGeneration) setLoadError(true);
+      if (
+        generation.current === currentGeneration &&
+        loadRequest.current === request
+      ) setLoadError(true);
     }
   }, [initialAggregate.group.id, repository]);
 

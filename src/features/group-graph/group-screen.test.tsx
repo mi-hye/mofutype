@@ -181,6 +181,51 @@ describe("GroupScreen", () => {
     expect(screen.getByTestId("graph-state")).toHaveTextContent(/unlocks:u1:unlocked,snapshot-only:pending/);
   });
 
+  it("ignores an older initial-load failure after a newer manual load succeeds", async () => {
+    const user = userEvent.setup();
+    let rejectInitial!: (reason: unknown) => void;
+    const initial = aggregate();
+    const newer = aggregate("g1", [member("newer")]);
+    const loadGroup = vi.fn()
+      .mockImplementationOnce(() => new Promise<GroupAggregate>((_resolve, reject) => { rejectInitial = reject; }))
+      .mockResolvedValueOnce(newer);
+    const repositoryApi = {
+      loadGroup,
+      subscribeToGroup: vi.fn(() => vi.fn(async () => undefined)),
+    } as never;
+    render(<GroupScreen initialAggregate={initial} repository={repositoryApi} />);
+
+    await user.click(screen.getByRole("button", { name: "最新の情報に更新" }));
+    await waitFor(() => expect(screen.getByTestId("graph-state")).toHaveTextContent("members:newer:newer"));
+    await act(async () => rejectInitial(new Error("older initial failure")));
+
+    expect(screen.queryByText("グループを更新できませんでした。通信環境を確認してください。")).not.toBeInTheDocument();
+  });
+
+  it("ignores an older manual-load failure after a newer manual load succeeds", async () => {
+    const user = userEvent.setup();
+    let rejectOlderRefresh!: (reason: unknown) => void;
+    const initial = aggregate();
+    const newer = aggregate("g1", [member("newer")]);
+    const loadGroup = vi.fn()
+      .mockResolvedValueOnce(initial)
+      .mockImplementationOnce(() => new Promise<GroupAggregate>((_resolve, reject) => { rejectOlderRefresh = reject; }))
+      .mockResolvedValueOnce(newer);
+    const repositoryApi = {
+      loadGroup,
+      subscribeToGroup: vi.fn(() => vi.fn(async () => undefined)),
+    } as never;
+    render(<GroupScreen initialAggregate={initial} repository={repositoryApi} />);
+    await waitFor(() => expect(loadGroup).toHaveBeenCalledOnce());
+
+    await user.click(screen.getByRole("button", { name: "最新の情報に更新" }));
+    await user.click(screen.getByRole("button", { name: "最新の情報に更新" }));
+    await waitFor(() => expect(screen.getByTestId("graph-state")).toHaveTextContent("members:newer:newer"));
+    await act(async () => rejectOlderRefresh(new Error("older manual failure")));
+
+    expect(screen.queryByText("グループを更新できませんでした。通信環境を確認してください。")).not.toBeInTheDocument();
+  });
+
   it("ignores stale events and load results after a group change", async () => {
     let resolveFirst!: (value: GroupAggregate) => void;
     const first = aggregate("g1");

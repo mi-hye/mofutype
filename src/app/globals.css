@@ -234,7 +234,9 @@ select {
   box-shadow: var(--shadow-sm);
   touch-action: none;
 }
-.group-graph__canvas .react-flow__controls button { width: 46px; height: 46px; color: var(--ink); background: var(--surface-raised); }
+.pointer-flow-controls { position: absolute; z-index: 5; bottom: 0.75rem; left: 0.75rem; display: grid; overflow: hidden; border: 1px solid var(--border); border-radius: 0.4rem; box-shadow: var(--shadow-sm); }
+.pointer-flow-controls button { width: 48px; min-height: 46px; border: 0; border-bottom: 1px solid var(--border); color: var(--ink); background: var(--surface-raised); font-weight: 900; cursor: pointer; }
+.pointer-flow-controls button:last-child { border-bottom: 0; font-size: 0.7rem; }
 .group-graph__canvas .react-flow__attribution { border-radius: 0.3rem 0 0 0; background: rgb(255 253 247 / 88%); font-size: 0.65rem; }
 .animal-graph-node { display: grid; min-width: 7rem; justify-items: center; gap: 0.22rem; text-align: center; }
 .animal-graph-node[data-selected="true"] { transform: scale(1.04); }

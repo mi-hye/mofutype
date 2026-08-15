@@ -8,9 +8,13 @@ import type { GroupMember, RelationUnlock } from "@/lib/supabase/models";
 export type GraphNodeSize = "sm" | "md" | "lg";
 export type EdgeEmphasis = "default" | "incident" | "faint";
 export type RelationshipFactory = (input: CreateRelationshipInput) => RelationshipResult;
+export type RelationshipGraphMember = Pick<
+  GroupMember,
+  "id" | "nickname" | "animalId" | "animalGroup" | "mbti" | "profile"
+>;
 
 export interface TopologyNodeData extends Record<string, unknown> {
-  member: GroupMember;
+  member: RelationshipGraphMember;
   size: GraphNodeSize;
   discriminator: string | null;
   accessibleLabel: string;
@@ -22,7 +26,7 @@ export interface AnimalNodeData extends TopologyNodeData {
 
 export interface TopologyEdgeData extends Record<string, unknown> {
   relationship: RelationshipResult;
-  memberIds: readonly [string, string];
+  memberIds: readonly [RelationshipGraphMember["id"], RelationshipGraphMember["id"]];
 }
 
 export interface RelationshipEdgeData extends TopologyEdgeData {
@@ -53,7 +57,7 @@ function nodeSize(count: number): GraphNodeSize {
   return "sm";
 }
 
-function uniquePrefixes(members: readonly GroupMember[]): Map<string, string> {
+function uniquePrefixes(members: readonly RelationshipGraphMember[]): Map<string, string> {
   const duplicatedNames = new Set<string>();
   const nameCounts = new Map<string, number>();
   for (const item of members) {
@@ -112,8 +116,10 @@ function positionAt(index: number, count: number): { x: number; y: number } {
   };
 }
 
-export function graphMembersVersion(members: readonly GroupMember[]): string {
-  const snapshots = [...members]
+export function graphMemberSnapshot(
+  members: readonly RelationshipGraphMember[],
+): RelationshipGraphMember[] {
+  return [...members]
     .sort((first, second) => first.id < second.id ? -1 : first.id > second.id ? 1 : 0)
     .map((member) => ({
       id: member.id,
@@ -129,11 +135,16 @@ export function graphMembersVersion(members: readonly GroupMember[]): string {
         calculationMode: member.profile.calculationMode,
       },
     }));
-  return JSON.stringify(snapshots);
+}
+
+export function graphMembersVersion(
+  members: readonly RelationshipGraphMember[],
+): string {
+  return JSON.stringify(graphMemberSnapshot(members));
 }
 
 export function buildGraphTopology(
-  members: readonly GroupMember[],
+  members: readonly RelationshipGraphMember[],
   relationshipFactory: RelationshipFactory = createRelationship,
 ): GraphTopology {
   if (members.length > 30) {
@@ -239,7 +250,7 @@ export function decorateGraph(
 }
 
 export function buildGraph(
-  members: readonly GroupMember[],
+  members: readonly RelationshipGraphMember[],
   selectedNodeId: string | null,
   unlocks: readonly RelationUnlock[],
 ): BuiltGraph {

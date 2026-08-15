@@ -2,7 +2,12 @@ import { describe, expect, it, vi } from "vitest";
 
 import { createRelationship } from "@/lib/relationship/local-provider";
 import type { GroupMember, RelationUnlock } from "@/lib/supabase/models";
-import { buildGraph, buildGraphTopology, decorateGraph } from "./build-graph";
+import {
+  buildGraph,
+  buildGraphTopology,
+  decorateGraph,
+  type RelationshipGraphMember,
+} from "./build-graph";
 
 function member(id: string, nickname = id): GroupMember {
   return {
@@ -39,6 +44,24 @@ function unlock(low: string, high: string): RelationUnlock {
 }
 
 describe("buildGraph", () => {
+  it("accepts the honest minimal relationship graph member shape", () => {
+    const minimalMember = {
+      id: "minimal",
+      nickname: "みにまる",
+      animalId: "fawn",
+      animalGroup: "MOON",
+      mbti: null,
+      profile: {
+        version: 1,
+        animalId: "fawn",
+        animalGroup: "MOON",
+        mbti: null,
+        calculationMode: "date-only",
+      },
+    } satisfies RelationshipGraphMember;
+
+    expect(buildGraphTopology([minimalMember]).nodes[0].data.member).toEqual(minimalMember);
+  });
   it.each(Array.from({ length: 30 }, (_, index) => {
     const count = index + 1;
     return [count, count * (count - 1) / 2] as const;
