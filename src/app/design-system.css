@@ -67,6 +67,8 @@
     "Noto Sans JP", "Apple SD Gothic Neo", system-ui, sans-serif;
   --font-display: "Hiragino Maru Gothic ProN", "Hiragino Kaku Gothic ProN",
     "Yu Gothic", "Noto Sans JP", "Apple SD Gothic Neo", system-ui, sans-serif;
+  --font-editorial: "Yu Mincho", "Hiragino Mincho ProN", "Hiragino Mincho Pro",
+    "Noto Serif JP", serif;
 
   /* Compatibility aliases for existing component contracts. */
   --paper-warm: var(--page-background);

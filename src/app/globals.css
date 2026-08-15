@@ -89,9 +89,9 @@ button, input, textarea, select { font: inherit; }
 .animal-avatar__selected-mark { position: absolute; right: 5%; bottom: 5%; width: 20%; min-width: 0.7rem; aspect-ratio: 1; border: 2px solid #fff; border-radius: 50%; background: var(--accent-vermilion); }
 
 .landing-shell { width: min(calc(100% - 1.5rem), 58rem); margin-inline: auto; padding: 0.9rem 0 5rem; }
-.landing-nav { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.2rem 0 0.9rem; transform: rotate(-0.08deg); }
-.wordmark { color: var(--ink); font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; letter-spacing: -0.035em; text-decoration: none; }
-.edition-label { border: 1.5px solid rgb(var(--ink-rgb) / 48%); border-radius: 999px; padding: 0.42rem 0.75rem; background: var(--butter); color: var(--accent-navy); font-size: 0.62rem; font-weight: 700; letter-spacing: 0.07em; box-shadow: 2px 3px 0 rgb(var(--ink-rgb) / 8%); }
+.landing-nav { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; border-bottom: 1px solid rgb(var(--ink-rgb) / 34%); padding: 0.15rem 0 0.65rem; }
+.wordmark { color: var(--ink); font-family: var(--font-body); font-size: 1.32rem; font-weight: 760; letter-spacing: -0.045em; line-height: 1; text-decoration: none; }
+.edition-label { border: 0; border-bottom: 1px solid rgb(var(--ink-rgb) / 58%); border-radius: 0; padding: 0.12rem 0.02rem 0.18rem; background: transparent; color: var(--text-muted); font-size: 0.58rem; font-weight: 750; letter-spacing: 0.14em; line-height: 1; box-shadow: none; }
 .hero { position: relative; display: grid; width: min(100%, 52rem); min-width: 0; gap: 1.15rem; overflow: visible; margin: 2.75rem auto 0; border: 0; border-radius: 0; padding: 0; background: transparent; box-shadow: none; }
 .hero__decor { position: relative; order: 3; width: 100%; height: clamp(16rem, 62vw, 30rem); overflow: hidden; border: var(--border-panel); border-radius: 2.5rem 2.2rem 2.65rem 2.1rem / 2.25rem 2.6rem 2.15rem 2.55rem; outline: 1px solid rgb(var(--ink-rgb) / 12%); outline-offset: -5px; background-color: var(--surface-elevated); background-image: linear-gradient(rgb(var(--ink-rgb) / 5%) 1px, transparent 1px), linear-gradient(90deg, rgb(var(--ink-rgb) / 5%) 1px, transparent 1px); background-size: 28px 28px; box-shadow: 3px 4px 0 rgb(var(--ink-rgb) / 6%), inset 0 0 32px rgb(var(--shadow-rgb) / 5%); }
 .hero__connectors { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
@@ -111,7 +111,7 @@ button, input, textarea, select { font: inherit; }
 .hero__cutout, .hero__issue-note { display: none; }
 .create-section__tape { display: none; }
 .hero__eyebrow { order: 1; width: fit-content; margin: 0; border: 1px solid rgb(var(--ink-rgb) / 38%); border-radius: 999px; padding: 0.24rem 0.7rem; background: var(--butter); color: var(--accent-navy); font-size: 0.76rem; font-weight: 650; letter-spacing: 0; box-shadow: 1px 2px 0 rgb(var(--ink-rgb) / 7%); }
-.hero h1 { order: 2; max-width: 10ch; margin: 0; color: var(--accent-navy); font-family: var(--font-display); font-size: clamp(3rem, 15vw, 4.6rem); font-weight: 700; letter-spacing: -0.045em; line-height: 1.02; text-wrap: balance; animation: rise-in 480ms 60ms cubic-bezier(.2,.8,.2,1) both; }
+.hero h1 { order: 2; max-width: 12ch; margin: 0; color: var(--ink); font-family: var(--font-editorial); font-size: clamp(2.9rem, 12.5vw, 4.25rem); font-weight: 700; letter-spacing: -0.07em; line-height: 1.08; text-wrap: balance; animation: rise-in 480ms 60ms cubic-bezier(.2,.8,.2,1) both; }
 .hero h1, .hero h1 span { color: var(--accent-navy); }
 .hero__stickers { order: 4; display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0; }
 .hero__stickers span { border: 1.5px solid rgb(var(--ink-rgb) / 55%); border-radius: 999px; padding: 0.32rem 0.82rem; background: rgb(var(--paper-rgb) / 84%); color: var(--ink); font-size: 0.78rem; font-weight: 700; box-shadow: 0 5px 12px rgb(var(--shadow-rgb) / 7%); }
@@ -346,8 +346,8 @@ button, input, textarea, select { font: inherit; }
   .landing-shell, .profile-step-shell, .group-gate-shell, .group-gate-message { width: calc(100% - 1rem); }
   .landing-shell, .profile-step-shell { padding-top: 0.7rem; }
   .landing-nav { gap: 0.5rem; }
-  .wordmark { font-size: 1.35rem; }
-  .edition-label { padding-inline: 0.48rem; font-size: 0.56rem; }
+  .wordmark { font-size: 1.18rem; }
+  .edition-label { padding-inline: 0.02rem; font-size: 0.54rem; }
   .hero { min-height: 0; padding: 0; }
   .hero__decor { height: 14rem; }
   .hero__tape, .hero__dots, .hero__stripe { width: 4.2rem; }
