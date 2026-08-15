@@ -133,14 +133,12 @@ button, input, textarea, select { font: inherit; }
 .edition-label { border: 0; border-radius: 0.25rem; padding: 0.35rem 0.65rem; background: var(--ink); color: #fff; font-size: 0.62rem; font-weight: 750; letter-spacing: 0.12em; }
 .hero { position: relative; display: grid; min-width: 0; gap: 1.15rem; overflow: visible; margin-top: 2.5rem; border: 0; border-radius: 0; padding: 0; background: transparent; box-shadow: none; }
 .hero__decor { position: relative; order: 3; width: 100%; height: clamp(14rem, 70vw, 20rem); overflow: hidden; border-block: 1px solid #c9ced2; background-color: rgb(255 255 255 / 62%); background-image: linear-gradient(rgb(41 75 99 / 7%) 1px, transparent 1px), linear-gradient(90deg, rgb(41 75 99 / 7%) 1px, transparent 1px); background-size: 28px 28px; }
-.hero__decor::before, .hero__decor::after { position: absolute; height: 1px; background: #8b98a2; content: ""; transform-origin: left center; }
-.hero__decor::before { top: 36%; left: 50%; width: 42%; transform: rotate(123deg); }
-.hero__decor::after { top: 36%; left: 50%; width: 42%; transform: rotate(57deg); }
+.hero__connectors { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.hero__connectors line { stroke: #71818d; stroke-width: 1; vector-effect: non-scaling-stroke; }
 .hero__tape, .hero__dots, .hero__stripe { position: absolute; z-index: 1; display: grid; width: clamp(4.2rem, 18vw, 5.4rem); aspect-ratio: 1; place-items: center; border: 1px solid #73818a; border-radius: 50%; box-shadow: 0 8px 20px rgb(41 75 99 / 12%); color: #fff; font-size: 0.82rem; font-weight: 800; letter-spacing: 0.03em; }
 .hero__tape::before { content: "ENTJ"; }
 .hero__dots::before { content: "INFP"; }
 .hero__stripe::before { content: "ISFJ"; }
-.hero__dots::after { position: absolute; top: 50%; left: 100%; z-index: -1; width: calc(100vw - 13.2rem); height: 1px; background: #8b98a2; content: ""; }
 .hero__tape { top: 12%; left: calc(50% - 2.35rem); background: var(--accent-navy); }
 .hero__dots { bottom: 12%; left: 12%; background: var(--mint-pop); }
 .hero__stripe { right: 12%; bottom: 12%; height: auto; background: #a9c0ce; opacity: 1; }
@@ -387,7 +385,6 @@ button, input, textarea, select { font: inherit; }
   .hero__decor { grid-column: 2; grid-row: 1 / 7; height: 100%; min-height: 36rem; border: 1px solid #c9ced2; }
   .hero__tape, .hero__dots, .hero__stripe { width: 6.2rem; }
   .hero__tape { left: calc(50% - 3.1rem); }
-  .hero__dots::after { width: calc(38vw - 12.4rem); }
   .create-section { grid-template-columns: minmax(16rem, 0.75fr) minmax(30rem, 1.25fr); gap: clamp(3rem, 7vw, 6rem); }
   .create-section__intro { position: sticky; top: 2rem; }
   .onboarding-form { gap: 1.35rem; }

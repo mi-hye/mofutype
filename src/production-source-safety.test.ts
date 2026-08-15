@@ -144,6 +144,7 @@ describe("production source safety", () => {
 
   it("keeps a mobile-first relationship preview without hiding document overflow", () => {
     const globalStyles = readFileSync(path.join(sourceRoot, "app/globals.css"), "utf8");
+    const pageSource = readFileSync(path.join(sourceRoot, "app/page.tsx"), "utf8");
 
     expect(globalStyles).not.toContain("min-width: 320px");
     expect(globalStyles).not.toContain("overflow-x: hidden");
@@ -154,6 +155,9 @@ describe("production source safety", () => {
     ]) expect(globalStyles).toContain(selector);
     expect(globalStyles).toMatch(/\.hero__decor\s*\{[^}]*order:\s*3/);
     expect(globalStyles).toMatch(/\.hero\s*\{[^}]*box-shadow:\s*none/);
+    expect(globalStyles).toContain(".hero__connectors line");
+    expect(pageSource).toContain('className="hero__connectors"');
+    expect(pageSource.match(/<line /g)).toHaveLength(3);
     expect(globalStyles).toContain("@keyframes float-orbit");
     expect(globalStyles).toContain("@keyframes rise-in");
   });

@@ -13,6 +13,16 @@ export default function Home() {
 
       <section className="hero" id="top">
         <div className="hero__decor" aria-hidden="true">
+          <svg
+            className="hero__connectors"
+            viewBox="0 0 100 100"
+            preserveAspectRatio="none"
+            focusable="false"
+          >
+            <line x1="50" y1="24" x2="19" y2="75" />
+            <line x1="50" y1="24" x2="81" y2="75" />
+            <line x1="19" y1="75" x2="81" y2="75" />
+          </svg>
           <span className="hero__tape" />
           <span className="hero__dots" />
           <span className="hero__stripe" />
