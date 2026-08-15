@@ -59,7 +59,7 @@ export default function Home() {
         <Card variant="accent">
           <span className="feature-card__number">01</span>
           <h2>わたしを知る</h2>
-          <p>生年月日とMBTIから、あなたらしい十二支タイプを見つけます。</p>
+          <p>生年月日からわかる十二支に、出生時刻とMBTIを重ねて、あなたらしいタイプを見つけます。</p>
         </Card>
         <Card>
           <span className="feature-card__number">02</span>

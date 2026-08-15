@@ -30,4 +30,12 @@ describe("Home", () => {
       "#create",
     );
   });
+
+  it("explains that birth time and MBTI refine the birth-year zodiac", () => {
+    render(<Home />);
+
+    expect(screen.getByText(
+      "生年月日からわかる十二支に、出生時刻とMBTIを重ねて、あなたらしいタイプを見つけます。",
+    )).toBeInTheDocument();
+  });
 });
