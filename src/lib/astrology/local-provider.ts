@@ -1,13 +1,32 @@
 import { ANIMAL_ORDER, ANIMALS } from "./animals";
-import type { AstrologyProvider } from "./types";
+import type { AstrologyProvider, MBTIType } from "./types";
 
 const MILLISECONDS_PER_DAY = 86_400_000;
 const DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
 const TIME_PATTERN = /^([01]\d|2[0-3]):([0-5]\d)$/;
+const VALID_MBTI_TYPES: ReadonlySet<MBTIType> = new Set([
+  "ISTJ",
+  "ISFJ",
+  "INFJ",
+  "INTJ",
+  "ISTP",
+  "ISFP",
+  "INFP",
+  "INTP",
+  "ESTP",
+  "ESFP",
+  "ENFP",
+  "ENTP",
+  "ESTJ",
+  "ESFJ",
+  "ENFJ",
+  "ENTJ",
+]);
 
 export type AstrologyValidationErrorCode =
   | "INVALID_BIRTH_DATE"
-  | "INVALID_BIRTH_TIME";
+  | "INVALID_BIRTH_TIME"
+  | "INVALID_MBTI";
 
 export class AstrologyValidationError extends Error {
   constructor(
@@ -63,8 +82,15 @@ function parseTimeMinutes(value: string): number {
   return Number(match[1]) * 60 + Number(match[2]);
 }
 
+function validateMbti(value: MBTIType | null): void {
+  if (value !== null && !VALID_MBTI_TYPES.has(value)) {
+    throw new AstrologyValidationError("INVALID_MBTI", "Invalid MBTI");
+  }
+}
+
 export const localAstrologyProvider: AstrologyProvider = {
   async derive(input) {
+    validateMbti(input.mbti);
     const utcDay = parseUtcDay(input.birthDate);
     const timeMinutes =
       input.birthTime === null ? 0 : parseTimeMinutes(input.birthTime);

@@ -104,6 +104,30 @@ describe("localAstrologyProvider", () => {
     );
   });
 
+  it("rejects an invalid non-null MBTI value", async () => {
+    await expect(
+      localAstrologyProvider.derive({
+        birthDate: "2024-02-29",
+        birthTime: null,
+        mbti: "XXXX" as never,
+      }),
+    ).rejects.toEqual(
+      new AstrologyValidationError("INVALID_MBTI", "Invalid MBTI"),
+    );
+  });
+
+  it("rejects a lowercase MBTI value without coercing it", async () => {
+    await expect(
+      localAstrologyProvider.derive({
+        birthDate: "2024-02-29",
+        birthTime: null,
+        mbti: "infp" as never,
+      }),
+    ).rejects.toEqual(
+      new AstrologyValidationError("INVALID_MBTI", "Invalid MBTI"),
+    );
+  });
+
   it("maps the Unix epoch deterministically through the stable order", async () => {
     await expect(
       localAstrologyProvider.derive({
