@@ -100,4 +100,27 @@ describe("JoinGroupForm", () => {
     await screen.findByRole("alert");
     expect(sessionStorage.getItem(joinDraftKey(token))).toBeNull();
   });
+
+  it("enters member state and settles loading when successful draft cleanup throws", async () => {
+    const user = userEvent.setup();
+    const joinGroup = vi.fn(async () => ({ groupId: "g1", memberId: "m1" }));
+    const loadGroup = vi.fn(async () => aggregate);
+    const onJoined = vi.fn();
+    const storage = {
+      getItem: vi.fn(() => null),
+      setItem: vi.fn(),
+      removeItem: vi.fn(() => { throw new Error("storage unavailable"); }),
+    } as unknown as Storage;
+    render(
+      <JoinGroupForm inviteToken={token} repositoryFactory={() => ({ joinGroup, loadGroup } as never)}
+        onJoined={onJoined} storage={storage} />,
+    );
+    await fillValid(user);
+    const submit = screen.getByRole("button", { name: "グループに参加" });
+    await user.click(submit);
+
+    await waitFor(() => expect(onJoined).toHaveBeenCalledWith(aggregate));
+    await waitFor(() => expect(submit).not.toBeDisabled());
+    expect(storage.setItem).not.toHaveBeenCalled();
+  });
 });

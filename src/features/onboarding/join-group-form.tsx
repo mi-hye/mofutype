@@ -120,7 +120,11 @@ export function JoinGroupForm({
       setLoading(false);
       return;
     }
-    activeStorage?.removeItem(key);
+    try {
+      activeStorage?.removeItem(key);
+    } catch {
+      // Browser storage cleanup is best-effort after a successful mutation.
+    }
     try {
       onJoined(aggregate);
     } catch {

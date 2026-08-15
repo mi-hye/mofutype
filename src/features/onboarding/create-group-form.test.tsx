@@ -111,4 +111,26 @@ describe("CreateGroupForm", () => {
     await screen.findByRole("alert");
     expect(sessionStorage.getItem(CREATE_DRAFT_KEY)).toBeNull();
   });
+
+  it("navigates and settles loading when successful draft cleanup throws", async () => {
+    const user = userEvent.setup();
+    const createGroup = vi.fn(async () => ({ groupId: "g1", memberId: "m1", inviteToken: token }));
+    const navigate = vi.fn();
+    const storage = {
+      getItem: vi.fn(() => null),
+      setItem: vi.fn(),
+      removeItem: vi.fn(() => { throw new Error("storage unavailable"); }),
+    } as unknown as Storage;
+    render(
+      <CreateGroupForm repositoryFactory={() => ({ createGroup } as never)}
+        navigate={navigate} storage={storage} />,
+    );
+    await fillValid(user);
+    const submit = screen.getByRole("button", { name: "グループを作成" });
+    await user.click(submit);
+
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith(`/g/${token}`));
+    await waitFor(() => expect(submit).not.toBeDisabled());
+    expect(storage.setItem).not.toHaveBeenCalled();
+  });
 });

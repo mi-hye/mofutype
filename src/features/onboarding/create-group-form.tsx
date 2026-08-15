@@ -107,7 +107,11 @@ export function CreateGroupForm({
       setLoading(false);
       return;
     }
-    activeStorage?.removeItem(CREATE_DRAFT_KEY);
+    try {
+      activeStorage?.removeItem(CREATE_DRAFT_KEY);
+    } catch {
+      // Browser storage cleanup is best-effort after a successful mutation.
+    }
     try {
       navigate(`/g/${inviteToken}`);
     } catch {
