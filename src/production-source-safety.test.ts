@@ -220,11 +220,17 @@ describe("production source safety", () => {
       "--animal-tiger-pastel",
       "--animal-rat-pastel",
       "--animal-rabbit-pastel",
+      "--animal-tiger-border",
+      "--animal-rat-border",
+      "--animal-rabbit-border",
     ]) expect(globalStyles).toContain(token);
     expect(globalStyles).toContain("--relationship-warm: #b87716");
     expect(globalStyles).toMatch(/\.hero__node-frame::before[^}]*border:\s*2px solid var\(--surface-elevated\)[^}]*filter:\s*none/);
     expect(globalStyles).toMatch(/\.hero__node-type[^}]*top:\s*0\.68rem/);
-    expect(globalStyles).toContain(".hero__tape .hero__node-frame::before { background: var(--animal-tiger-pastel); }");
+    expect(globalStyles).toMatch(/\.hero__tape \.hero__node-frame::before[^}]*background:\s*var\(--animal-tiger-pastel\)/);
+    expect(globalStyles).toContain("border-color: var(--animal-tiger-border)");
+    expect(globalStyles).toContain("border-color: var(--animal-rat-border)");
+    expect(globalStyles).toContain("border-color: var(--animal-rabbit-border)");
     expect(globalStyles).toMatch(/\.hero__connectors line[^}]*stroke-width:\s*1\.25[^}]*stroke-opacity:\s*0\.72/);
     expect(globalStyles).toMatch(/\.ui-button::before[^}]*animation:\s*squigglevision/);
     expect(globalStyles).toContain(".ui-button > span { position: relative; z-index: 1; }");

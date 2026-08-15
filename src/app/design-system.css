@@ -50,6 +50,9 @@
   --animal-tiger-pastel: #fff0b8;
   --animal-rat-pastel: #e4e8ef;
   --animal-rabbit-pastel: #f8e1e6;
+  --animal-tiger-border: #dfbd52;
+  --animal-rat-border: #aeb9ca;
+  --animal-rabbit-border: #dfadb9;
 
   /* Borders and elevation. */
   --border-subtle: 1.5px solid rgb(var(--ink-rgb) / 58%);
