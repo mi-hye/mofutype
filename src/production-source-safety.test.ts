@@ -52,12 +52,12 @@ function colorToken(styles: string, name: string): string {
 }
 
 describe("production source safety", () => {
-  it("defines the Modern Editorial tokens and reduced-motion fallback", () => {
+  it("defines the Urban Utility tokens and reduced-motion fallback", () => {
     const globalStyles = readFileSync(path.join(sourceRoot, "app/globals.css"), "utf8");
 
     expect(globalStyles).toContain("--paper-warm:");
     expect(globalStyles).toContain("--accent-navy:");
-    expect(globalStyles).toContain("--accent-brick:");
+    expect(globalStyles).toContain("--accent-plum:");
     expect(globalStyles).toContain("--accent-sand:");
     expect(globalStyles).toContain("--border-subtle:");
     expect(globalStyles).toContain("--shadow-pop:");
@@ -95,7 +95,7 @@ describe("production source safety", () => {
     expect(globalStyles).toContain("@media (forced-colors: active)");
   });
 
-  it("defines Modern Editorial contracts for relationship and checkout surfaces", () => {
+  it("defines Urban Utility contracts for relationship and checkout surfaces", () => {
     const globalStyles = readFileSync(path.join(sourceRoot, "app/globals.css"), "utf8");
 
     for (const selector of [
@@ -142,7 +142,7 @@ describe("production source safety", () => {
     expect(globalStyles).toContain("stroke: var(--edge-mint)");
   });
 
-  it("keeps restrained editorial planes and motion without hiding document overflow", () => {
+  it("keeps a mobile-first relationship preview without hiding document overflow", () => {
     const globalStyles = readFileSync(path.join(sourceRoot, "app/globals.css"), "utf8");
 
     expect(globalStyles).not.toContain("min-width: 320px");
@@ -151,10 +151,9 @@ describe("production source safety", () => {
       ".hero__tape {",
       ".hero__dots {",
       ".hero__stripe {",
-      ".hero__cutout {",
-      ".hero__issue-note {",
-      ".create-section__tape {",
     ]) expect(globalStyles).toContain(selector);
+    expect(globalStyles).toMatch(/\.hero__decor\s*\{[^}]*order:\s*3/);
+    expect(globalStyles).toMatch(/\.hero\s*\{[^}]*box-shadow:\s*none/);
     expect(globalStyles).toContain("@keyframes float-orbit");
     expect(globalStyles).toContain("@keyframes rise-in");
   });
