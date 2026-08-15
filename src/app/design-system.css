@@ -44,9 +44,6 @@
   --status-danger: var(--color-error-text);
   --edge-strong: #934b43;
   --edge-soft: #55725f;
-  --graph-node-entj: #123b5d;
-  --graph-node-infp: #8ebdab;
-  --graph-node-isfj: #a9c8d8;
 
   /* Borders and elevation. */
   --border-subtle: 1.5px solid rgb(var(--ink-rgb) / 58%);

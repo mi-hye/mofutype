@@ -193,10 +193,10 @@ describe("production source safety", () => {
     for (const animalImage of ["tiger.png", "rat.png", "rabbit.png"]) {
       expect(globalStyles).toContain(`/zodiac/${animalImage}`);
     }
-    for (const nodeToken of ["--graph-node-entj", "--graph-node-infp", "--graph-node-isfj"]) {
-      expect(globalStyles).toContain(nodeToken);
-    }
+    expect(globalStyles).toMatch(/\.hero__tape, \.hero__dots, \.hero__stripe[^}]*background:\s*transparent/);
     expect(globalStyles).toMatch(/\.hero__tape::before[^}]*border:\s*0/);
+    expect(globalStyles).toMatch(/\.ui-button::before[^}]*animation:\s*squigglevision/);
+    expect(globalStyles).toContain(".ui-button > span { position: relative; z-index: 1; }");
     expect(globalStyles).toContain("@keyframes float-orbit");
     expect(globalStyles).toContain("@keyframes rise-in");
   });
