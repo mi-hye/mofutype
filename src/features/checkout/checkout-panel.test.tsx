@@ -34,6 +34,10 @@ describe("CheckoutPanel", () => {
     expect(screen.getByText("これはモック決済です。実際の請求は発生しません。")).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: "PayPay（モック）" })).toBeChecked();
     expect(screen.getByRole("radio", { name: "カード（モック）" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "特定商取引法に基づく表記" })).toHaveAttribute(
+      "href",
+      "/tokushoho",
+    );
   });
 
   it("unlocks once and reports success", async () => {

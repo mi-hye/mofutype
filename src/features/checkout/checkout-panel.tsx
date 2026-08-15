@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import type { PaymentInput, PaymentProvider } from "./types";
@@ -107,6 +108,7 @@ export function CheckoutPanel({
           {failure ? "もう一度試す" : "モック決済を完了"}
         </Button>
       )}
+      <Link href="/tokushoho">特定商取引法に基づく表記</Link>
     </section>
   );
 }
