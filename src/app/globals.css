@@ -275,6 +275,23 @@ select {
 .unknown-toggle:has(input:checked) { background: var(--mint-pop); box-shadow: 3px 3px 0 var(--hot-pink); }
 .unknown-toggle input { width: 1.5rem; height: 1.5rem; margin: 0; accent-color: var(--hot-pink); }
 .field-error, .form-error { width: fit-content; margin: 0; border-left: 7px solid var(--coral); padding: 0.22rem 0.55rem; background: var(--surface-error); color: var(--text-error); font-weight: 850; transform: rotate(-0.3deg); }
+.start-group-form { align-content: start; min-height: 16rem; }
+.start-group-form .form-field input { min-height: 58px; font-size: 1.08rem; font-weight: 750; }
+.start-group-form__note { margin: 0; color: var(--text-muted); font-size: 0.82rem; font-weight: 700; text-align: center; }
+.profile-step-shell { width: min(calc(100% - 2rem), var(--content-wide)); margin-inline: auto; padding: 2rem 0 5rem; }
+.profile-step { display: grid; gap: 2rem; padding-top: clamp(2.5rem, 8vw, 6rem); }
+.profile-step__intro { position: relative; max-width: 34rem; }
+.profile-step__intro::before { position: absolute; top: -1.1rem; left: 7rem; width: 6rem; height: 1.25rem; background: var(--tape-mint); clip-path: polygon(4% 0, 100% 8%, 94% 100%, 0 88%); content: ""; transform: rotate(-4deg); }
+.profile-step__intro h1 { margin: 0; font-size: clamp(2.8rem, 9vw, 5.4rem); font-weight: 1000; letter-spacing: -0.075em; line-height: 0.96; text-shadow: 3px 3px 0 var(--hot-pink); text-wrap: balance; }
+.profile-step__intro > p:last-of-type { color: var(--text-muted); font-weight: 700; }
+.profile-step__intro > a { display: inline-flex; min-height: 44px; align-items: center; border-bottom: 4px solid var(--mint-pop); color: var(--ink); font-size: 0.9rem; font-weight: 900; text-underline-offset: 0.2rem; }
+.profile-step-group { display: flex; min-width: 0; align-items: center; gap: 0.7rem; margin: 0; border: 2px solid var(--ink); border-radius: 0.7rem 1rem 0.7rem 0.9rem; padding: 0.65rem 0.8rem; background: var(--butter); box-shadow: 3px 3px 0 var(--ink); transform: rotate(-0.35deg); }
+.profile-step-group span { flex: 0 0 auto; font-family: ui-monospace, monospace; font-size: 0.7rem; font-weight: 950; letter-spacing: 0.08em; }
+.profile-step-group strong { min-width: 0; overflow-wrap: anywhere; }
+.profile-step-missing { display: grid; gap: 1rem; justify-items: start; }
+.profile-step-missing p { margin: 0; font-weight: 850; }
+.profile-step-missing a { text-decoration: none; }
+.profile-step-loading { margin: 0; border-left: 7px solid var(--mint-pop); padding: 0.55rem 0.75rem; background: var(--surface-mint-zine); font-weight: 850; }
 .join-panel { position: relative; width: min(100%, 40rem); border: var(--ink-border); border-radius: 1rem 1.7rem 1.1rem 1.4rem; padding: clamp(1rem, 5vw, 2.25rem); background: var(--surface-join); box-shadow: var(--shadow-zine); }
 .join-panel::before { position: absolute; top: -0.8rem; left: 50%; width: 7rem; height: 1.55rem; background: var(--tape-mint); clip-path: polygon(5% 0, 100% 9%, 94% 100%, 0 88%); content: ""; transform: translateX(-50%) rotate(-2deg); }
 .join-panel > h1 { margin: 0; font-size: clamp(2rem, 8vw, 3.5rem); line-height: 1.1; }
@@ -405,6 +422,7 @@ select {
 
 @media (max-width: 23rem) {
   .landing-shell,
+  .profile-step-shell,
   .group-gate-shell,
   .group-gate-message { width: calc(100% - 1rem); }
   .landing-shell { padding-top: 0.75rem; }
@@ -419,6 +437,10 @@ select {
   .hero__stripe { right: 0.5rem; width: 6rem; }
   .ui-card { padding: 1rem; box-shadow: 4px 4px 0 var(--ink); }
   .unknown-toggle { width: 100%; }
+  .profile-step-shell { padding-top: 0.75rem; }
+  .profile-step { padding-top: 3.2rem; }
+  .profile-step__intro h1 { font-size: 2.8rem; overflow-wrap: anywhere; }
+  .profile-step .ui-card { padding: 1rem; }
   .group-member-shell { width: calc(100% - 0.75rem); }
   .group-member-header { box-shadow: 4px 4px 0 var(--ink); }
   .group-member-actions { display: grid; }
@@ -462,6 +484,8 @@ select {
   .profile-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: end; }
   .profile-fields .form-field:nth-of-type(1),
   .profile-fields .form-field:nth-of-type(2) { grid-column: 1 / -1; }
+  .profile-step { grid-template-columns: minmax(15rem, 0.72fr) minmax(24rem, 1.28fr); align-items: start; gap: clamp(2rem, 7vw, 6rem); }
+  .profile-step__intro { position: sticky; top: 2rem; }
 }
 
 @media (forced-colors: active) {

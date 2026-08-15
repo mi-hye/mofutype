@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import Link from "next/link";
+import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
 import { localAstrologyProvider } from "@/lib/astrology/local-provider";
@@ -49,14 +50,28 @@ export interface CreateGroupFormProps {
   navigate?: (path: string) => void;
   storage?: Storage;
   clock?: () => Date;
+  profileOnly?: boolean;
 }
 
-export function CreateGroupForm({
+const subscribeToHydration = () => () => {};
+
+export function CreateGroupForm(props: CreateGroupFormProps) {
+  const hydrated = useSyncExternalStore(subscribeToHydration, () => true, () => false);
+
+  if (props.profileOnly && !hydrated) {
+    return <p className="profile-step-loading" role="status">入力内容を確認しています</p>;
+  }
+
+  return <ReadyCreateGroupForm {...props} />;
+}
+
+function ReadyCreateGroupForm({
   repositoryFactory = createBrowserGroupRepository,
   astrologyProvider = localAstrologyProvider,
   navigate = (path) => window.location.assign(path),
   storage,
   clock = () => new Date(),
+  profileOnly = false,
 }: CreateGroupFormProps) {
   const activeStorage = storage ?? (typeof window === "undefined" ? undefined : window.sessionStorage);
   const [draft, setDraft] = useState<Draft>(() => readDraft(activeStorage));
@@ -139,16 +154,35 @@ export function CreateGroupForm({
     if (isCurrent()) setLoading(false);
   }
 
-  return (
-    <form className="onboarding-form" aria-label="グループ作成フォーム" onSubmit={submit} noValidate>
-      <div className="form-field">
-        <label htmlFor="create-group-name">グループ名</label>
-        <input id="create-group-name" type="text" maxLength={30} value={draft.groupName}
-          onChange={(event) => setDraft({ ...draft, groupName: event.target.value })}
-          disabled={loading} aria-describedby={errors.groupName ? "create-group-name-error" : undefined}
-          aria-invalid={Boolean(errors.groupName) || undefined} />
-        {errors.groupName ? <p className="field-error" id="create-group-name-error" role="alert">{errors.groupName}</p> : null}
+  if (profileOnly && !draft.groupName.trim()) {
+    return (
+      <div className="profile-step-missing" role="status">
+        <p>先にグループ名を入力してください。</p>
+        <Link className="ui-button" data-size="lg" data-variant="secondary" href="/#create">
+          グループ名を入力する
+        </Link>
       </div>
+    );
+  }
+
+  return (
+    <form className="onboarding-form" aria-label={profileOnly ? "プロフィール入力フォーム" : "グループ作成フォーム"}
+      onSubmit={submit} noValidate>
+      {profileOnly ? (
+        <p className="profile-step-group" aria-label="作成するグループ">
+          <span>GROUP</span>
+          <strong>{draft.groupName}</strong>
+        </p>
+      ) : (
+        <div className="form-field">
+          <label htmlFor="create-group-name">グループ名</label>
+          <input id="create-group-name" type="text" maxLength={30} value={draft.groupName}
+            onChange={(event) => setDraft({ ...draft, groupName: event.target.value })}
+            disabled={loading} aria-describedby={errors.groupName ? "create-group-name-error" : undefined}
+            aria-invalid={Boolean(errors.groupName) || undefined} />
+          {errors.groupName ? <p className="field-error" id="create-group-name-error" role="alert">{errors.groupName}</p> : null}
+        </div>
+      )}
       <ProfileForm value={draft} onChange={(profile) => setDraft({ ...draft, ...profile })}
         errors={errors as ProfileErrors} disabled={loading} />
       {failure ? <p className="form-error" role="alert">{failure}</p> : null}

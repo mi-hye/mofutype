@@ -11,6 +11,10 @@ const mbtiValues = new Set<string>(MBTI_TYPES);
 const datePattern = /^(\d{4})-(\d{2})-(\d{2})$/;
 const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
 
+export const groupNameSchema = z.string().trim()
+  .min(1, "グループ名を入力してください")
+  .max(30, "グループ名は30文字以内で入力してください");
+
 function parseIsoDate(value: string): { year: number; month: number; day: number } | null {
   const match = datePattern.exec(value);
   if (!match) return null;
@@ -32,7 +36,7 @@ export function createOnboardingSchema(clock: () => Date = () => new Date()) {
   return z
     .object({
       nickname: z.string().trim().min(1, "ニックネームを入力してください").max(20, "ニックネームは20文字以内で入力してください"),
-      groupName: z.string().trim().min(1, "グループ名を入力してください").max(30, "グループ名は30文字以内で入力してください").optional(),
+      groupName: groupNameSchema.optional(),
       birthDate: z.string(),
       birthTimeKnown: z.boolean(),
       birthTime: z.string(),

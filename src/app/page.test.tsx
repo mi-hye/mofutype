@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import Home from "./page";
 
 describe("Home", () => {
-  it("links its call to action to an existing section and renders real creation onboarding", () => {
+  it("starts group creation with only a group name before profile routing", () => {
     render(<Home />);
 
     const link = screen.getByRole("link", { name: "グループを作る" });
@@ -12,8 +12,11 @@ describe("Home", () => {
 
     expect(targetId).toBeTruthy();
     expect(document.getElementById(targetId!)).toBeInTheDocument();
-    expect(screen.getByRole("form", { name: "グループ作成フォーム" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "グループを作成" })).toBeInTheDocument();
+    expect(screen.getByRole("form", { name: "グループ名入力フォーム" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "次へ：プロフィール入力" })).toBeInTheDocument();
+    expect(screen.getByLabelText("グループ名")).toBeInTheDocument();
+    expect(screen.queryByLabelText("ニックネーム")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("生年月日")).not.toBeInTheDocument();
   });
 
   it("uses the approved Kawaii Zine headline and sticker copy", () => {
