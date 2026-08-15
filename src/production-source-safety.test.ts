@@ -167,6 +167,9 @@ describe("production source safety", () => {
     expect(pageSource).toContain("#12干支");
     expect(pageSource).not.toContain("#動物うらない");
     expect(pageSource).not.toContain("性格タイプ × 動物キャラクター");
+    for (const animalImage of ["tiger.png", "rat.png", "rabbit.png"]) {
+      expect(globalStyles).toContain(`/zodiac/${animalImage}`);
+    }
     expect(globalStyles).toContain("@keyframes float-orbit");
     expect(globalStyles).toContain("@keyframes rise-in");
   });

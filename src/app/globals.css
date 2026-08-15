@@ -154,13 +154,18 @@ button, input, textarea, select { font: inherit; }
 .hero__decor { position: relative; order: 3; width: 100%; height: clamp(16rem, 62vw, 30rem); overflow: hidden; border: var(--border-panel); border-radius: 2.5rem 2.2rem 2.65rem 2.1rem / 2.25rem 2.6rem 2.15rem 2.55rem; outline: 1px solid rgb(18 59 93 / 12%); outline-offset: -5px; background-color: rgb(255 253 249 / 76%); background-image: linear-gradient(rgb(18 59 93 / 5%) 1px, transparent 1px), linear-gradient(90deg, rgb(18 59 93 / 5%) 1px, transparent 1px); background-size: 28px 28px; box-shadow: 3px 4px 0 rgb(18 59 93 / 6%), inset 0 0 40px rgb(246 221 162 / 18%); }
 .hero__connectors { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
 .hero__connectors line { stroke: #61798a; stroke-width: 1.35; stroke-linecap: round; vector-effect: non-scaling-stroke; }
-.hero__tape, .hero__dots, .hero__stripe { position: absolute; z-index: 1; display: grid; width: clamp(4.2rem, 18vw, 5.4rem); aspect-ratio: 1; place-items: center; border: 2px solid var(--accent-navy); border-radius: 46% 54% 49% 51% / 52% 46% 54% 48%; box-shadow: inset 0 0 0 4px rgb(255 255 255 / 18%), 0 10px 22px rgb(18 59 93 / 14%); color: #fff; font-size: 0.82rem; font-weight: 800; letter-spacing: 0.03em; }
+.hero__tape, .hero__dots, .hero__stripe { position: absolute; z-index: 1; display: grid; width: clamp(4.2rem, 18vw, 5.4rem); aspect-ratio: 1; place-items: center; border: 1.5px solid rgb(18 59 93 / 62%); border-radius: 50%; background: #fffaf1; box-shadow: 0 8px 18px rgb(18 59 93 / 12%); color: var(--accent-navy); font-size: 0.72rem; font-weight: 800; letter-spacing: 0.03em; }
+.hero__tape::before, .hero__dots::before, .hero__stripe::before { position: absolute; bottom: -0.45rem; left: 50%; z-index: 2; min-width: 3rem; transform: translateX(-50%); border: 1px solid rgb(18 59 93 / 55%); border-radius: 999px; padding: 0.16rem 0.48rem; background: #fffdf9; box-shadow: 1px 2px 0 rgb(18 59 93 / 9%); text-align: center; line-height: 1; }
+.hero__tape::after, .hero__dots::after, .hero__stripe::after { position: absolute; inset: -5%; z-index: 1; background-position: center; background-repeat: no-repeat; background-size: contain; content: ""; filter: drop-shadow(0 3px 2px rgb(18 59 93 / 10%)); }
 .hero__tape::before { content: "ENTJ"; }
 .hero__dots::before { content: "INFP"; }
 .hero__stripe::before { content: "ISFJ"; }
-.hero__tape { top: 12%; left: calc(50% - 2.35rem); background: var(--accent-navy); }
-.hero__dots { bottom: 12%; left: 12%; background: #8ebdab; }
-.hero__stripe { right: 12%; bottom: 12%; height: auto; background: #a9c8d8; opacity: 1; }
+.hero__tape::after { background-image: url("/zodiac/tiger.png"); }
+.hero__dots::after { background-image: url("/zodiac/rat.png"); }
+.hero__stripe::after { background-image: url("/zodiac/rabbit.png"); }
+.hero__tape { top: 12%; left: calc(50% - 2.35rem); }
+.hero__dots { bottom: 12%; left: 12%; }
+.hero__stripe { right: 12%; bottom: 12%; height: auto; opacity: 1; }
 .hero__cutout, .hero__issue-note { display: none; }
 .create-section__tape { display: none; }
 .hero__eyebrow { order: 1; width: fit-content; margin: 0; border: 1px solid rgb(18 59 93 / 38%); border-radius: 999px; padding: 0.24rem 0.7rem; background: var(--butter); color: var(--accent-navy); font-size: 0.76rem; font-weight: 650; letter-spacing: 0; box-shadow: 1px 2px 0 rgb(18 59 93 / 7%); }
