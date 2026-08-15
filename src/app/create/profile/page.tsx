@@ -13,9 +13,9 @@ export default function CreateProfilePage() {
       <section className="profile-step" aria-labelledby="profile-step-title">
         <div className="profile-step__intro">
           <p className="hero__eyebrow">プロフィール</p>
-          <h1 id="profile-step-title">あなたのことを教えて</h1>
-          <p>この情報から動物タイプを見つけて、グループを作成します。</p>
-          <Link href="/#create">グループ名を変更する</Link>
+          <h1 id="profile-step-title">プロフィールを入力</h1>
+          <p>あと少しでグループ完成です。</p>
+          <Link href="/#create">グループ名を変更</Link>
         </div>
         <Card variant="accent">
           <CreateGroupForm profileOnly />

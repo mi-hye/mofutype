@@ -16,11 +16,11 @@ describe("CreateProfilePage", () => {
   it("renders the second creation step with native profile controls", () => {
     render(<CreateProfilePage />);
 
-    expect(screen.getByRole("heading", { name: "あなたのことを教えて" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "プロフィールを入力" })).toBeInTheDocument();
     expect(screen.getByRole("form", { name: "プロフィール入力フォーム" })).toBeInTheDocument();
     expect(screen.getByLabelText("生年月日")).toHaveAttribute("type", "date");
     expect(screen.getByLabelText("出生時刻")).toHaveAttribute("type", "time");
     expect(screen.getByRole("checkbox", { name: "出生時刻はわからない" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "グループ名を変更する" })).toHaveAttribute("href", "/#create");
+    expect(screen.getByRole("link", { name: "グループ名を変更" })).toHaveAttribute("href", "/#create");
   });
 });

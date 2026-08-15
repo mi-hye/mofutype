@@ -110,6 +110,15 @@ describe("production source safety", () => {
     }
   });
 
+  it("keeps the profile step compact without replacing native controls", () => {
+    const globalStyles = readFileSync(path.join(sourceRoot, "app/globals.css"), "utf8");
+
+    expect(globalStyles).toContain(".profile-step .ui-card {");
+    expect(globalStyles).toContain("max-width: 38rem;");
+    expect(globalStyles).toContain(".profile-step .unknown-toggle input {");
+    expect(globalStyles).toContain("width: 1.15rem;");
+  });
+
   it("keeps semantic selected-edge colors visible against cream", () => {
     const globalStyles = readFileSync(path.join(sourceRoot, "app/globals.css"), "utf8");
     const cream = colorToken(globalStyles, "--cream");

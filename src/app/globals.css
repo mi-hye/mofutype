@@ -279,13 +279,18 @@ select {
 .start-group-form .form-field input { min-height: 58px; font-size: 1.08rem; font-weight: 750; }
 .start-group-form__note { margin: 0; color: var(--text-muted); font-size: 0.82rem; font-weight: 700; text-align: center; }
 .profile-step-shell { width: min(calc(100% - 2rem), var(--content-wide)); margin-inline: auto; padding: 2rem 0 5rem; }
-.profile-step { display: grid; gap: 2rem; padding-top: clamp(2.5rem, 8vw, 6rem); }
-.profile-step__intro { position: relative; max-width: 34rem; }
+.profile-step { display: grid; max-width: 70rem; gap: 2rem; margin-inline: auto; padding-top: clamp(2.5rem, 7vw, 5rem); }
+.profile-step__intro { position: relative; max-width: 26rem; }
 .profile-step__intro::before { position: absolute; top: -1.1rem; left: 7rem; width: 6rem; height: 1.25rem; background: var(--tape-mint); clip-path: polygon(4% 0, 100% 8%, 94% 100%, 0 88%); content: ""; transform: rotate(-4deg); }
-.profile-step__intro h1 { margin: 0; font-size: clamp(2.8rem, 9vw, 5.4rem); font-weight: 1000; letter-spacing: -0.075em; line-height: 0.96; text-shadow: 3px 3px 0 var(--hot-pink); text-wrap: balance; }
+.profile-step__intro h1 { margin: 0; font-size: clamp(2.65rem, 7vw, 4.4rem); font-weight: 1000; letter-spacing: -0.075em; line-height: 0.96; text-shadow: 3px 3px 0 var(--hot-pink); text-wrap: balance; }
 .profile-step__intro > p:last-of-type { color: var(--text-muted); font-weight: 700; }
 .profile-step__intro > a { display: inline-flex; min-height: 44px; align-items: center; border-bottom: 4px solid var(--mint-pop); color: var(--ink); font-size: 0.9rem; font-weight: 900; text-underline-offset: 0.2rem; }
-.profile-step-group { display: flex; min-width: 0; align-items: center; gap: 0.7rem; margin: 0; border: 2px solid var(--ink); border-radius: 0.7rem 1rem 0.7rem 0.9rem; padding: 0.65rem 0.8rem; background: var(--butter); box-shadow: 3px 3px 0 var(--ink); transform: rotate(-0.35deg); }
+.profile-step .ui-card { width: min(100%, 38rem); max-width: 38rem; justify-self: center; }
+.profile-step .onboarding-form, .profile-step .profile-fields { gap: 1rem; }
+.profile-step .form-field input, .profile-step .form-field select { min-height: 46px; padding-block: 0.55rem; }
+.profile-step .unknown-toggle { min-height: 40px; gap: 0.4rem; padding: 0.2rem 0.65rem 0.2rem 0.35rem; font-size: 0.8rem; }
+.profile-step .unknown-toggle input { width: 1.15rem; height: 1.15rem; }
+.profile-step-group { display: flex; min-width: 0; align-items: center; gap: 0.6rem; margin: 0; border: 2px solid var(--ink); border-radius: 0.7rem 1rem 0.7rem 0.9rem; padding: 0.5rem 0.7rem; background: var(--butter); box-shadow: 3px 3px 0 var(--ink); transform: rotate(-0.35deg); }
 .profile-step-group span { flex: 0 0 auto; font-family: ui-monospace, monospace; font-size: 0.7rem; font-weight: 950; letter-spacing: 0.08em; }
 .profile-step-group strong { min-width: 0; overflow-wrap: anywhere; }
 .profile-step-missing { display: grid; gap: 1rem; justify-items: start; }
@@ -436,7 +441,7 @@ select {
   .hero h1 { font-size: clamp(2.8rem, 17vw, 3.35rem); letter-spacing: -0.08em; }
   .hero__stripe { right: 0.5rem; width: 6rem; }
   .ui-card { padding: 1rem; box-shadow: 4px 4px 0 var(--ink); }
-  .unknown-toggle { width: 100%; }
+  .join-panel .unknown-toggle { width: 100%; }
   .profile-step-shell { padding-top: 0.75rem; }
   .profile-step { padding-top: 3.2rem; }
   .profile-step__intro h1 { font-size: 2.8rem; overflow-wrap: anywhere; }
@@ -467,6 +472,10 @@ select {
   .hero__actions { flex-direction: row; }
   .feature-grid { grid-template-columns: repeat(3, 1fr); }
   .create-section { grid-template-columns: minmax(0, 0.85fr) minmax(20rem, 1.15fr); align-items: start; }
+  .profile-step .profile-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: end; column-gap: 1rem; }
+  .profile-step .profile-fields .form-field:nth-of-type(1),
+  .profile-step .profile-fields .form-field:nth-of-type(2) { grid-column: auto; }
+  .profile-step .unknown-toggle { align-self: end; justify-self: start; }
   .group-member-shell { width: min(calc(100% - 2rem), 86rem); padding-top: 2rem; }
   .group-member-header { grid-template-columns: minmax(0, 1fr) auto; align-items: end; }
   .group-member-actions { justify-content: flex-end; }
@@ -484,7 +493,7 @@ select {
   .profile-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: end; }
   .profile-fields .form-field:nth-of-type(1),
   .profile-fields .form-field:nth-of-type(2) { grid-column: 1 / -1; }
-  .profile-step { grid-template-columns: minmax(15rem, 0.72fr) minmax(24rem, 1.28fr); align-items: start; gap: clamp(2rem, 7vw, 6rem); }
+  .profile-step { grid-template-columns: minmax(16rem, 0.8fr) minmax(0, 38rem); align-items: start; justify-content: space-between; gap: clamp(2rem, 5vw, 4rem); }
   .profile-step__intro { position: sticky; top: 2rem; }
 }
 
