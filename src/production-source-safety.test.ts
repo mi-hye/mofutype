@@ -117,7 +117,9 @@ describe("production source safety", () => {
     expect(globalStyles).toContain("max-width: 38rem;");
     expect(globalStyles).toContain(".profile-step .unknown-toggle input {");
     expect(globalStyles).toContain("width: 1.15rem;");
-    expect(globalStyles).toContain("@media (min-width: 48rem)");
+    expect(globalStyles).toContain(
+      ".profile-step .field-error { max-width: 100%; font-size: 0.75rem;",
+    );
   });
 
   it("keeps semantic selected-edge colors visible against cream", () => {
