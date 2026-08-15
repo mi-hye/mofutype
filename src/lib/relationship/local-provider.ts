@@ -14,13 +14,37 @@ type CopyTemplate = {
   detail: RelationshipDetail;
 };
 
-type CrossGroupPair = "EARTH:MOON" | "EARTH:SUN" | "MOON:SUN";
+const GROUP_DYNAMICS = {
+  MOON: {
+    MOON: "SAME_GROUP",
+    EARTH: "MOON_OVER_EARTH",
+    SUN: "SUN_OVER_MOON",
+  },
+  EARTH: {
+    MOON: "MOON_OVER_EARTH",
+    EARTH: "SAME_GROUP",
+    SUN: "EARTH_OVER_SUN",
+  },
+  SUN: {
+    MOON: "SUN_OVER_MOON",
+    EARTH: "EARTH_OVER_SUN",
+    SUN: "SAME_GROUP",
+  },
+} as const satisfies Readonly<
+  Record<AnimalGroup, Readonly<Record<AnimalGroup, GroupDynamic>>>
+>;
 
-const CROSS_GROUP_DYNAMICS = {
-  "EARTH:MOON": "MOON_OVER_EARTH",
-  "EARTH:SUN": "EARTH_OVER_SUN",
-  "MOON:SUN": "SUN_OVER_MOON",
-} as const satisfies Readonly<Record<CrossGroupPair, GroupDynamic>>;
+export type RelationshipValidationErrorCode = "INVALID_ANIMAL_GROUP";
+
+export class RelationshipValidationError extends Error {
+  constructor(
+    public readonly code: RelationshipValidationErrorCode,
+    message: string,
+  ) {
+    super(message);
+    this.name = "RelationshipValidationError";
+  }
+}
 
 const COPY_TEMPLATES: Readonly<
   Record<GroupDynamic, (duo: string) => CopyTemplate>
@@ -79,16 +103,24 @@ const COPY_TEMPLATES: Readonly<
   }),
 };
 
-function groupDynamic(
-  firstGroup: AnimalGroup,
-  secondGroup: AnimalGroup,
-): GroupDynamic {
-  if (firstGroup === secondGroup) {
-    return "SAME_GROUP";
+function validateAnimalGroup(value: unknown): asserts value is AnimalGroup {
+  switch (value) {
+    case "MOON":
+    case "EARTH":
+    case "SUN":
+      return;
+    default:
+      throw new RelationshipValidationError(
+        "INVALID_ANIMAL_GROUP",
+        "Invalid animal group",
+      );
   }
+}
 
-  const key = [firstGroup, secondGroup].sort().join(":") as CrossGroupPair;
-  return CROSS_GROUP_DYNAMICS[key];
+function groupDynamic(firstGroup: unknown, secondGroup: unknown): GroupDynamic {
+  validateAnimalGroup(firstGroup);
+  validateAnimalGroup(secondGroup);
+  return GROUP_DYNAMICS[firstGroup][secondGroup];
 }
 
 function animalDuo(first: DerivedProfile, second: DerivedProfile): string {

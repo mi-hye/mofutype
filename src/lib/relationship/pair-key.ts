@@ -13,5 +13,5 @@ export function canonicalPairKey(memberAId: string, memberBId: string): string {
 
   const [low, high] = [memberAId, memberBId].sort();
 
-  return `${low}:${high}`;
+  return `${encodeURIComponent(low)}:${encodeURIComponent(high)}`;
 }

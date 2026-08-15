@@ -7,7 +7,10 @@ import type {
   MBTIType,
 } from "../astrology/types";
 import { canonicalPairKey } from "./pair-key";
-import { createRelationship } from "./local-provider";
+import {
+  createRelationship,
+  RelationshipValidationError,
+} from "./local-provider";
 
 function profile(
   animalId: AnimalId,
@@ -35,6 +38,20 @@ describe("canonicalPairKey", () => {
     expect(canonicalPairKey("member-z", "member-a")).toBe(
       "member-a:member-z",
     );
+  });
+
+  it("keeps delimiter-bearing member pairs unambiguous", () => {
+    const firstPair = canonicalPairKey("a", "b:c");
+    const secondPair = canonicalPairKey("a:b", "c");
+
+    expect(firstPair).toBe("a:b%3Ac");
+    expect(secondPair).toBe("a%3Ab:c");
+    expect(firstPair).not.toBe(secondPair);
+  });
+
+  it("sorts raw IDs before encoding colon and percent characters", () => {
+    expect(canonicalPairKey("b%", "a:")).toBe("a%3A:b%25");
+    expect(canonicalPairKey("a:", "b%")).toBe("a%3A:b%25");
   });
 
   it.each(["", "   "])("rejects an empty member ID (%j)", (emptyId) => {
@@ -97,6 +114,23 @@ describe("createRelationship", () => {
     ).toBe("SAME_GROUP");
   });
 
+  it("rejects a malformed runtime animal group with a stable typed error", () => {
+    expect(() =>
+      relationship(
+        {
+          id: "member-a",
+          profile: profile("fawn", "STAR" as never),
+        },
+        { id: "member-b", profile: profile("wolf", "EARTH") },
+      ),
+    ).toThrowError(
+      new RelationshipValidationError(
+        "INVALID_ANIMAL_GROUP",
+        "Invalid animal group",
+      ),
+    );
+  });
+
   it("returns exactly the same result when members are swapped", () => {
     const memberA = {
       id: "member-z",
@@ -112,19 +146,89 @@ describe("createRelationship", () => {
     );
   });
 
-  it("never returns a numeric compatibility score or percentage copy", () => {
-    const result = relationship(
-      { id: "member-a", profile: profile("wolf", "EARTH") },
-      { id: "member-b", profile: profile("lion", "SUN") },
-    );
-    const copy = [
-      result.freeTitleJa,
-      result.freeSummaryJa,
-      ...Object.values(result.detail),
+  it("uses distinct dynamic copy with stable animal-name order", () => {
+    const cases = [
+      {
+        result: relationship(
+          { id: "member-a", profile: profile("sheep", "MOON") },
+          { id: "member-b", profile: profile("fawn", "MOON") },
+        ),
+        title: "こじか × ひつじ、似たもの同士で話が早い",
+        summary:
+          "テンポが自然にそろうコンビ。わかり合えるぶん、思い込みだけは言葉でほどこう。",
+      },
+      {
+        result: relationship(
+          { id: "member-a", profile: profile("wolf", "EARTH") },
+          { id: "member-b", profile: profile("fawn", "MOON") },
+        ),
+        title: "こじか × 狼、やわらかさが現実を動かす",
+        summary:
+          "気持ちを拾う月タイプと足場を固める地球タイプ。違う得意技が、意外といいパスになる。",
+      },
+      {
+        result: relationship(
+          { id: "member-a", profile: profile("wolf", "EARTH") },
+          { id: "member-b", profile: profile("lion", "SUN") },
+        ),
+        title: "ライオン × 狼、勢いをちゃんと形にする",
+        summary:
+          "走り出す太陽タイプと着地させる地球タイプ。熱量と段取りがかみ合えば頼もしい。",
+      },
+      {
+        result: relationship(
+          { id: "member-a", profile: profile("lion", "SUN") },
+          { id: "member-b", profile: profile("fawn", "MOON") },
+        ),
+        title: "こじか × ライオン、まぶしさが心の扉を開く",
+        summary:
+          "場を照らす太陽タイプと気配を読む月タイプ。勢いにやさしい余白が加わるコンビ。",
+      },
     ];
 
-    expect(result).not.toHaveProperty("score");
-    expect(copy.every((value) => !value.includes("%"))).toBe(true);
+    for (const { result, title, summary } of cases) {
+      expect(result.freeTitleJa).toBe(title);
+      expect(result.freeSummaryJa).toBe(summary);
+    }
+    expect(new Set(cases.map(({ result }) => result.freeTitleJa)).size).toBe(4);
+    expect(new Set(cases.map(({ result }) => result.freeSummaryJa)).size).toBe(
+      4,
+    );
+  });
+
+  it("never returns score fields or score-like copy for any dynamic", () => {
+    const results = [
+      relationship(
+        { id: "same-a", profile: profile("fawn", "MOON") },
+        { id: "same-b", profile: profile("sheep", "MOON") },
+      ),
+      relationship(
+        { id: "moon", profile: profile("fawn", "MOON") },
+        { id: "earth", profile: profile("wolf", "EARTH") },
+      ),
+      relationship(
+        { id: "earth", profile: profile("wolf", "EARTH") },
+        { id: "sun", profile: profile("lion", "SUN") },
+      ),
+      relationship(
+        { id: "sun", profile: profile("lion", "SUN") },
+        { id: "moon", profile: profile("fawn", "MOON") },
+      ),
+    ];
+    const scoreLikeCopy = /[%％]|\d+(?:\.\d+)?\s*点/;
+
+    for (const result of results) {
+      const copy = [
+        result.freeTitleJa,
+        result.freeSummaryJa,
+        ...Object.values(result.detail),
+      ];
+
+      expect(result).not.toHaveProperty("score");
+      expect(copy).not.toEqual(
+        expect.arrayContaining([expect.stringMatching(scoreLikeCopy)]),
+      );
+    }
   });
 
   it("adds the same deterministic modifier when both MBTI values are known", () => {
