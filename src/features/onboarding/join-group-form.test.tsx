@@ -68,6 +68,36 @@ function expectNoRawPersistence(recorder: ReturnType<typeof recordingStorage>) {
 }
 
 describe("JoinGroupForm", () => {
+  it("renders and submits when reading window.sessionStorage throws", async () => {
+    const descriptor = Object.getOwnPropertyDescriptor(window, "sessionStorage");
+    if (!descriptor) throw new Error("sessionStorage descriptor is unavailable");
+    const user = userEvent.setup();
+    const derive = vi.fn(async () => profile);
+    const joinGroup = vi.fn(async () => ({ groupId: "g1", memberId: "m1" }));
+    const loadGroup = vi.fn(async () => aggregate);
+    const onJoined = vi.fn();
+    let view: ReturnType<typeof render> | undefined;
+    Object.defineProperty(window, "sessionStorage", {
+      configurable: true,
+      get() { throw new DOMException("blocked", "SecurityError"); },
+    });
+
+    try {
+      view = render(
+        <JoinGroupForm inviteToken={token} clock={clock} etoProvider={{ derive }}
+          repositoryFactory={() => ({ joinGroup, loadGroup } as never)} onJoined={onJoined} />,
+      );
+      await fillValid(user);
+      await user.click(screen.getByRole("button", { name: "グループに参加" }));
+
+      await waitFor(() => expect(onJoined).toHaveBeenCalledWith(aggregate));
+      expect(joinGroup).toHaveBeenCalledOnce();
+    } finally {
+      view?.unmount();
+      Object.defineProperty(window, "sessionStorage", descriptor);
+    }
+  });
+
   it("removes only the current invite legacy draft on mount without reading it", async () => {
     const recorder = recordingStorage({
       [joinDraftKey(token)]: JSON.stringify({ nickname: "保存した名前", birthDate: "1999-01-01" }),

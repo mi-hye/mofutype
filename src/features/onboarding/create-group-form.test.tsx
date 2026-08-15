@@ -61,6 +61,35 @@ function expectNoRawPersistence(recorder: ReturnType<typeof recordingStorage>) {
 }
 
 describe("CreateGroupForm", () => {
+  it("renders and submits when reading window.sessionStorage throws", async () => {
+    const descriptor = Object.getOwnPropertyDescriptor(window, "sessionStorage");
+    if (!descriptor) throw new Error("sessionStorage descriptor is unavailable");
+    const user = userEvent.setup();
+    const derive = vi.fn(async () => profile);
+    const createGroup = vi.fn(async () => ({ groupId: "g1", memberId: "m1", inviteToken: token }));
+    const navigate = vi.fn();
+    let view: ReturnType<typeof render> | undefined;
+    Object.defineProperty(window, "sessionStorage", {
+      configurable: true,
+      get() { throw new DOMException("blocked", "SecurityError"); },
+    });
+
+    try {
+      view = render(
+        <CreateGroupForm clock={clock} etoProvider={{ derive }}
+          repositoryFactory={() => ({ createGroup } as never)} navigate={navigate} />,
+      );
+      await fillValid(user);
+      await user.click(screen.getByRole("button", { name: "グループを作成" }));
+
+      await waitFor(() => expect(navigate).toHaveBeenCalledWith(`/g/${token}`));
+      expect(createGroup).toHaveBeenCalledOnce();
+    } finally {
+      view?.unmount();
+      Object.defineProperty(window, "sessionStorage", descriptor);
+    }
+  });
+
   it("removes the legacy draft on mount without reading or restoring it", async () => {
     const recorder = recordingStorage({
       [CREATE_DRAFT_KEY]: JSON.stringify({ nickname: "保存した名前", birthDate: "1999-01-01" }),

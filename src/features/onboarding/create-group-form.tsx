@@ -20,6 +20,15 @@ function emptyDraft(): Draft {
   return { groupName: "", ...emptyProfileDraft() };
 }
 
+function defaultSessionStorage(): Storage | undefined {
+  if (typeof window === "undefined") return undefined;
+  try {
+    return window.sessionStorage;
+  } catch {
+    return undefined;
+  }
+}
+
 function publicCreateError(error: unknown): string {
   const code = typeof error === "object" && error !== null && "code" in error
     ? String(error.code)
@@ -44,7 +53,7 @@ export function CreateGroupForm({
   storage,
   clock = () => new Date(),
 }: CreateGroupFormProps) {
-  const activeStorage = storage ?? (typeof window === "undefined" ? undefined : window.sessionStorage);
+  const activeStorage = storage ?? defaultSessionStorage();
   const maxBirthDate = todayIsoInTokyo(clock);
   const [draft, setDraft] = useState<Draft>(emptyDraft);
   const [errors, setErrors] = useState<Record<string, string>>({});

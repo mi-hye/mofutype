@@ -17,6 +17,15 @@ export function joinDraftKey(inviteToken: string) {
   return `mofutype:join-group:${inviteToken}:draft`;
 }
 
+function defaultSessionStorage(): Storage | undefined {
+  if (typeof window === "undefined") return undefined;
+  try {
+    return window.sessionStorage;
+  } catch {
+    return undefined;
+  }
+}
+
 function errorFingerprint(error: unknown): string {
   const parts: string[] = [];
   let value = error;
@@ -74,7 +83,7 @@ function JoinGroupFormForInvite({
   clock = () => new Date(),
 }: JoinGroupFormProps) {
   const key = joinDraftKey(inviteToken);
-  const activeStorage = storage ?? (typeof window === "undefined" ? undefined : window.sessionStorage);
+  const activeStorage = storage ?? defaultSessionStorage();
   const maxBirthDate = todayIsoInTokyo(clock);
   const [draft, setDraft] = useState(emptyProfileDraft);
   const [errors, setErrors] = useState<ProfileErrors>({});
