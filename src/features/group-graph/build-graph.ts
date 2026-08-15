@@ -233,7 +233,11 @@ export function decorateGraph(
     return {
       ...edge,
       animated: incident,
-      className: `relationship-edge relationship-edge--${unlocked ? "unlocked" : "locked"}`,
+      className: [
+        "relationship-edge",
+        `relationship-edge--${unlocked ? "unlocked" : "locked"}`,
+        `relationship-edge--${emphasis}`,
+      ].join(" "),
       style: {
         strokeWidth,
         opacity,

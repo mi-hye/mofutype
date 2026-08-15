@@ -1,6 +1,13 @@
 import { forwardRef, type HTMLAttributes } from "react";
 
-type CardVariant = "default" | "accent" | "subtle";
+type CardVariant =
+  | "default"
+  | "accent"
+  | "subtle"
+  | "cream"
+  | "pink"
+  | "mint"
+  | "violet";
 
 export interface CardProps extends HTMLAttributes<HTMLDivElement> {
   variant?: CardVariant;

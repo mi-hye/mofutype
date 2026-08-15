@@ -57,7 +57,15 @@ describe("Card", () => {
     expect(ref.current).toBe(screen.getByText("カード"));
   });
 
-  it.each(["default", "accent", "subtle"] as const)(
+  it.each([
+    "default",
+    "accent",
+    "subtle",
+    "cream",
+    "pink",
+    "mint",
+    "violet",
+  ] as const)(
     "exposes the %s variant",
     (variant) => {
       render(<Card variant={variant}>カード</Card>);

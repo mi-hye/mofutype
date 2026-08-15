@@ -34,6 +34,19 @@ describe("production source safety", () => {
     expect(globalStyles).toContain("--mint-pop:");
     expect(globalStyles).toContain("--shadow-zine:");
     expect(globalStyles).toContain("@media (prefers-reduced-motion: reduce)");
+    expect(globalStyles).toContain('.animal-avatar[data-selected="true"]');
+    expect(globalStyles).toMatch(
+      /\.animal-avatar\[data-selected="true"\][^{]*\{[^}]*box-shadow:\s*[^;]*var\(--hot-pink\)/,
+    );
+    for (const variant of ["cream", "pink", "mint", "violet"]) {
+      expect(globalStyles).toContain(`.ui-card[data-variant="${variant}"]`);
+    }
+    expect(globalStyles).toContain(
+      ".relationship-edge--incident.relationship-edge--locked",
+    );
+    expect(globalStyles).toContain(
+      ".relationship-edge--incident.relationship-edge--unlocked",
+    );
   });
 
   it("detects a forbidden animal symbol in supplied source", () => {

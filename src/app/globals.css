@@ -150,8 +150,10 @@ select {
   box-shadow: 5px 5px 0 var(--ink);
 }
 
-.ui-card[data-variant="accent"] { background: #ffe6f1; box-shadow: 6px 6px 0 var(--hot-pink); }
-.ui-card[data-variant="subtle"] { background: #dcfaef; box-shadow: 5px 5px 0 var(--mint-pop); }
+.ui-card[data-variant="default"], .ui-card[data-variant="cream"] { background: var(--cream); }
+.ui-card[data-variant="accent"], .ui-card[data-variant="pink"] { background: #ffe6f1; box-shadow: 6px 6px 0 var(--hot-pink); }
+.ui-card[data-variant="subtle"], .ui-card[data-variant="mint"] { background: #dcfaef; box-shadow: 5px 5px 0 var(--mint-pop); }
+.ui-card[data-variant="violet"] { background: var(--surface-lilac); box-shadow: 5px 5px 0 var(--lilac); }
 
 .status-banner {
   display: flex;
@@ -185,7 +187,7 @@ select {
 .animal-avatar[data-size="sm"] { width: 44px; height: 44px; }
 .animal-avatar[data-size="md"] { width: 72px; height: 72px; }
 .animal-avatar[data-size="lg"] { width: 112px; height: 112px; }
-.animal-avatar[data-selected="true"] { outline: 4px solid var(--ink); outline-offset: 3px; transform: scale(1.04); }
+.animal-avatar[data-selected="true"] { outline: 4px solid var(--ink); outline-offset: 3px; box-shadow: 5px 5px 0 var(--hot-pink); transform: scale(1.04); }
 .animal-avatar__image { width: 100%; height: 100%; object-fit: cover; }
 .animal-avatar__fallback { display: grid; width: 100%; height: 100%; place-items: center; padding: 0.25rem; text-align: center; font-size: 0.72em; font-weight: 900; }
 .animal-avatar__selected-mark { position: absolute; right: 5%; bottom: 5%; width: 22%; min-width: 0.75rem; aspect-ratio: 1; border: 2px solid var(--ink); border-radius: 50%; background: var(--coral); }
@@ -270,6 +272,8 @@ select {
 .group-graph__canvas .react-flow__attribution { border-radius: 0.3rem 0 0 0; background: rgb(255 253 247 / 88%); font-size: 0.65rem; }
 .relationship-edge--locked .react-flow__edge-path { stroke: var(--ink); }
 .relationship-edge--unlocked .react-flow__edge-path { stroke: #a77b00; stroke-dasharray: 12 5; }
+.relationship-edge--incident.relationship-edge--locked .react-flow__edge-path { stroke: var(--hot-pink); }
+.relationship-edge--incident.relationship-edge--unlocked .react-flow__edge-path { stroke: var(--mint-pop); }
 .animal-graph-node { position: relative; display: grid; min-width: 7rem; justify-items: center; gap: 0.22rem; text-align: center; transition: transform 150ms ease; }
 .animal-graph-node[data-selected="true"] { z-index: 2; transform: scale(1.06) rotate(-1deg); }
 .animal-graph-node__handle { width: 1px !important; height: 1px !important; border: 0 !important; opacity: 0; pointer-events: none; }

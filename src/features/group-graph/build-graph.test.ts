@@ -137,6 +137,8 @@ describe("buildGraph", () => {
     expect(highlighted).toHaveLength(3);
     expect(unrelated).toHaveLength(3);
     expect(highlighted.every((edge) => edge.style?.strokeWidth === 4 && edge.animated)).toBe(true);
+    expect(highlighted.every((edge) => edge.className?.includes("relationship-edge--incident"))).toBe(true);
+    expect(unrelated.every((edge) => edge.className?.includes("relationship-edge--faint"))).toBe(true);
     expect(graph.nodes.find((node) => node.id === "b")?.data.selected).toBe(true);
   });
 
