@@ -170,13 +170,6 @@ button, input, textarea, select { font: inherit; }
 .hero__copy { order: 5; max-width: var(--content-reading); margin: 0; color: var(--text-muted); font-size: clamp(0.98rem, 2vw, 1.08rem); }
 .hero__actions { order: 6; display: flex; flex-direction: column; align-items: stretch; gap: 0.8rem; }
 .hero__cta { text-decoration: none; }
-.feature-grid { display: grid; gap: 1.2rem; padding-top: 1.25rem; }
-.feature-grid .ui-card:nth-child(1) { border-top: var(--border-subtle); background: radial-gradient(circle at 92% 12%, #fae4dd 0 5rem, transparent 11rem), #fffdf9; }
-.feature-grid .ui-card:nth-child(2) { border-top: var(--border-subtle); background: radial-gradient(circle at 92% 12%, #f8e8c6 0 5rem, transparent 11rem), #fffdf9; animation-delay: 70ms; }
-.feature-grid .ui-card:nth-child(3) { border-top: var(--border-subtle); background: radial-gradient(circle at 92% 12%, #e3f0e9 0 5rem, transparent 11rem), #fffdf9; animation-delay: 140ms; }
-.feature-card__number { display: inline-flex; min-width: 2rem; min-height: 2rem; align-items: center; justify-content: center; margin-bottom: 1.25rem; border: 1px solid rgb(18 59 93 / 35%); border-radius: 50%; background: var(--butter); color: var(--accent-navy); font-size: 0.68rem; font-weight: 700; letter-spacing: 0; }
-.feature-grid h2 { margin: 0 0 0.5rem; font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; line-height: 1.35; }
-.feature-grid p { margin: 0; color: var(--text-muted); }
 .create-section { display: grid; gap: 1.5rem; margin: 4.5rem 0; padding-top: 1rem; scroll-margin-top: 1.5rem; }
 .create-section__intro { position: relative; max-width: 33rem; padding: 0; }
 .create-section__intro h2 { margin: 0.55rem 0 0; color: var(--accent-navy); font-family: var(--font-display); font-size: clamp(2rem, 6vw, 3.2rem); font-weight: 700; letter-spacing: -0.025em; line-height: 1.15; }
@@ -439,7 +432,6 @@ button, input, textarea, select { font: inherit; }
 @media (min-width: 40rem) {
   .landing-shell { padding-top: 1.5rem; }
   .hero__actions { flex-direction: row; }
-  .feature-grid { grid-template-columns: repeat(3, 1fr); }
   .create-section { grid-template-columns: minmax(0, 0.9fr) minmax(20rem, 1.1fr); align-items: start; }
   .group-member-shell { width: min(calc(100% - 2rem), 82rem); padding-top: 2rem; }
   .group-member-header { grid-template-columns: minmax(0, 1fr) auto; align-items: end; }

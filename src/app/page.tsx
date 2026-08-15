@@ -65,27 +65,6 @@ export default function Home() {
         </Card>
       </section>
 
-      <section
-        className="feature-grid"
-        id="features"
-        aria-label="MofuTypeでできること"
-      >
-        <Card variant="accent">
-          <span className="feature-card__number">01</span>
-          <h2>わたしを知る</h2>
-          <p>生年月日とMBTIから、あなたらしい動物タイプを見つけます。</p>
-        </Card>
-        <Card>
-          <span className="feature-card__number">02</span>
-          <h2>みんなをつなぐ</h2>
-          <p>友だちやチームを招待して、関係性を一枚のマップに。</p>
-        </Card>
-        <Card variant="subtle">
-          <span className="feature-card__number">03</span>
-          <h2>違いを楽しむ</h2>
-          <p>それぞれの個性を知って、もっと心地よい関係へ。</p>
-        </Card>
-      </section>
     </main>
   );
 }

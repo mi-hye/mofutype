@@ -47,4 +47,15 @@ describe("Home", () => {
       );
     }
   });
+
+  it("leaves the area after group creation open for future content", () => {
+    render(<Home />);
+
+    expect(
+      screen.queryByRole("region", { name: "MofuTypeでできること" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText("わたしを知る")).not.toBeInTheDocument();
+    expect(screen.queryByText("みんなをつなぐ")).not.toBeInTheDocument();
+    expect(screen.queryByText("違いを楽しむ")).not.toBeInTheDocument();
+  });
 });
