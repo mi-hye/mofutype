@@ -1,22 +1,12 @@
-import { calculateFourPillarsFacts } from "./four-pillars";
+import {
+  calculateFourPillarsFacts,
+  type FourPillarsFacts,
+} from "./four-pillars";
 import type { DerivedEtoProfile, EtoProvider } from "./types";
-import { parseEtoInput } from "./validation";
 import { zodiacForGregorianYear } from "./zodiac";
 
-function todayInTokyo(): string {
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Tokyo",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(new Date());
-  const part = (type: Intl.DateTimeFormatPartTypes) =>
-    parts.find((candidate) => candidate.type === type)?.value;
-  return `${part("year")}-${part("month")}-${part("day")}`;
-}
-
 function cloneProfileFacts(
-  facts: ReturnType<typeof calculateFourPillarsFacts>,
+  facts: FourPillarsFacts,
 ) {
   return {
     dayMaster: { ...facts.dayMaster },
@@ -25,22 +15,26 @@ function cloneProfileFacts(
   };
 }
 
-export const localEtoProvider: EtoProvider = {
-  async derive(input, todayIso = todayInTokyo()): Promise<DerivedEtoProfile> {
-    const parsed = parseEtoInput(input, todayIso);
-    const facts = calculateFourPillarsFacts(input, todayIso);
-    const cloned = cloneProfileFacts(facts);
+export function deriveEtoProfile(
+  facts: FourPillarsFacts,
+): DerivedEtoProfile {
+  const cloned = cloneProfileFacts(facts);
 
-    return {
-      version: 1,
-      zodiacId: zodiacForGregorianYear(parsed.year),
-      mbti: parsed.mbti,
-      dayMaster: cloned.dayMaster,
-      fiveElements: cloned.fiveElements,
-      yinYang: cloned.yinYang,
-      calculationMode: facts.calculationMode,
-      boundaryState: facts.boundaryState,
-      engineVersion: "mofu-eto-four-pillars-v1",
-    };
+  return {
+    version: 1,
+    zodiacId: zodiacForGregorianYear(facts.birthYear),
+    mbti: facts.mbti,
+    dayMaster: cloned.dayMaster,
+    fiveElements: cloned.fiveElements,
+    yinYang: cloned.yinYang,
+    calculationMode: facts.calculationMode,
+    boundaryState: facts.boundaryState,
+    engineVersion: "mofu-eto-four-pillars-v1",
+  };
+}
+
+export const localEtoProvider: EtoProvider = {
+  async derive(input, todayIso): Promise<DerivedEtoProfile> {
+    return deriveEtoProfile(calculateFourPillarsFacts(input, todayIso));
   },
 };

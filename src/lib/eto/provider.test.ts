@@ -1,6 +1,20 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { localEtoProvider } from "./provider";
+const parseEtoInputCall = vi.hoisted(() => vi.fn());
+
+vi.mock("./validation", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("./validation")>();
+  return {
+    ...actual,
+    parseEtoInput: (...args: Parameters<typeof actual.parseEtoInput>) => {
+      parseEtoInputCall();
+      return actual.parseEtoInput(...args);
+    },
+  };
+});
+
+import type { FourPillarsFacts } from "./four-pillars";
+import { deriveEtoProfile, localEtoProvider } from "./provider";
 import { EtoValidationError } from "./validation";
 
 const TODAY_ISO = "2026-08-15";
@@ -16,6 +30,10 @@ function collectKeys(value: unknown, keys: string[] = []): string[] {
 }
 
 describe("localEtoProvider", () => {
+  beforeEach(() => {
+    parseEtoInputCall.mockClear();
+  });
+
   it("returns exactly the privacy-safe profile contract", async () => {
     const profile = await localEtoProvider.derive(
       { birthDate: "2024-02-04", birthTime: "17:27", mbti: "INFP" },
@@ -60,6 +78,46 @@ describe("localEtoProvider", () => {
     );
 
     expect(profile.zodiacId).toBe("dragon");
+  });
+
+  it("validates exactly once before composing a profile", async () => {
+    await localEtoProvider.derive(
+      { birthDate: "2024-02-29", birthTime: null, mbti: "ENTJ" },
+      TODAY_ISO,
+    );
+
+    expect(parseEtoInputCall).toHaveBeenCalledTimes(1);
+  });
+
+  it("composes a cloned persisted profile directly from validated facts", () => {
+    const facts: FourPillarsFacts = {
+      birthYear: 2024,
+      mbti: "ENTJ",
+      dayMaster: { element: "WATER", polarity: "YIN" },
+      fiveElements: { WOOD: 2, FIRE: 1, EARTH: 1, METAL: 0, WATER: 2 },
+      yinYang: { YIN: 2, YANG: 4 },
+      calculationMode: "date-only",
+      boundaryState: "exact",
+    };
+
+    const profile = deriveEtoProfile(facts);
+
+    expect(profile).toEqual({
+      version: 1,
+      zodiacId: "dragon",
+      mbti: "ENTJ",
+      dayMaster: { element: "WATER", polarity: "YIN" },
+      fiveElements: { WOOD: 2, FIRE: 1, EARTH: 1, METAL: 0, WATER: 2 },
+      yinYang: { YIN: 2, YANG: 4 },
+      calculationMode: "date-only",
+      boundaryState: "exact",
+      engineVersion: "mofu-eto-four-pillars-v1",
+    });
+    expect(profile.dayMaster).not.toBe(facts.dayMaster);
+    expect(profile.fiveElements).not.toBe(facts.fiveElements);
+    expect(profile.yinYang).not.toBe(facts.yinYang);
+    expect(parseEtoInputCall).not.toHaveBeenCalled();
+    expect(collectKeys(profile)).not.toContain("birthYear");
   });
 
   it("is deterministic and does not mutate the input", async () => {

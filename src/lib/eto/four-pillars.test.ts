@@ -100,6 +100,8 @@ describe("calculateFourPillarsFacts", () => {
     );
 
     expect(facts).toEqual({
+      birthYear: 2024,
+      mbti: null,
       dayMaster: { element: "WATER", polarity: "YIN" },
       fiveElements: { WOOD: 2, FIRE: 1, EARTH: 1, METAL: 0, WATER: 4 },
       yinYang: { YIN: 2, YANG: 6 },
@@ -110,6 +112,16 @@ describe("calculateFourPillarsFacts", () => {
     expect(countTotal(facts.yinYang!)).toBe(8);
   });
 
+  it("carries only the validated identity facts needed for profile composition", () => {
+    const facts = calculateFourPillarsFacts(
+      { birthDate: "2024-02-29", birthTime: null, mbti: "ENTJ" },
+      TODAY_ISO,
+    );
+
+    expect(facts.birthYear).toBe(2024);
+    expect(facts.mbti).toBe("ENTJ");
+  });
+
   it("counts six characters for an ordinary date-only calculation", () => {
     const facts = calculateFourPillarsFacts(
       input("2024-02-29", null),
@@ -117,6 +129,8 @@ describe("calculateFourPillarsFacts", () => {
     );
 
     expect(facts).toEqual({
+      birthYear: 2024,
+      mbti: null,
       dayMaster: { element: "WATER", polarity: "YIN" },
       fiveElements: { WOOD: 2, FIRE: 1, EARTH: 1, METAL: 0, WATER: 2 },
       yinYang: { YIN: 2, YANG: 4 },
@@ -131,6 +145,8 @@ describe("calculateFourPillarsFacts", () => {
     expect(
       calculateFourPillarsFacts(input("2024-02-04", null), TODAY_ISO),
     ).toEqual({
+      birthYear: 2024,
+      mbti: null,
       dayMaster: { element: "EARTH", polarity: "YANG" },
       fiveElements: null,
       yinYang: null,

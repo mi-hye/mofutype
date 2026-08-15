@@ -6,6 +6,7 @@ import type {
   ElementCounts,
   EtoInput,
   FiveElement,
+  MbtiType,
   Polarity,
   YinYangCounts,
 } from "./types";
@@ -14,6 +15,18 @@ import { parseEtoInput } from "./validation";
 const STEMS = [..."甲乙丙丁戊己庚辛壬癸"];
 const BRANCHES = [..."子丑寅卯辰巳午未申酉戌亥"];
 const TOKYO_TO_LIBRARY_BASIS_MINUTES = 60;
+
+function todayInTokyo(): string {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Tokyo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const part = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((candidate) => candidate.type === type)?.value;
+  return `${part("year")}-${part("month")}-${part("day")}`;
+}
 
 // lunar-typescript emits solar-term civil timestamps on a UTC+8 basis. Japan
 // civil input is UTC+9, so only exact year/month lookup is shifted back 60 min.
@@ -146,6 +159,8 @@ function countPillars(pillars: readonly PillarFact[]) {
 }
 
 export interface FourPillarsFacts {
+  birthYear: number;
+  mbti: MbtiType | null;
   dayMaster: Readonly<{ element: FiveElement; polarity: Polarity }>;
   fiveElements: ElementCounts | null;
   yinYang: YinYangCounts | null;
@@ -155,7 +170,7 @@ export interface FourPillarsFacts {
 
 export function calculateFourPillarsFacts(
   input: EtoInput,
-  todayIso: string,
+  todayIso = todayInTokyo(),
 ): FourPillarsFacts {
   return calculateParsedFourPillarsFacts(parseEtoInput(input, todayIso));
 }
@@ -173,6 +188,7 @@ function calculateParsedFourPillarsFacts(
     element: elementFor(day.wuXing[0]),
     polarity: polarityFor(day.stem, "stem"),
   };
+  const identityFacts = { birthYear: parsed.year, mbti: parsed.mbti };
 
   if (parsed.hour === null || parsed.minute === null) {
     const start = exactYearMonth(parsed, 0, 0);
@@ -182,6 +198,7 @@ function calculateParsedFourPillarsFacts(
       !samePillar(start.month, end.month)
     ) {
       return {
+        ...identityFacts,
         dayMaster,
         fiveElements: null,
         yinYang: null,
@@ -192,6 +209,7 @@ function calculateParsedFourPillarsFacts(
 
     const counts = countPillars([start.year, start.month, day]);
     return {
+      ...identityFacts,
       dayMaster,
       ...counts,
       calculationMode: "date-only",
@@ -207,6 +225,7 @@ function calculateParsedFourPillarsFacts(
   };
   const counts = countPillars([exact.year, exact.month, day, time]);
   return {
+    ...identityFacts,
     dayMaster,
     ...counts,
     calculationMode: "date-time",
