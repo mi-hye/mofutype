@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { GroupScreen } from "@/features/group-graph/group-screen";
+import { INVITE_TOKEN_PATTERN } from "@/lib/invite-token";
 import { SupabaseConfigurationError } from "@/lib/supabase/browser";
 import { createBrowserGroupRepository, type GroupAggregate, type GroupInvitePreview } from "@/lib/supabase/group-repository";
-import { INVITE_TOKEN_PATTERN } from "./create-group-form";
 import { JoinGroupForm } from "./join-group-form";
 
 type BrowserRepository = ReturnType<typeof createBrowserGroupRepository>;
@@ -14,15 +14,22 @@ type BrowserRepository = ReturnType<typeof createBrowserGroupRepository>;
 interface GroupGateProps {
   inviteToken: string;
   repositoryFactory?: () => BrowserRepository;
+  initialAggregate?: GroupAggregate;
+  currentUserId?: string;
 }
 
 export function GroupGate(props: GroupGateProps) {
   return <GroupGateForInvite key={props.inviteToken} {...props} />;
 }
 
-function GroupGateForInvite({ inviteToken, repositoryFactory = createBrowserGroupRepository }: GroupGateProps) {
+function GroupGateForInvite({
+  inviteToken,
+  repositoryFactory = createBrowserGroupRepository,
+  initialAggregate,
+  currentUserId,
+}: GroupGateProps) {
   const validToken = INVITE_TOKEN_PATTERN.test(inviteToken);
-  const [aggregate, setAggregate] = useState<GroupAggregate | null>(null);
+  const [aggregate, setAggregate] = useState<GroupAggregate | null>(initialAggregate ?? null);
   const [repository, setRepository] = useState<BrowserRepository | null>(null);
   const [preview, setPreview] = useState<GroupInvitePreview | null>(null);
   const [status, setStatus] = useState<"loading" | "join" | "missing" | "full" | "error">("loading");
@@ -77,8 +84,15 @@ function GroupGateForInvite({ inviteToken, repositoryFactory = createBrowserGrou
       </main>
     );
   }
-  if (aggregate && repository) {
-    return <GroupScreen initialAggregate={aggregate} repository={repository} inviteToken={inviteToken} />;
+  if (aggregate) {
+    return (
+      <GroupScreen
+        initialAggregate={aggregate}
+        repository={repository ?? undefined}
+        inviteToken={inviteToken}
+        currentUserId={currentUserId}
+      />
+    );
   }
   if (status === "loading") return <main className="group-gate-message" role="status">参加状況を確認しています</main>;
   if (status === "missing") {

@@ -7,11 +7,11 @@ import { Button } from "@/components/ui/button";
 import { localAstrologyProvider } from "@/lib/astrology/local-provider";
 import type { AstrologyProvider } from "@/lib/astrology/types";
 import { createBrowserGroupRepository } from "@/lib/supabase/group-repository";
+import { INVITE_TOKEN_PATTERN } from "@/lib/invite-token";
 import { ProfileForm, emptyProfileDraft, type ProfileDraft, type ProfileErrors } from "./profile-form";
 import { createOnboardingSchema } from "./schema";
 
 export const CREATE_DRAFT_KEY = "mofutype:create-group:draft";
-export const INVITE_TOKEN_PATTERN = /^[a-f0-9]{64}$/;
 
 type BrowserRepository = ReturnType<typeof createBrowserGroupRepository>;
 type Draft = ProfileDraft & { groupName: string };

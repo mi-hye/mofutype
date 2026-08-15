@@ -260,7 +260,7 @@ button, input, textarea, select { font: inherit; }
 .group-graph__accessible button { min-height: 42px; border: var(--border-subtle); border-radius: 999px; padding: 0.48rem 0.8rem; background: var(--surface); color: var(--ink); font-size: 0.84rem; font-weight: 650; cursor: pointer; }
 .group-graph__accessible button[aria-pressed="true"] { border-color: #d8a8a3; background: var(--surface-coral); color: var(--coral-deep); }
 
-.my-result-card { position: relative; display: grid; gap: 1.1rem; overflow: hidden; border: var(--border-subtle); border-radius: var(--radius-18); padding: clamp(1rem, 4vw, 1.8rem); background: #fff; box-shadow: var(--shadow-pop); }
+.my-result-card { position: relative; display: grid; gap: 1.1rem; overflow: hidden; margin-top: clamp(1rem, 3vw, 1.5rem); border: var(--border-subtle); border-radius: var(--radius-18); padding: clamp(1rem, 4vw, 1.8rem); background: #fff; box-shadow: var(--shadow-pop); }
 .my-result-card::before { position: absolute; top: 0; left: 0; width: 7rem; height: 0.3rem; background: var(--accent-vermilion); content: ""; }
 .my-result-card__summary { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 0.9rem; }
 .my-result-card__identity { display: grid; min-width: 0; gap: 0.18rem; }

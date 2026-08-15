@@ -25,7 +25,7 @@ type GroupRepository = Pick<
 
 interface GroupScreenProps {
   initialAggregate: GroupAggregate;
-  repository: GroupRepository;
+  repository?: GroupRepository;
   inviteToken?: string;
   currentUserId?: string;
 }
@@ -188,6 +188,7 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken, curren
   }, []);
 
   useEffect(() => {
+    if (!repository) return;
     const currentGeneration = generation.current + 1;
     generation.current = currentGeneration;
     const revisionBeforeLoad = changeRevision.current;
@@ -312,6 +313,7 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken, curren
   }, [applyMember, applyUnlock, initialAggregate.group.id, repository, subscriptionAttempt]);
 
   const refresh = useCallback(async () => {
+    if (!repository) return;
     const currentGeneration = generation.current;
     const revisionBeforeLoad = changeRevision.current;
     const request = loadRequest.current + 1;
@@ -341,7 +343,7 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken, curren
 
   useEffect(() => {
     if (currentUserId) return;
-    if (!repository.ensureAnonymousSession) return;
+    if (!repository?.ensureAnonymousSession) return;
     let current = true;
     void repository.ensureAnonymousSession().then((userId) => {
       if (current) setResolvedUserId(userId);
@@ -393,6 +395,7 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken, curren
             variant="ghost"
             aria-label="最新の情報に更新"
             title="最新の情報に更新"
+            disabled={!repository}
             onClick={() => void refresh()}
           >
             <RefreshCw aria-hidden="true" focusable="false" strokeWidth={2.2} />
