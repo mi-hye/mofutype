@@ -22,8 +22,8 @@ describe("Home", () => {
     expect(
       screen.getByRole("heading", { name: "わたしたち、こんな感じ。" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("#かわいい")).toBeInTheDocument();
-    expect(screen.getByText("#ちょい毒")).toBeInTheDocument();
+    expect(screen.getByText("#MBTI")).toBeInTheDocument();
+    expect(screen.getByText("#動物うらない")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "グループを作る" })).toHaveAttribute(
       "href",
       "#create",

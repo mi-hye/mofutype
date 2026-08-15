@@ -22,8 +22,8 @@ export default function Home() {
           わたしたち、<span>こんな感じ。</span>
         </h1>
         <div className="hero__stickers" aria-label="ムード">
-          <span>#かわいい</span>
-          <span>#ちょい毒</span>
+          <span>#MBTI</span>
+          <span>#動物うらない</span>
         </div>
         <p className="hero__copy">
           誕生日と性格タイプで、友だちとの空気感を一枚の関係マップに。
