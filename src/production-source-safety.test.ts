@@ -85,6 +85,13 @@ describe("production source safety", () => {
     for (const filterId of ["squiggle-1", "squiggle-2", "squiggle-3", "squiggle-4"]) {
       expect(squiggleFilters).toContain(`id="${filterId}"`);
     }
+    expect(squiggleFilters).toContain("[0, 1, 2, 3, 4].map((seed)");
+    expect(squiggleFilters).toContain("id={`text-squiggly-${seed}`}");
+    expect(squiggleFilters).toContain('baseFrequency="0.02"');
+    expect(squiggleFilters).toContain("scale={5}");
+    expect(globalStyles).toMatch(/\.hero h1[^}]*animation:\s*hero-squiggly 0\.3s infinite linear/);
+    expect(globalStyles).toContain("@keyframes hero-squiggly");
+    expect(globalStyles).toMatch(/@media \(prefers-reduced-motion: reduce\)[\s\S]*\.hero h1\s*\{[^}]*animation:\s*none !important[^}]*filter:\s*none/);
     expect(squiggleFilters).toContain('id="wrinkle-effect"');
     expect(squiggleFilters).not.toContain('id="node-wrinkle-effect"');
     expect(squiggleFilters).toContain('baseFrequency="0.03"');
