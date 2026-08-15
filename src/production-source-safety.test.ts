@@ -211,6 +211,7 @@ describe("production source safety", () => {
     expect(previewSource.match(/className: "hero__connector--/g)).toHaveLength(3);
     expect(previewSource).toContain('aria-pressed={selected}');
     expect(pageSource).toContain("#12干支");
+    expect(globalStyles).toMatch(/\.hero__stickers[^}]*align-items:\s*center/);
     expect(pageSource).not.toContain("#動物うらない");
     expect(pageSource).not.toContain("性格タイプ × 動物キャラクター");
     for (const animalImage of ["tiger.png", "rat.png", "rabbit.png"]) {
