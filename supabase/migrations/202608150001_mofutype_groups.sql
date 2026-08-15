@@ -27,11 +27,16 @@ create table public.group_members (
     'ISTJ', 'ISFJ', 'INFJ', 'INTJ', 'ISTP', 'ISFP', 'INFP', 'INTP',
     'ESTP', 'ESFP', 'ENFP', 'ENTP', 'ESTJ', 'ESFJ', 'ENFJ', 'ENTJ'
   )),
-  profile_payload jsonb not null check (
+  profile_payload jsonb not null constraint group_members_profile_payload_check check (
     jsonb_typeof(profile_payload) = 'object'
-    and profile_payload ? 'version'
-    and profile_payload::text !~* '"[^"]*birth[^"]*"[[:space:]]*:'
-    and profile_payload::text !~* '"(date_of_birth|dob)"[[:space:]]*:'
+    and profile_payload = jsonb_build_object(
+      'version', 1,
+      'animalId', animal_id,
+      'animalGroup', animal_group::text,
+      'mbti', mbti,
+      'calculationMode', profile_payload ->> 'calculationMode'
+    )
+    and profile_payload ->> 'calculationMode' in ('date-time', 'date-only')
   ),
   joined_at timestamptz not null default now(),
   constraint group_members_group_user_key unique (group_id, user_id),
@@ -106,7 +111,7 @@ revoke insert, update, delete, truncate, references, trigger
 
 create function public._profile_is_valid(
   p_animal_id text,
-  p_animal_group public.animal_group,
+  p_animal_group text,
   p_mbti text,
   p_profile_payload jsonb
 )
@@ -116,7 +121,7 @@ immutable
 security definer
 set search_path = ''
 as $$
-  select
+  select coalesce(
     case p_animal_group
       when 'MOON' then p_animal_id in ('fawn', 'raccoon', 'black-panther', 'sheep')
       when 'EARTH' then p_animal_id in ('wolf', 'monkey', 'tiger', 'koala')
@@ -128,19 +133,26 @@ as $$
       'ESTP', 'ESFP', 'ENFP', 'ENTP', 'ESTJ', 'ESFJ', 'ENFJ', 'ENTJ'
     ))
     and pg_catalog.jsonb_typeof(p_profile_payload) = 'object'
-    and p_profile_payload ? 'version'
-    and p_profile_payload::text !~* '"[^"]*birth[^"]*"[[:space:]]*:'
-    and p_profile_payload::text !~* '"(date_of_birth|dob)"[[:space:]]*:';
+    and p_profile_payload = pg_catalog.jsonb_build_object(
+      'version', 1,
+      'animalId', p_animal_id,
+      'animalGroup', p_animal_group,
+      'mbti', p_mbti,
+      'calculationMode', p_profile_payload ->> 'calculationMode'
+    )
+    and p_profile_payload ->> 'calculationMode' in ('date-time', 'date-only'),
+    false
+  );
 $$;
 
-alter function public._profile_is_valid(text, public.animal_group, text, jsonb) owner to postgres;
-revoke all on function public._profile_is_valid(text, public.animal_group, text, jsonb) from public, anon, authenticated;
+alter function public._profile_is_valid(text, text, text, jsonb) owner to postgres;
+revoke all on function public._profile_is_valid(text, text, text, jsonb) from public, anon, authenticated;
 
 create function public.create_group_and_join(
   p_name text,
   p_nickname text,
   p_animal_id text,
-  p_animal_group public.animal_group,
+  p_animal_group text,
   p_mbti text,
   p_profile_payload jsonb
 )
@@ -174,22 +186,22 @@ begin
   returning id into v_group_id;
 
   insert into public.group_members(group_id, user_id, nickname, animal_id, animal_group, mbti, profile_payload)
-  values (v_group_id, v_user_id, v_nickname, p_animal_id, p_animal_group, p_mbti, p_profile_payload)
+  values (v_group_id, v_user_id, v_nickname, p_animal_id, p_animal_group::public.animal_group, p_mbti, p_profile_payload)
   returning id into v_member_id;
 
   return query select v_group_id, v_member_id, v_invite_token;
 end;
 $$;
 
-alter function public.create_group_and_join(text, text, text, public.animal_group, text, jsonb) owner to postgres;
-revoke all on function public.create_group_and_join(text, text, text, public.animal_group, text, jsonb) from public, anon, authenticated;
-grant execute on function public.create_group_and_join(text, text, text, public.animal_group, text, jsonb) to authenticated;
+alter function public.create_group_and_join(text, text, text, text, text, jsonb) owner to postgres;
+revoke all on function public.create_group_and_join(text, text, text, text, text, jsonb) from public, anon, authenticated;
+grant execute on function public.create_group_and_join(text, text, text, text, text, jsonb) to authenticated;
 
 create function public.join_group(
   p_invite_token text,
   p_nickname text,
   p_animal_id text,
-  p_animal_group public.animal_group,
+  p_animal_group text,
   p_mbti text,
   p_profile_payload jsonb
 )
@@ -237,15 +249,15 @@ begin
   end if;
 
   insert into public.group_members(group_id, user_id, nickname, animal_id, animal_group, mbti, profile_payload)
-  values (v_group_id, v_user_id, v_nickname, p_animal_id, p_animal_group, p_mbti, p_profile_payload)
+  values (v_group_id, v_user_id, v_nickname, p_animal_id, p_animal_group::public.animal_group, p_mbti, p_profile_payload)
   returning id into v_member_id;
   return query select v_group_id, v_member_id;
 end;
 $$;
 
-alter function public.join_group(text, text, text, public.animal_group, text, jsonb) owner to postgres;
-revoke all on function public.join_group(text, text, text, public.animal_group, text, jsonb) from public, anon, authenticated;
-grant execute on function public.join_group(text, text, text, public.animal_group, text, jsonb) to authenticated;
+alter function public.join_group(text, text, text, text, text, jsonb) owner to postgres;
+revoke all on function public.join_group(text, text, text, text, text, jsonb) from public, anon, authenticated;
+grant execute on function public.join_group(text, text, text, text, text, jsonb) to authenticated;
 
 create function public.unlock_relation_mock(p_group_id uuid, p_member_a uuid, p_member_b uuid)
 returns setof public.relation_unlocks
@@ -275,18 +287,20 @@ begin
     raise exception using errcode = 'P0001', message = 'INVALID_PAIR';
   end if;
 
-  return query
   insert into public.relation_unlocks(
     group_id, member_low_id, member_high_id, status,
     payment_provider, payment_reference, unlocked_by, unlocked_at
   ) values (
     p_group_id, v_low, v_high, 'unlocked', 'mock', null, v_user_id, pg_catalog.now()
   )
-  on conflict (group_id, member_low_id, member_high_id) do update
-  set status = 'unlocked', payment_provider = 'mock',
-      unlocked_by = excluded.unlocked_by,
-      unlocked_at = coalesce(public.relation_unlocks.unlocked_at, excluded.unlocked_at)
-  returning public.relation_unlocks.*;
+  on conflict (group_id, member_low_id, member_high_id) do nothing;
+
+  return query
+  select ru.*
+  from public.relation_unlocks ru
+  where ru.group_id = p_group_id
+    and ru.member_low_id = v_low
+    and ru.member_high_id = v_high;
 end;
 $$;
 

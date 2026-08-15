@@ -170,7 +170,7 @@ export type Database = {
     Functions: {
       _profile_is_valid: {
         Args: {
-          p_animal_group: Database["public"]["Enums"]["animal_group"]
+          p_animal_group: string
           p_animal_id: string
           p_mbti: string
           p_profile_payload: Json
@@ -179,7 +179,7 @@ export type Database = {
       }
       create_group_and_join: {
         Args: {
-          p_animal_group: Database["public"]["Enums"]["animal_group"]
+          p_animal_group: string
           p_animal_id: string
           p_mbti: string
           p_name: string
@@ -195,7 +195,7 @@ export type Database = {
       is_group_member: { Args: { p_group_id: string }; Returns: boolean }
       join_group: {
         Args: {
-          p_animal_group: Database["public"]["Enums"]["animal_group"]
+          p_animal_group: string
           p_animal_id: string
           p_invite_token: string
           p_mbti: string
