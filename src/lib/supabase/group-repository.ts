@@ -35,8 +35,12 @@ interface RealtimeChannel {
     callback: (payload: RealtimePayload) => void,
   ): RealtimeChannel;
   subscribe(callback: (status: string, error?: unknown) => void): RealtimeChannel;
-  remove(): Promise<void>;
+  remove(): Promise<ChannelRemoveStatus>;
 }
+
+export type ChannelRemoveStatus = Awaited<
+  ReturnType<SupabaseClient<AppDatabase>["removeChannel"]>
+>;
 
 export interface GroupRepositoryClient {
   auth: {
@@ -161,7 +165,20 @@ function mapChange<T>(
   };
 }
 
+function invokeSafely<TArgs extends unknown[]>(
+  callback: ((...args: TArgs) => void) | undefined,
+  ...args: TArgs
+): void {
+  try {
+    callback?.(...args);
+  } catch {
+    // Consumer callbacks are isolated from repository and realtime control flow.
+  }
+}
+
 export function createGroupRepository(client: GroupRepositoryClient) {
+  let anonymousSessionPromise: Promise<string> | null = null;
+
   async function callOperation(
     operation: () => Promise<ClientResult>,
     errorCode: "CREATE_FAILED" | "JOIN_FAILED" | "UNLOCK_FAILED",
@@ -177,23 +194,37 @@ export function createGroupRepository(client: GroupRepositoryClient) {
   }
 
   async function ensureAnonymousSession(): Promise<string> {
-    let sessionResult;
-    try {
-      sessionResult = await client.auth.getSession();
-    } catch (cause) {
-      throw repositoryError("AUTH_FAILED", cause);
-    }
-    const sessionUserId = sessionResult.data.session?.user.id;
-    if (!sessionResult.error && sessionUserId) return sessionUserId;
+    if (anonymousSessionPromise) return anonymousSessionPromise;
 
+    const sessionAttempt = (async () => {
+      let sessionResult;
+      try {
+        sessionResult = await client.auth.getSession();
+      } catch (cause) {
+        throw repositoryError("AUTH_FAILED", cause);
+      }
+      const sessionUserId = sessionResult.data.session?.user.id;
+      if (!sessionResult.error && sessionUserId) return sessionUserId;
+
+      try {
+        const result = await client.auth.signInAnonymously();
+        const userId = result.data.user?.id;
+        if (result.error || !userId) {
+          throw repositoryError("AUTH_FAILED", result.error);
+        }
+        return userId;
+      } catch (cause) {
+        if (cause instanceof GroupRepositoryError) throw cause;
+        throw repositoryError("AUTH_FAILED", cause);
+      }
+    })();
+    anonymousSessionPromise = sessionAttempt;
     try {
-      const result = await client.auth.signInAnonymously();
-      const userId = result.data.user?.id;
-      if (result.error || !userId) throw repositoryError("AUTH_FAILED", result.error);
-      return userId;
-    } catch (cause) {
-      if (cause instanceof GroupRepositoryError) throw cause;
-      throw repositoryError("AUTH_FAILED", cause);
+      return await sessionAttempt;
+    } finally {
+      if (anonymousSessionPromise === sessionAttempt) {
+        anonymousSessionPromise = null;
+      }
     }
   }
 
@@ -295,8 +326,13 @@ export function createGroupRepository(client: GroupRepositoryClient) {
     groupId: string,
     callbacks: GroupSubscriptionCallbacks,
   ): () => Promise<void> {
+    let partialChannel: RealtimeChannel | undefined;
+    const reportError = (error: GroupRepositoryError) => {
+      invokeSafely(callbacks.onError, error);
+    };
     try {
       const channel = client.channel(`group:${groupId}`);
+      partialChannel = channel;
       const filter = `group_id=eq.${groupId}`;
       const register = <T>(
         table: "group_members" | "relation_unlocks",
@@ -311,16 +347,18 @@ export function createGroupRepository(client: GroupRepositoryClient) {
             "postgres_changes",
             { event, schema: "public", table, filter },
             (payload) => {
+              let change: GroupChangeEvent<T>;
               try {
-                const change = mapChange(payload, mapper);
-                callback?.(change);
+                change = mapChange(payload, mapper);
               } catch (cause) {
-                callbacks.onError?.(
+                reportError(
                   cause instanceof GroupRepositoryError
                     ? cause
                     : repositoryError("INVALID_DATA", cause),
                 );
+                return;
               }
+              invokeSafely(callback, change);
             },
           );
         }
@@ -328,23 +366,30 @@ export function createGroupRepository(client: GroupRepositoryClient) {
       register("group_members", mapGroupMember, callbacks.onMemberChange);
       register("relation_unlocks", mapRelationUnlock, callbacks.onUnlockChange);
       channel.subscribe((status, error) => {
-        callbacks.onConnectionStatus?.(status);
+        invokeSafely(callbacks.onConnectionStatus, status);
         if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
-          callbacks.onError?.(repositoryError("SUBSCRIPTION_FAILED", error));
+          reportError(repositoryError("SUBSCRIPTION_FAILED", error));
         }
       });
 
       let cleaned = false;
       return async () => {
         if (cleaned) return;
-        cleaned = true;
         try {
-          await channel.remove();
+          const status = await channel.remove();
+          if (status === "ok") {
+            cleaned = true;
+          } else {
+            reportError(repositoryError("SUBSCRIPTION_FAILED", status));
+          }
         } catch (cause) {
-          callbacks.onError?.(repositoryError("SUBSCRIPTION_FAILED", cause));
+          reportError(repositoryError("SUBSCRIPTION_FAILED", cause));
         }
       };
     } catch (cause) {
+      if (partialChannel) {
+        void partialChannel.remove().catch(() => undefined);
+      }
       throw repositoryError("SUBSCRIPTION_FAILED", cause);
     }
   }
@@ -444,7 +489,7 @@ export function createSupabaseGroupRepositoryAdapter(
           return channel;
         },
         async remove() {
-          await client.removeChannel(supabaseChannel);
+          return await client.removeChannel(supabaseChannel);
         },
       };
       return channel;

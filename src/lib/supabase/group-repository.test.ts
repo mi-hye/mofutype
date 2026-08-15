@@ -66,6 +66,16 @@ const invalidRpcRowSets: unknown[][] = [
 
 type Result = { data: unknown; error: unknown };
 
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason: unknown) => void;
+  const promise = new Promise<T>((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise;
+    reject = rejectPromise;
+  });
+  return { promise, resolve, reject };
+}
+
 class FakeQuery {
   selected = "";
   filters: Array<[string, unknown]> = [];
@@ -112,7 +122,8 @@ class FakeChannel {
   registrations: RealtimeRegistration[] = [];
   statusCallback?: (status: string, error?: unknown) => void;
   registrationError?: unknown;
-  removeCallback?: () => Promise<void>;
+  subscriptionError?: unknown;
+  removeCallback?: () => Promise<"ok" | "timed out" | "error">;
 
   on(
     _kind: "postgres_changes",
@@ -125,12 +136,13 @@ class FakeChannel {
   }
 
   subscribe(callback: (status: string, error?: unknown) => void) {
+    if (this.subscriptionError !== undefined) throw this.subscriptionError;
     this.statusCallback = callback;
     return this;
   }
 
-  async remove(): Promise<void> {
-    await this.removeCallback?.();
+  async remove(): Promise<"ok" | "timed out" | "error"> {
+    return (await this.removeCallback?.()) ?? "ok";
   }
 
   emit(table: string, event: string, row: Record<string, unknown>) {
@@ -159,6 +171,10 @@ class FakeSupabaseClient implements GroupRepositoryClient {
     data: { user: { id: "anon-1" } },
     error: null,
   };
+  anonymousSignIn?: () => Promise<
+    Result & { data: { user: { id: string } | null } }
+  >;
+  anonymousSignInCalls = 0;
   rpcResults = new Map<string, Result>();
   rejectedRpcs = new Map<string, unknown>();
   rpcCalls: Array<{ name: string; args: Record<string, unknown> }> = [];
@@ -167,15 +183,21 @@ class FakeSupabaseClient implements GroupRepositoryClient {
   queries = new Map<string, FakeQuery>();
   channels: FakeChannel[] = [];
   removedChannels: FakeChannel[] = [];
+  removeChannelCalls = 0;
   channelRegistrationError?: unknown;
+  channelSubscriptionError?: unknown;
   removeChannelError?: unknown;
+  removeStatuses: Array<"ok" | "timed out" | "error"> = [];
 
   auth = {
     getSession: async () => ({
       data: { session: this.session },
       error: this.getSessionError,
     }),
-    signInAnonymously: async () => this.anonymousResult,
+    signInAnonymously: async () => {
+      this.anonymousSignInCalls += 1;
+      return this.anonymousSignIn?.() ?? this.anonymousResult;
+    },
   };
 
   rpc(name: string, args: Record<string, unknown>): Promise<Result> {
@@ -236,14 +258,19 @@ class FakeSupabaseClient implements GroupRepositoryClient {
     void name;
     const channel = new FakeChannel();
     channel.registrationError = this.channelRegistrationError;
+    channel.subscriptionError = this.channelSubscriptionError;
     channel.removeCallback = () => this.removeChannel(channel);
     this.channels.push(channel);
     return channel;
   }
 
-  async removeChannel(channel: FakeChannel): Promise<void> {
+  async removeChannel(
+    channel: FakeChannel,
+  ): Promise<"ok" | "timed out" | "error"> {
+    this.removeChannelCalls += 1;
     if (this.removeChannelError !== undefined) throw this.removeChannelError;
     this.removedChannels.push(channel);
+    return this.removeStatuses.shift() ?? "ok";
   }
 }
 
@@ -333,6 +360,41 @@ describe("group repository", () => {
     await expect(createGroupRepository(client).ensureAnonymousSession()).resolves.toBe(
       "anon-1",
     );
+  });
+
+  it("single-flights simultaneous anonymous sign-ins and retries after failure", async () => {
+    const client = new FakeSupabaseClient();
+    client.session = null;
+    const first = deferred<
+      Result & { data: { user: { id: string } | null } }
+    >();
+    client.anonymousSignIn = () => first.promise;
+    const repository = createGroupRepository(client);
+
+    const firstCall = repository.ensureAnonymousSession();
+    const secondCall = repository.ensureAnonymousSession();
+    await Promise.resolve();
+    expect(client.anonymousSignInCalls).toBe(1);
+    first.resolve({ data: { user: { id: "shared-anon" } }, error: null });
+    await expect(Promise.all([firstCall, secondCall])).resolves.toEqual([
+      "shared-anon",
+      "shared-anon",
+    ]);
+
+    const failure = deferred<
+      Result & { data: { user: { id: string } | null } }
+    >();
+    client.anonymousSignIn = () => failure.promise;
+    const failedCall = repository.ensureAnonymousSession();
+    await Promise.resolve();
+    failure.reject(new Error("private auth failure"));
+    await expect(failedCall).rejects.toEqual(expectRepositoryError("AUTH_FAILED"));
+    client.anonymousSignIn = async () => ({
+      data: { user: { id: "retry-anon" } },
+      error: null,
+    });
+    await expect(repository.ensureAnonymousSession()).resolves.toBe("retry-anon");
+    expect(client.anonymousSignInCalls).toBe(3);
   });
 
   it("wraps authentication failures without leaking their details", async () => {
@@ -595,6 +657,13 @@ describe("group repository", () => {
     [{ ...memberRow, animal_group: "STARS" }],
     [{ ...memberRow, animal_id: "dragon" }],
     [{ ...memberRow, profile_payload: { ...profile, animalId: "wolf" } }],
+    [
+      {
+        ...memberRow,
+        animal_group: "EARTH",
+        profile_payload: { ...profile, animalGroup: "EARTH" },
+      },
+    ],
   ])("rejects invalid member row data", (row) => {
     expect(() => mapGroupMember(row)).toThrow(expectRepositoryError("INVALID_DATA"));
   });
@@ -709,7 +778,65 @@ describe("group repository", () => {
     }
   });
 
-  it("reports cleanup failures once with a stable error and remains idempotent", async () => {
+  it.each(["on", "subscribe"] as const)(
+    "best-effort removes a channel when %s registration throws without masking it",
+    async (failurePoint) => {
+      const client = new FakeSupabaseClient();
+      const registrationCause = new Error("private registration detail");
+      if (failurePoint === "on") {
+        client.channelRegistrationError = registrationCause;
+      } else {
+        client.channelSubscriptionError = registrationCause;
+      }
+      client.removeChannelError = new Error("private removal detail");
+
+      try {
+        createGroupRepository(client).subscribeToGroup("group-1", {});
+        throw new Error("expected subscription failure");
+      } catch (error) {
+        expect(error).toEqual(expectRepositoryError("SUBSCRIPTION_FAILED"));
+        expect((error as Error & { cause?: unknown }).cause).toBe(registrationCause);
+      }
+      await Promise.resolve();
+      expect(client.removeChannelCalls).toBe(1);
+    },
+  );
+
+  it("isolates throwing consumer callbacks from realtime delivery", () => {
+    const client = new FakeSupabaseClient();
+    const onError = vi.fn(() => {
+      throw new Error("consumer onError failure");
+    });
+    createGroupRepository(client).subscribeToGroup("group-1", {
+      onMemberChange: () => {
+        throw new Error("consumer member failure");
+      },
+      onUnlockChange: () => {
+        throw new Error("consumer unlock failure");
+      },
+      onConnectionStatus: () => {
+        throw new Error("consumer status failure");
+      },
+      onError,
+    });
+    const channel = client.channels[0];
+
+    expect(() => channel.emit("group_members", "INSERT", memberRow)).not.toThrow();
+    expect(() => channel.emit("relation_unlocks", "UPDATE", unlockRow)).not.toThrow();
+    expect(onError).not.toHaveBeenCalled();
+    expect(() => channel.statusCallback?.("CHANNEL_ERROR", new Error("socket"))).not.toThrow();
+    expect(onError).toHaveBeenCalledTimes(1);
+    expect(() =>
+      channel.emitRaw("group_members", "INSERT", {
+        eventType: "INSERT",
+        new: { ...memberRow, animal_id: "dragon" },
+        old: {},
+      }),
+    ).not.toThrow();
+    expect(onError).toHaveBeenCalledTimes(2);
+  });
+
+  it("reports cleanup exceptions stably and keeps cleanup retryable", async () => {
     const client = new FakeSupabaseClient();
     client.removeChannelError = new Error("private cleanup detail");
     const errors = vi.fn();
@@ -719,10 +846,32 @@ describe("group repository", () => {
 
     await cleanup();
     await cleanup();
-    expect(errors).toHaveBeenCalledTimes(1);
+    expect(client.removeChannelCalls).toBe(2);
+    expect(errors).toHaveBeenCalledTimes(2);
     expect(errors).toHaveBeenCalledWith(expectRepositoryError("SUBSCRIPTION_FAILED"));
     expect((errors.mock.calls[0][0] as Error).message).not.toContain("private cleanup detail");
   });
+
+  it.each(["timed out", "error"] as const)(
+    "keeps cleanup retryable when removeChannel returns %s",
+    async (status) => {
+      const client = new FakeSupabaseClient();
+      client.removeStatuses.push(status, "ok");
+      const errors = vi.fn(() => {
+        throw new Error("consumer cleanup callback failure");
+      });
+      const cleanup = createGroupRepository(client).subscribeToGroup("group-1", {
+        onError: errors,
+      });
+
+      await expect(cleanup()).resolves.toBeUndefined();
+      await expect(cleanup()).resolves.toBeUndefined();
+      await cleanup();
+      expect(client.removedChannels).toHaveLength(2);
+      expect(errors).toHaveBeenCalledTimes(1);
+      expect(errors).toHaveBeenCalledWith(expectRepositoryError("SUBSCRIPTION_FAILED"));
+    },
+  );
 });
 
 describe("production Supabase adapter", () => {
@@ -792,6 +941,7 @@ describe("production Supabase adapter", () => {
       },
       removeChannel: async (channel: unknown) => {
         calls.push({ kind: "removeChannel", value: channel });
+        return "timed out" as const;
       },
     };
     const adapter = createSupabaseGroupRepositoryAdapter(
@@ -889,7 +1039,7 @@ describe("production Supabase adapter", () => {
     });
     expect(changes).toHaveBeenCalledWith({ eventType: "INSERT", new: memberRow, old: {} });
     expect(statuses).toHaveBeenCalledWith("SUBSCRIBED", undefined);
-    await channel.remove();
+    await expect(channel.remove()).resolves.toBe("timed out");
     expect(calls).toContainEqual({ kind: "removeChannel", value: nativeChannel });
   });
 });

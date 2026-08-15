@@ -1,3 +1,4 @@
+import { ANIMALS } from "../astrology/animals";
 import type {
   AnimalGroup,
   AnimalId,
@@ -119,6 +120,8 @@ export function mapDerivedProfile(value: unknown): DerivedProfile {
     !animalIds.has(animalId as AnimalId) ||
     typeof animalGroup !== "string" ||
     !animalGroups.has(animalGroup as AnimalGroup) ||
+    (animalIds.has(animalId as AnimalId) &&
+      ANIMALS[animalId as AnimalId].group !== animalGroup) ||
     (mbti !== null &&
       (typeof mbti !== "string" || !mbtiTypes.has(mbti as MBTIType))) ||
     (calculationMode !== "date-time" && calculationMode !== "date-only")
