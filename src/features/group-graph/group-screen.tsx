@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { RefreshCw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { StatusBanner, type ConnectionStatus } from "@/components/ui/status-banner";
@@ -291,7 +292,7 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken }: Grou
           <p>メンバー {aggregate.members.length}人</p>
         </div>
         <div className="group-member-actions">
-          <StatusBanner status={status} />
+          {status !== "success" ? <StatusBanner status={status} /> : null}
           {inviteToken ? (
             <GroupShareControls
               groupName={aggregate.group.name}
@@ -308,8 +309,15 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken }: Grou
               接続を再試行
             </Button>
           ) : null}
-          <Button type="button" variant="ghost" onClick={() => void refresh()}>
-            最新の情報に更新
+          <Button
+            type="button"
+            className="group-refresh-button"
+            variant="ghost"
+            aria-label="最新の情報に更新"
+            title="最新の情報に更新"
+            onClick={() => void refresh()}
+          >
+            <RefreshCw aria-hidden="true" focusable="false" strokeWidth={2.2} />
           </Button>
         </div>
       </header>

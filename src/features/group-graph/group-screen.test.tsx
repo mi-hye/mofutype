@@ -165,7 +165,7 @@ describe("GroupScreen", () => {
 
     expect(screen.getByRole("status")).toHaveTextContent("接続中");
     act(() => repo.callbacks()?.onConnectionStatus?.("SUBSCRIBED"));
-    expect(screen.getByRole("status")).toHaveTextContent("接続完了");
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
     act(() => repo.callbacks()?.onConnectionStatus?.("TIMED_OUT"));
     expect(screen.getByRole("alert")).toHaveTextContent("オフライン");
     await user.click(screen.getByRole("button", { name: "接続を再試行" }));

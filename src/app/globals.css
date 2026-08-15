@@ -222,6 +222,8 @@ button, input, textarea, select { font: inherit; }
 .group-share-button { width: 46px; min-width: 46px; min-height: 46px; padding: 0 !important; border-radius: 0.8rem; background: var(--surface-mint) !important; box-shadow: 0 7px 16px rgb(41 75 99 / 10%); }
 .group-share-button > span:first-child { display: grid; place-items: center; }
 .group-share-button svg { width: 1.2rem; height: 1.2rem; overflow: visible; fill: none; stroke: var(--ink); }
+.group-refresh-button { width: 46px; min-width: 46px; min-height: 46px; padding: 0 !important; border: 0 !important; background: transparent !important; box-shadow: none !important; }
+.group-refresh-button svg { width: 1.2rem; height: 1.2rem; fill: none; stroke: currentColor; }
 .group-share-backdrop { position: fixed; inset: 0; z-index: 100; display: grid; align-items: end; padding: 1rem; background: rgb(24 32 58 / 42%); backdrop-filter: blur(4px); animation: fade-in 160ms ease-out both; }
 .group-share-actions { display: grid; width: min(100%, 28rem); margin-inline: auto; gap: 0.65rem; border: var(--border-subtle); border-radius: 1.25rem; padding: 1rem; background: linear-gradient(145deg, #fff, #f4f5f4); box-shadow: 0 26px 70px rgb(24 32 38 / 28%); animation: sheet-up 220ms cubic-bezier(.2,.8,.2,1) both; }
 .group-share-actions header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
@@ -345,6 +347,7 @@ button, input, textarea, select { font: inherit; }
   .group-member-actions > .status-banner { grid-column: 1 / -1; }
   .group-member-actions .ui-button { width: 100%; }
   .group-member-actions .group-share-button { width: 44px; justify-self: start; }
+  .group-member-actions .group-refresh-button { width: 44px; justify-self: start; }
   .group-graph__canvas { min-height: 27rem; height: 68svh; }
   .group-graph__accessible { padding: 0.85rem; }
   .group-graph__member-list, .group-graph__relationship-list { display: grid; }
