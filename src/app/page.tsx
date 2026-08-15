@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 import { Card } from "@/components/ui/card";
 import { StartGroupForm } from "@/features/onboarding/start-group-form";
 
@@ -6,7 +8,14 @@ export default function Home() {
     <main className="landing-shell">
       <header className="landing-nav">
         <a className="wordmark" href="#top" aria-label="MofuType ホーム">
-          MofuType
+          <Image
+            className="wordmark__image"
+            src="/brand/mofutype-wordmark.png"
+            alt=""
+            width={960}
+            height={240}
+            priority
+          />
         </a>
       </header>
 

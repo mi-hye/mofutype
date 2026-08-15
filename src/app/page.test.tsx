@@ -22,6 +22,11 @@ describe("Home", () => {
   it("uses the approved Kawaii Zine headline and sticker copy", () => {
     render(<Home />);
 
+    const homeLink = screen.getByRole("link", { name: "MofuType ホーム" });
+    expect(homeLink.querySelector("img")).toHaveAttribute(
+      "src",
+      expect.stringContaining("mofutype-wordmark.png"),
+    );
     expect(
       screen.getByRole("heading", { name: "わたしたち、こんな感じ。" }),
     ).toBeInTheDocument();
