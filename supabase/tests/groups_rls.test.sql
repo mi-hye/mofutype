@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
 
-select no_plan();
+select plan(224);
 
 -- Schema and API contract.
 select tables_are('public', array['groups', 'group_members', 'relation_unlocks'], 'public has exactly the three group tables');
@@ -16,6 +16,12 @@ select has_column('public', 'group_members', 'zodiac_id', 'zodiac_id exists');
 select has_column('public', 'group_members', 'mbti', 'mbti exists');
 select has_column('public', 'group_members', 'profile_payload', 'profile_payload exists');
 select has_column('public', 'group_members', 'profile_version', 'profile_version exists');
+select columns_are(
+  'public',
+  'group_members',
+  array['id','group_id','user_id','nickname','mbti','profile_payload','joined_at','zodiac_id','profile_version'],
+  'group_members columns are exact after the destructive reset'
+);
 select col_not_null('public', 'group_members', 'zodiac_id', 'zodiac_id is required');
 select col_not_null('public', 'group_members', 'profile_payload', 'profile_payload is required');
 select col_not_null('public', 'group_members', 'profile_version', 'profile_version is required');
@@ -72,6 +78,7 @@ select ok(not has_function_privilege('public', 'public.join_group(text,text,text
 select ok(not has_function_privilege('authenticated', 'public._eto_profile_is_valid(text,text,jsonb)', 'EXECUTE'), 'authenticated cannot execute validator');
 select ok(not has_function_privilege('anon', 'public._eto_profile_is_valid(text,text,jsonb)', 'EXECUTE'), 'anon cannot execute validator');
 select ok(not has_function_privilege('public', 'public._eto_profile_is_valid(text,text,jsonb)', 'EXECUTE'), 'public cannot execute validator');
+select ok(has_function_privilege('service_role', 'public._eto_profile_is_valid(text,text,jsonb)', 'EXECUTE'), 'service role can execute validator for table checks');
 select ok(has_function_privilege('authenticated', 'public.get_group_invite_preview(text)', 'EXECUTE'), 'authenticated can execute invite preview');
 select ok(not has_function_privilege('anon', 'public.get_group_invite_preview(text)', 'EXECUTE'), 'anon cannot execute invite preview');
 select ok(not has_function_privilege('public', 'public.get_group_invite_preview(text)', 'EXECUTE'), 'public cannot execute invite preview');
@@ -97,7 +104,7 @@ select ok(
   ),
   zodiac_id || ' zodiac is accepted'
 )
-from unnest(array['rat','ox','tiger','rabbit','dragon','snake','horse','goat','monkey','rooster','dog','pig']) zodiac_id;
+from unnest(array['rat','ox','tiger','rabbit','dragon','snake','horse','sheep','monkey','rooster','dog','boar']) zodiac_id;
 
 select ok(
   public._eto_profile_is_valid(
@@ -122,13 +129,23 @@ select ok(public._eto_profile_is_valid(
 ), 'date-time profile with totals of eight is accepted');
 select ok(public._eto_profile_is_valid(
   'dragon', null,
-  '{"version":1,"zodiacId":"dragon","mbti":null,"dayMaster":{"element":"WOOD","polarity":"YANG"},"fiveElements":null,"yinYang":null,"calculationMode":"date-only","boundaryState":"ambiguous","engineVersion":"mofu-eto-four-pillars-v1"}'::jsonb
-), 'ambiguous date-only profile accepts both null distributions');
+  '{"version":1,"zodiacId":"dragon","mbti":null,"dayMaster":{"element":"WOOD","polarity":"YANG"},"fiveElements":null,"yinYang":null,"calculationMode":"date-only","boundaryState":"solar-term-ambiguous","engineVersion":"mofu-eto-four-pillars-v1"}'::jsonb
+), 'solar-term-ambiguous date-only profile accepts both null distributions');
+select ok(public._eto_profile_is_valid(
+  'sheep', null,
+  '{"version":1,"zodiacId":"sheep","mbti":null,"dayMaster":{"element":"EARTH","polarity":"YIN"},"fiveElements":{"WOOD":1,"FIRE":1,"EARTH":2,"METAL":1,"WATER":1},"yinYang":{"YIN":3,"YANG":3},"calculationMode":"date-only","boundaryState":"exact","engineVersion":"mofu-eto-four-pillars-v1"}'::jsonb
+), 'helper accepts sheep vocabulary');
+select ok(public._eto_profile_is_valid(
+  'boar', null,
+  '{"version":1,"zodiacId":"boar","mbti":null,"dayMaster":{"element":"WATER","polarity":"YIN"},"fiveElements":null,"yinYang":null,"calculationMode":"date-only","boundaryState":"solar-term-ambiguous","engineVersion":"mofu-eto-four-pillars-v1"}'::jsonb
+), 'helper accepts boar with the exact ambiguous boundary vocabulary');
 
 -- Invalid validator cases return false, including malformed values that must never leak native casts.
 select is(public._eto_profile_is_valid(zodiac_id, mbti, payload), false, description)
 from (values
   ('cat', 'INFP', '{"version":1,"zodiacId":"cat","mbti":"INFP","dayMaster":{"element":"WOOD","polarity":"YANG"},"fiveElements":{"WOOD":2,"FIRE":1,"EARTH":1,"METAL":1,"WATER":1},"yinYang":{"YIN":3,"YANG":3},"calculationMode":"date-only","boundaryState":"exact","engineVersion":"mofu-eto-four-pillars-v1"}'::jsonb, 'unknown lowercase zodiac is rejected'),
+  ('goat', null, '{"version":1,"zodiacId":"goat","mbti":null,"dayMaster":{"element":"EARTH","polarity":"YIN"},"fiveElements":{"WOOD":1,"FIRE":1,"EARTH":2,"METAL":1,"WATER":1},"yinYang":{"YIN":3,"YANG":3},"calculationMode":"date-only","boundaryState":"exact","engineVersion":"mofu-eto-four-pillars-v1"}'::jsonb, 'legacy goat zodiac is rejected'),
+  ('pig', null, '{"version":1,"zodiacId":"pig","mbti":null,"dayMaster":{"element":"WATER","polarity":"YIN"},"fiveElements":{"WOOD":1,"FIRE":1,"EARTH":1,"METAL":1,"WATER":2},"yinYang":{"YIN":3,"YANG":3},"calculationMode":"date-only","boundaryState":"exact","engineVersion":"mofu-eto-four-pillars-v1"}'::jsonb, 'legacy pig zodiac is rejected'),
   ('Dragon', 'INFP', '{"version":1,"zodiacId":"Dragon","mbti":"INFP","dayMaster":{"element":"WOOD","polarity":"YANG"},"fiveElements":{"WOOD":2,"FIRE":1,"EARTH":1,"METAL":1,"WATER":1},"yinYang":{"YIN":3,"YANG":3},"calculationMode":"date-only","boundaryState":"exact","engineVersion":"mofu-eto-four-pillars-v1"}'::jsonb, 'uppercase zodiac is rejected'),
   ('dragon', 'infp', '{"version":1,"zodiacId":"dragon","mbti":"infp","dayMaster":{"element":"WOOD","polarity":"YANG"},"fiveElements":{"WOOD":2,"FIRE":1,"EARTH":1,"METAL":1,"WATER":1},"yinYang":{"YIN":3,"YANG":3},"calculationMode":"date-only","boundaryState":"exact","engineVersion":"mofu-eto-four-pillars-v1"}'::jsonb, 'lowercase MBTI is rejected'),
   ('dragon', 'XXXX', '{"version":1,"zodiacId":"dragon","mbti":"XXXX","dayMaster":{"element":"WOOD","polarity":"YANG"},"fiveElements":{"WOOD":2,"FIRE":1,"EARTH":1,"METAL":1,"WATER":1},"yinYang":{"YIN":3,"YANG":3},"calculationMode":"date-only","boundaryState":"exact","engineVersion":"mofu-eto-four-pillars-v1"}'::jsonb, 'invalid MBTI is rejected'),
@@ -150,11 +167,12 @@ from (values
   ('dragon', 'INFP', '{"version":1,"zodiacId":"dragon","mbti":"INFP","dayMaster":{"element":"WOOD","polarity":"YANG"},"fiveElements":{"WOOD":1,"FIRE":1,"EARTH":1,"METAL":1,"WATER":1},"yinYang":{"YIN":3,"YANG":3},"calculationMode":"date-only","boundaryState":"exact","engineVersion":"mofu-eto-four-pillars-v1"}'::jsonb, 'date-only element total must be six'),
   ('dragon', 'INFP', '{"version":1,"zodiacId":"dragon","mbti":"INFP","dayMaster":{"element":"WOOD","polarity":"YANG"},"fiveElements":{"WOOD":2,"FIRE":1,"EARTH":1,"METAL":1,"WATER":1},"yinYang":{"YIN":4,"YANG":4},"calculationMode":"date-only","boundaryState":"exact","engineVersion":"mofu-eto-four-pillars-v1"}'::jsonb, 'date-only yin yang total must be six'),
   ('dragon', 'INFP', '{"version":1,"zodiacId":"dragon","mbti":"INFP","dayMaster":{"element":"WOOD","polarity":"YANG"},"fiveElements":{"WOOD":2,"FIRE":2,"EARTH":1,"METAL":2,"WATER":1},"yinYang":{"YIN":3,"YANG":3},"calculationMode":"date-time","boundaryState":"exact","engineVersion":"mofu-eto-four-pillars-v1"}'::jsonb, 'date-time yin yang total must be eight'),
-  ('dragon', 'INFP', '{"version":1,"zodiacId":"dragon","mbti":"INFP","dayMaster":{"element":"WOOD","polarity":"YANG"},"fiveElements":null,"yinYang":{"YIN":3,"YANG":3},"calculationMode":"date-only","boundaryState":"ambiguous","engineVersion":"mofu-eto-four-pillars-v1"}'::jsonb, 'ambiguous distributions must both be null'),
-  ('dragon', 'INFP', '{"version":1,"zodiacId":"dragon","mbti":"INFP","dayMaster":{"element":"WOOD","polarity":"YANG"},"fiveElements":{"WOOD":2,"FIRE":1,"EARTH":1,"METAL":1,"WATER":1},"yinYang":null,"calculationMode":"date-only","boundaryState":"ambiguous","engineVersion":"mofu-eto-four-pillars-v1"}'::jsonb, 'ambiguous reverse one-null distribution is rejected'),
+  ('dragon', 'INFP', '{"version":1,"zodiacId":"dragon","mbti":"INFP","dayMaster":{"element":"WOOD","polarity":"YANG"},"fiveElements":null,"yinYang":{"YIN":3,"YANG":3},"calculationMode":"date-only","boundaryState":"solar-term-ambiguous","engineVersion":"mofu-eto-four-pillars-v1"}'::jsonb, 'ambiguous distributions must both be null'),
+  ('dragon', 'INFP', '{"version":1,"zodiacId":"dragon","mbti":"INFP","dayMaster":{"element":"WOOD","polarity":"YANG"},"fiveElements":{"WOOD":2,"FIRE":1,"EARTH":1,"METAL":1,"WATER":1},"yinYang":null,"calculationMode":"date-only","boundaryState":"solar-term-ambiguous","engineVersion":"mofu-eto-four-pillars-v1"}'::jsonb, 'ambiguous reverse one-null distribution is rejected'),
   ('dragon', 'INFP', '{"version":1,"zodiacId":"dragon","mbti":"INFP","dayMaster":{"element":"WOOD","polarity":"YANG"},"fiveElements":null,"yinYang":null,"calculationMode":"date-only","boundaryState":"exact","engineVersion":"mofu-eto-four-pillars-v1"}'::jsonb, 'exact profiles cannot have null distributions'),
-  ('dragon', 'INFP', '{"version":1,"zodiacId":"dragon","mbti":"INFP","dayMaster":{"element":"WOOD","polarity":"YANG"},"fiveElements":{"WOOD":2,"FIRE":1,"EARTH":1,"METAL":1,"WATER":1},"yinYang":{"YIN":3,"YANG":3},"calculationMode":"date-only","boundaryState":"ambiguous","engineVersion":"mofu-eto-four-pillars-v1"}'::jsonb, 'ambiguous profiles cannot include counts'),
-  ('dragon', 'INFP', '{"version":1,"zodiacId":"dragon","mbti":"INFP","dayMaster":{"element":"WOOD","polarity":"YANG"},"fiveElements":null,"yinYang":null,"calculationMode":"date-time","boundaryState":"ambiguous","engineVersion":"mofu-eto-four-pillars-v1"}'::jsonb, 'ambiguous date-time profiles are rejected'),
+  ('dragon', 'INFP', '{"version":1,"zodiacId":"dragon","mbti":"INFP","dayMaster":{"element":"WOOD","polarity":"YANG"},"fiveElements":{"WOOD":2,"FIRE":1,"EARTH":1,"METAL":1,"WATER":1},"yinYang":{"YIN":3,"YANG":3},"calculationMode":"date-only","boundaryState":"solar-term-ambiguous","engineVersion":"mofu-eto-four-pillars-v1"}'::jsonb, 'ambiguous profiles cannot include counts'),
+  ('dragon', 'INFP', '{"version":1,"zodiacId":"dragon","mbti":"INFP","dayMaster":{"element":"WOOD","polarity":"YANG"},"fiveElements":null,"yinYang":null,"calculationMode":"date-time","boundaryState":"solar-term-ambiguous","engineVersion":"mofu-eto-four-pillars-v1"}'::jsonb, 'ambiguous date-time profiles are rejected'),
+  ('dragon', 'INFP', '{"version":1,"zodiacId":"dragon","mbti":"INFP","dayMaster":{"element":"WOOD","polarity":"YANG"},"fiveElements":null,"yinYang":null,"calculationMode":"date-only","boundaryState":"ambiguous","engineVersion":"mofu-eto-four-pillars-v1"}'::jsonb, 'legacy plain ambiguous boundary is rejected'),
   ('dragon', 'INFP', '{"version":1,"zodiacId":"dragon","mbti":"INFP","dayMaster":{"element":"WOOD","polarity":"YANG"},"fiveElements":{"WOOD":2,"FIRE":1,"EARTH":1,"METAL":1,"WATER":1},"yinYang":{"YIN":3,"YANG":3},"calculationMode":"date-only","boundaryState":"exact","engineVersion":"mofu-eto-four-pillars-v1","birthDate":"2000-01-01"}'::jsonb, 'birthDate is rejected as an extra key'),
   ('dragon', 'INFP', '{"version":1,"zodiacId":"dragon","mbti":"INFP","dayMaster":{"element":"WOOD","polarity":"YANG"},"fiveElements":{"WOOD":2,"FIRE":1,"EARTH":1,"METAL":1,"WATER":1},"yinYang":{"YIN":3,"YANG":3},"calculationMode":"date-only","boundaryState":"exact","engineVersion":"mofu-eto-four-pillars-v1","birth_time":"12:00"}'::jsonb, 'birth_time is rejected as an extra key'),
   ('dragon', 'INFP', '{"version":1,"zodiacId":"dragon","mbti":"INFP","dayMaster":{"element":"WOOD","polarity":"YANG"},"fiveElements":{"WOOD":2,"FIRE":1,"EARTH":1,"METAL":1,"WATER":1},"yinYang":{"YIN":3,"YANG":3},"calculationMode":"date-only","boundaryState":"exact","engineVersion":"mofu-eto-four-pillars-v1","dob":"2000-01-01"}'::jsonb, 'dob is rejected as an extra key'),
@@ -204,6 +222,7 @@ reset role;
 
 create temporary table created_group(group_id uuid, member_id uuid, invite_token text);
 grant select, insert on created_group to authenticated;
+grant select on created_group to service_role;
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000001', true);
 insert into created_group
@@ -220,6 +239,9 @@ select is((select profile_version from public.group_members where id=(select mem
 select is(length((select invite_token from created_group)), 64, 'create returns 32 random bytes as hex');
 select is((select invite_token_hash from public.groups where id=(select group_id from created_group)), encode(extensions.digest((select invite_token from created_group), 'sha256'), 'hex'), 'only the SHA256 invite digest is stored');
 select is((select max_members from public.groups where id=(select group_id from created_group)), 30, 'group max remains fixed at 30');
+select throws_ok($$insert into public.groups(name,invite_token_hash,created_by) values (' padded','bad-trim','00000000-0000-0000-0000-000000000001')$$, '23514', 'new row for relation "groups" violates check constraint "groups_name_check"', 'table rejects untrimmed group names');
+select throws_ok($$insert into public.groups(name,invite_token_hash,created_by) values (repeat('x',31),'bad-length','00000000-0000-0000-0000-000000000001')$$, '23514', 'new row for relation "groups" violates check constraint "groups_name_check"', 'table rejects group names longer than 30');
+select throws_ok($$insert into public.groups(name,invite_token_hash,created_by,max_members) values ('Bad max','bad-max','00000000-0000-0000-0000-000000000001',31)$$, '23514', 'new row for relation "groups" violates check constraint "groups_max_members_check"', 'table enforces fixed max_members at the table boundary');
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000003', true);
@@ -229,11 +251,29 @@ select is((select count(*) from public.get_group_invite_preview('not-a-token')),
 reset role;
 
 -- Representative table-boundary checks.
+select throws_ok(format($sql$insert into public.group_members(group_id,user_id,nickname,zodiac_id,mbti,profile_payload,profile_version) values (%L,'00000000-0000-0000-0000-000000000003',' padded','dragon','INFP','{"version":1,"zodiacId":"dragon","mbti":"INFP","dayMaster":{"element":"WOOD","polarity":"YANG"},"fiveElements":{"WOOD":2,"FIRE":1,"EARTH":1,"METAL":1,"WATER":1},"yinYang":{"YIN":3,"YANG":3},"calculationMode":"date-only","boundaryState":"exact","engineVersion":"mofu-eto-four-pillars-v1"}',1)$sql$,(select group_id from created_group)), '23514', 'new row for relation "group_members" violates check constraint "group_members_nickname_check"', 'table rejects untrimmed nicknames');
+select throws_ok(format($sql$insert into public.group_members(group_id,user_id,nickname,zodiac_id,mbti,profile_payload,profile_version) values (%L,'00000000-0000-0000-0000-000000000003',repeat('x',21),'dragon','INFP','{"version":1,"zodiacId":"dragon","mbti":"INFP","dayMaster":{"element":"WOOD","polarity":"YANG"},"fiveElements":{"WOOD":2,"FIRE":1,"EARTH":1,"METAL":1,"WATER":1},"yinYang":{"YIN":3,"YANG":3},"calculationMode":"date-only","boundaryState":"exact","engineVersion":"mofu-eto-four-pillars-v1"}',1)$sql$,(select group_id from created_group)), '23514', 'new row for relation "group_members" violates check constraint "group_members_nickname_check"', 'table rejects nicknames longer than 20');
 select throws_ok(format($sql$insert into public.group_members(group_id,user_id,nickname,zodiac_id,mbti,profile_payload,profile_version) values (%L,'00000000-0000-0000-0000-000000000003','Bad zodiac','Dragon','INFP','{}',1)$sql$,(select group_id from created_group)), '23514', null, 'table rejects invalid zodiac');
 select throws_ok(format($sql$insert into public.group_members(group_id,user_id,nickname,zodiac_id,mbti,profile_payload,profile_version) values (%L,'00000000-0000-0000-0000-000000000003','Bad MBTI','dragon','infp','{}',1)$sql$,(select group_id from created_group)), '23514', null, 'table rejects invalid MBTI');
 select throws_ok(format($sql$insert into public.group_members(group_id,user_id,nickname,zodiac_id,mbti,profile_payload,profile_version) values (%L,'00000000-0000-0000-0000-000000000003','Bad version','dragon','INFP','{"version":1,"zodiacId":"dragon","mbti":"INFP","dayMaster":{"element":"WOOD","polarity":"YANG"},"fiveElements":{"WOOD":2,"FIRE":1,"EARTH":1,"METAL":1,"WATER":1},"yinYang":{"YIN":3,"YANG":3},"calculationMode":"date-only","boundaryState":"exact","engineVersion":"mofu-eto-four-pillars-v1"}',2)$sql$,(select group_id from created_group)), '23514', null, 'table enforces scalar profile version');
 select throws_ok(format($sql$insert into public.group_members(group_id,user_id,nickname,zodiac_id,mbti,profile_payload,profile_version) values (%L,'00000000-0000-0000-0000-000000000003','Mismatch','rat','INFP','{"version":1,"zodiacId":"dragon","mbti":"INFP","dayMaster":{"element":"WOOD","polarity":"YANG"},"fiveElements":{"WOOD":2,"FIRE":1,"EARTH":1,"METAL":1,"WATER":1},"yinYang":{"YIN":3,"YANG":3},"calculationMode":"date-only","boundaryState":"exact","engineVersion":"mofu-eto-four-pillars-v1"}',1)$sql$,(select group_id from created_group)), '23514', null, 'table requires scalar and payload equality');
-select lives_ok(format($sql$insert into public.group_members(group_id,user_id,nickname,zodiac_id,mbti,profile_payload,profile_version) values (%L,'00000000-0000-0000-0000-000000000003','Ambiguous','dragon',null,'{"version":1,"zodiacId":"dragon","mbti":null,"dayMaster":{"element":"WOOD","polarity":"YANG"},"fiveElements":null,"yinYang":null,"calculationMode":"date-only","boundaryState":"ambiguous","engineVersion":"mofu-eto-four-pillars-v1"}',1)$sql$,(select group_id from created_group)), 'table accepts a representative ambiguous profile');
+select throws_ok(statement, '23514', null, description)
+from (values
+  (format($sql$insert into public.group_members(group_id,user_id,nickname,zodiac_id,mbti,profile_payload,profile_version) values (%L,'00000000-0000-0000-0000-000000000003','Missing key','dragon','INFP','{"version":1,"zodiacId":"dragon","mbti":"INFP","dayMaster":{"element":"WOOD","polarity":"YANG"},"fiveElements":{"WOOD":2,"FIRE":1,"EARTH":1,"METAL":1,"WATER":1},"yinYang":{"YIN":3,"YANG":3},"calculationMode":"date-only","boundaryState":"exact"}',1)$sql$,(select group_id from created_group)), 'table rejects a missing top-level profile key'),
+  (format($sql$insert into public.group_members(group_id,user_id,nickname,zodiac_id,mbti,profile_payload,profile_version) values (%L,'00000000-0000-0000-0000-000000000003','Extra key','dragon','INFP','{"version":1,"zodiacId":"dragon","mbti":"INFP","dayMaster":{"element":"WOOD","polarity":"YANG"},"fiveElements":{"WOOD":2,"FIRE":1,"EARTH":1,"METAL":1,"WATER":1},"yinYang":{"YIN":3,"YANG":3},"calculationMode":"date-only","boundaryState":"exact","engineVersion":"mofu-eto-four-pillars-v1","extra":true}',1)$sql$,(select group_id from created_group)), 'table rejects an extra profile key'),
+  (format($sql$insert into public.group_members(group_id,user_id,nickname,zodiac_id,mbti,profile_payload,profile_version) values (%L,'00000000-0000-0000-0000-000000000003','Null field','dragon','INFP','{"version":1,"zodiacId":"dragon","mbti":"INFP","dayMaster":null,"fiveElements":{"WOOD":2,"FIRE":1,"EARTH":1,"METAL":1,"WATER":1},"yinYang":{"YIN":3,"YANG":3},"calculationMode":"date-only","boundaryState":"exact","engineVersion":"mofu-eto-four-pillars-v1"}',1)$sql$,(select group_id from created_group)), 'table rejects an exact-profile null field'),
+  (format($sql$insert into public.group_members(group_id,user_id,nickname,zodiac_id,mbti,profile_payload,profile_version) values (%L,'00000000-0000-0000-0000-000000000003','MBTI mismatch','dragon',null,'{"version":1,"zodiacId":"dragon","mbti":"INFP","dayMaster":{"element":"WOOD","polarity":"YANG"},"fiveElements":{"WOOD":2,"FIRE":1,"EARTH":1,"METAL":1,"WATER":1},"yinYang":{"YIN":3,"YANG":3},"calculationMode":"date-only","boundaryState":"exact","engineVersion":"mofu-eto-four-pillars-v1"}',1)$sql$,(select group_id from created_group)), 'table rejects scalar MBTI mismatch'),
+  (format($sql$insert into public.group_members(group_id,user_id,nickname,zodiac_id,mbti,profile_payload,profile_version) values (%L,'00000000-0000-0000-0000-000000000003','Raw key','dragon','INFP','{"version":1,"zodiacId":"dragon","mbti":"INFP","dayMaster":{"element":"WOOD","polarity":"YANG"},"fiveElements":{"WOOD":2,"FIRE":1,"EARTH":1,"METAL":1,"WATER":1},"yinYang":{"YIN":3,"YANG":3},"calculationMode":"date-only","boundaryState":"exact","engineVersion":"mofu-eto-four-pillars-v1","birthDate":"2000-01-01"}',1)$sql$,(select group_id from created_group)), 'table rejects a raw birth key'),
+  (format($sql$insert into public.group_members(group_id,user_id,nickname,zodiac_id,mbti,profile_payload,profile_version) values (%L,'00000000-0000-0000-0000-000000000003','Wrong total','dragon','INFP','{"version":1,"zodiacId":"dragon","mbti":"INFP","dayMaster":{"element":"WOOD","polarity":"YANG"},"fiveElements":{"WOOD":1,"FIRE":1,"EARTH":1,"METAL":1,"WATER":1},"yinYang":{"YIN":3,"YANG":3},"calculationMode":"date-only","boundaryState":"exact","engineVersion":"mofu-eto-four-pillars-v1"}',1)$sql$,(select group_id from created_group)), 'table rejects a wrong count total'),
+  (format($sql$insert into public.group_members(group_id,user_id,nickname,zodiac_id,mbti,profile_payload,profile_version) values (%L,'00000000-0000-0000-0000-000000000003','Malformed count','dragon','INFP','{"version":1,"zodiacId":"dragon","mbti":"INFP","dayMaster":{"element":"WOOD","polarity":"YANG"},"fiveElements":{"WOOD":"bad","FIRE":1,"EARTH":1,"METAL":1,"WATER":1},"yinYang":{"YIN":3,"YANG":3},"calculationMode":"date-only","boundaryState":"exact","engineVersion":"mofu-eto-four-pillars-v1"}',1)$sql$,(select group_id from created_group)), 'table contains malformed JSON as a check violation without a native cast leak')
+) invalid_table(statement, description);
+select lives_ok(format($sql$insert into public.group_members(group_id,user_id,nickname,zodiac_id,mbti,profile_payload,profile_version) values (%L,'00000000-0000-0000-0000-000000000003','Ambiguous boar','boar',null,'{"version":1,"zodiacId":"boar","mbti":null,"dayMaster":{"element":"WATER","polarity":"YIN"},"fiveElements":null,"yinYang":null,"calculationMode":"date-only","boundaryState":"solar-term-ambiguous","engineVersion":"mofu-eto-four-pillars-v1"}',1)$sql$,(select group_id from created_group)), 'table accepts boar with the exact ambiguous domain payload');
+delete from public.group_members where user_id='00000000-0000-0000-0000-000000000003';
+
+set local role service_role;
+select lives_ok(format($sql$insert into public.group_members(group_id,user_id,nickname,zodiac_id,mbti,profile_payload,profile_version) values (%L,'00000000-0000-0000-0000-000000000003','Service sheep','sheep',null,'{"version":1,"zodiacId":"sheep","mbti":null,"dayMaster":{"element":"EARTH","polarity":"YIN"},"fiveElements":{"WOOD":1,"FIRE":1,"EARTH":2,"METAL":1,"WATER":1},"yinYang":{"YIN":3,"YANG":3},"calculationMode":"date-only","boundaryState":"exact","engineVersion":"mofu-eto-four-pillars-v1"}',1)$sql$,(select group_id from created_group)), 'service role can insert a valid sheep profile through the table check');
+reset role;
+select is((select zodiac_id from public.group_members where user_id='00000000-0000-0000-0000-000000000003'),'sheep','service role insert persists the exact zodiac');
 delete from public.group_members where user_id='00000000-0000-0000-0000-000000000003';
 
 create temporary table joined_group(group_id uuid, member_id uuid);
@@ -241,7 +281,7 @@ grant select, insert on joined_group to authenticated;
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000002', true);
 insert into joined_group select * from public.join_group((select invite_token from created_group),'  Joiner  ','ox','ENTJ','{"version":1,"zodiacId":"ox","mbti":"ENTJ","dayMaster":{"element":"FIRE","polarity":"YIN"},"fiveElements":{"WOOD":2,"FIRE":2,"EARTH":1,"METAL":2,"WATER":1},"yinYang":{"YIN":4,"YANG":4},"calculationMode":"date-time","boundaryState":"exact","engineVersion":"mofu-eto-four-pillars-v1"}'::jsonb);
-insert into joined_group select * from public.join_group((select invite_token from created_group),'Ignored','pig',null,'{"version":1,"zodiacId":"pig","mbti":null,"dayMaster":{"element":"WATER","polarity":"YIN"},"fiveElements":null,"yinYang":null,"calculationMode":"date-only","boundaryState":"ambiguous","engineVersion":"mofu-eto-four-pillars-v1"}'::jsonb);
+insert into joined_group select * from public.join_group((select invite_token from created_group),'Ignored','boar',null,'{"version":1,"zodiacId":"boar","mbti":null,"dayMaster":{"element":"WATER","polarity":"YIN"},"fiveElements":null,"yinYang":null,"calculationMode":"date-only","boundaryState":"solar-term-ambiguous","engineVersion":"mofu-eto-four-pillars-v1"}'::jsonb);
 reset role;
 select is((select count(*) from joined_group), 2::bigint, 'repeat join returns a result each time');
 select is((select count(distinct member_id) from joined_group), 1::bigint, 'repeat join returns the original member');
@@ -254,13 +294,23 @@ select is((select count(*) from public.group_members), 0::bigint, 'nonmember can
 select throws_ok($$select * from public.create_group_and_join('Bad','Bad','dragon','INFP','{}'::jsonb)$$, 'P0001', 'INVALID_PROFILE', 'malformed create profile returns stable INVALID_PROFILE');
 select throws_ok(format($sql$select * from public.join_group(%L,'Bad','dragon','INFP','{"version":1,"zodiacId":"dragon","mbti":"INFP","dayMaster":{"element":"WOOD","polarity":"YANG"},"fiveElements":{"WOOD":"bad","FIRE":1,"EARTH":1,"METAL":1,"WATER":1},"yinYang":{"YIN":3,"YANG":3},"calculationMode":"date-only","boundaryState":"exact","engineVersion":"mofu-eto-four-pillars-v1"}'::jsonb)$sql$,(select invite_token from created_group)), 'P0001', 'INVALID_PROFILE', 'malformed join count returns stable INVALID_PROFILE without a native cast leak');
 select throws_ok($$select * from public.join_group('not-a-token','Nope','dragon','INFP','{"version":1,"zodiacId":"dragon","mbti":"INFP","dayMaster":{"element":"WOOD","polarity":"YANG"},"fiveElements":{"WOOD":2,"FIRE":1,"EARTH":1,"METAL":1,"WATER":1},"yinYang":{"YIN":3,"YANG":3},"calculationMode":"date-only","boundaryState":"exact","engineVersion":"mofu-eto-four-pillars-v1"}'::jsonb)$$, 'P0001', 'INVALID_INVITE', 'invalid invite returns stable INVALID_INVITE');
+select throws_ok(statement, 'P0001', 'INVALID_PROFILE', description)
+from (values
+  ($$select * from public.create_group_and_join('Missing','Bad','dragon','INFP','{"version":1,"zodiacId":"dragon","mbti":"INFP","dayMaster":{"element":"WOOD","polarity":"YANG"},"fiveElements":{"WOOD":2,"FIRE":1,"EARTH":1,"METAL":1,"WATER":1},"yinYang":{"YIN":3,"YANG":3},"calculationMode":"date-only","boundaryState":"exact"}'::jsonb)$$, 'create RPC rejects a missing profile key'),
+  ($$select * from public.create_group_and_join('Extra','Bad','dragon','INFP','{"version":1,"zodiacId":"dragon","mbti":"INFP","dayMaster":{"element":"WOOD","polarity":"YANG"},"fiveElements":{"WOOD":2,"FIRE":1,"EARTH":1,"METAL":1,"WATER":1},"yinYang":{"YIN":3,"YANG":3},"calculationMode":"date-only","boundaryState":"exact","engineVersion":"mofu-eto-four-pillars-v1","extra":true}'::jsonb)$$, 'create RPC rejects an extra profile key'),
+  ($$select * from public.create_group_and_join('Null','Bad','dragon','INFP','{"version":1,"zodiacId":"dragon","mbti":"INFP","dayMaster":null,"fiveElements":{"WOOD":2,"FIRE":1,"EARTH":1,"METAL":1,"WATER":1},"yinYang":{"YIN":3,"YANG":3},"calculationMode":"date-only","boundaryState":"exact","engineVersion":"mofu-eto-four-pillars-v1"}'::jsonb)$$, 'create RPC rejects a null derived field'),
+  ($$select * from public.create_group_and_join('Scalar','Bad','rat','INFP','{"version":1,"zodiacId":"dragon","mbti":"INFP","dayMaster":{"element":"WOOD","polarity":"YANG"},"fiveElements":{"WOOD":2,"FIRE":1,"EARTH":1,"METAL":1,"WATER":1},"yinYang":{"YIN":3,"YANG":3},"calculationMode":"date-only","boundaryState":"exact","engineVersion":"mofu-eto-four-pillars-v1"}'::jsonb)$$, 'create RPC rejects scalar and payload mismatch'),
+  ($$select * from public.create_group_and_join('Raw','Bad','dragon','INFP','{"version":1,"zodiacId":"dragon","mbti":"INFP","dayMaster":{"element":"WOOD","polarity":"YANG"},"fiveElements":{"WOOD":2,"FIRE":1,"EARTH":1,"METAL":1,"WATER":1},"yinYang":{"YIN":3,"YANG":3},"calculationMode":"date-only","boundaryState":"exact","engineVersion":"mofu-eto-four-pillars-v1","birth_time":"12:00"}'::jsonb)$$, 'create RPC rejects a raw birth key'),
+  ($$select * from public.create_group_and_join('Totals','Bad','dragon','INFP','{"version":1,"zodiacId":"dragon","mbti":"INFP","dayMaster":{"element":"WOOD","polarity":"YANG"},"fiveElements":{"WOOD":1,"FIRE":1,"EARTH":1,"METAL":1,"WATER":1},"yinYang":{"YIN":3,"YANG":3},"calculationMode":"date-only","boundaryState":"exact","engineVersion":"mofu-eto-four-pillars-v1"}'::jsonb)$$, 'create RPC rejects a wrong count total'),
+  ($$select * from public.create_group_and_join('Malformed','Bad','dragon','INFP','{"version":1,"zodiacId":"dragon","mbti":"INFP","dayMaster":{"element":"WOOD","polarity":"YANG"},"fiveElements":{"WOOD":"bad","FIRE":1,"EARTH":1,"METAL":1,"WATER":1},"yinYang":{"YIN":3,"YANG":3},"calculationMode":"date-only","boundaryState":"exact","engineVersion":"mofu-eto-four-pillars-v1"}'::jsonb)$$, 'create RPC contains malformed JSON as stable INVALID_PROFILE without a native cast leak')
+) invalid_rpc(statement, description);
 reset role;
 
 create temporary table other_group(group_id uuid, member_id uuid, invite_token text);
 grant select, insert on other_group to authenticated;
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000004', true);
-insert into other_group select * from public.create_group_and_join('Other','Other owner','rat',null,'{"version":1,"zodiacId":"rat","mbti":null,"dayMaster":{"element":"METAL","polarity":"YANG"},"fiveElements":{"WOOD":1,"FIRE":1,"EARTH":1,"METAL":2,"WATER":1},"yinYang":{"YIN":3,"YANG":3},"calculationMode":"date-only","boundaryState":"exact","engineVersion":"mofu-eto-four-pillars-v1"}'::jsonb);
+insert into other_group select * from public.create_group_and_join('Other','Other owner','boar',null,'{"version":1,"zodiacId":"boar","mbti":null,"dayMaster":{"element":"WATER","polarity":"YIN"},"fiveElements":{"WOOD":1,"FIRE":1,"EARTH":1,"METAL":1,"WATER":2},"yinYang":{"YIN":3,"YANG":3},"calculationMode":"date-only","boundaryState":"exact","engineVersion":"mofu-eto-four-pillars-v1"}'::jsonb);
 reset role;
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000001', true);
@@ -276,13 +326,13 @@ declare n integer;
 begin
   for n in 1..28 loop
     perform set_config('request.jwt.claim.sub',('10000000-0000-0000-0000-'||lpad(n::text,12,'0')),true);
-    perform * from public.join_group((select invite_token from created_group),'Member '||n,'goat',null,'{"version":1,"zodiacId":"goat","mbti":null,"dayMaster":{"element":"EARTH","polarity":"YIN"},"fiveElements":{"WOOD":1,"FIRE":1,"EARTH":2,"METAL":1,"WATER":1},"yinYang":{"YIN":3,"YANG":3},"calculationMode":"date-only","boundaryState":"exact","engineVersion":"mofu-eto-four-pillars-v1"}'::jsonb);
+    perform * from public.join_group((select invite_token from created_group),'Member '||n,'sheep',null,'{"version":1,"zodiacId":"sheep","mbti":null,"dayMaster":{"element":"EARTH","polarity":"YIN"},"fiveElements":{"WOOD":1,"FIRE":1,"EARTH":2,"METAL":1,"WATER":1},"yinYang":{"YIN":3,"YANG":3},"calculationMode":"date-only","boundaryState":"exact","engineVersion":"mofu-eto-four-pillars-v1"}'::jsonb);
   end loop;
 end
 $capacity$;
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000029',true);
-select throws_ok(format($sql$select * from public.join_group(%L,'Thirty first','goat',null,'{"version":1,"zodiacId":"goat","mbti":null,"dayMaster":{"element":"EARTH","polarity":"YIN"},"fiveElements":{"WOOD":1,"FIRE":1,"EARTH":2,"METAL":1,"WATER":1},"yinYang":{"YIN":3,"YANG":3},"calculationMode":"date-only","boundaryState":"exact","engineVersion":"mofu-eto-four-pillars-v1"}'::jsonb)$sql$,(select invite_token from created_group)), 'P0001', 'GROUP_FULL', '31st unique user is rejected');
+select throws_ok(format($sql$select * from public.join_group(%L,'Thirty first','sheep',null,'{"version":1,"zodiacId":"sheep","mbti":null,"dayMaster":{"element":"EARTH","polarity":"YIN"},"fiveElements":{"WOOD":1,"FIRE":1,"EARTH":2,"METAL":1,"WATER":1},"yinYang":{"YIN":3,"YANG":3},"calculationMode":"date-only","boundaryState":"exact","engineVersion":"mofu-eto-four-pillars-v1"}'::jsonb)$sql$,(select invite_token from created_group)), 'P0001', 'GROUP_FULL', '31st unique user is rejected');
 reset role;
 select is((select count(*) from public.group_members where group_id=(select group_id from created_group)), 30::bigint, 'capacity remains fixed at 30');
 
@@ -302,6 +352,12 @@ select is((select count(*) from public.relation_unlocks where group_id=(select g
 select ok((select member_low_id < member_high_id from unlock_result limit 1),'unlock pair is canonical');
 select is((select count(distinct unlocked_by) from unlock_result),1::bigint,'duplicate unlock preserves first unlocked_by audit');
 select is((select count(distinct unlocked_at) from unlock_result),1::bigint,'duplicate unlock preserves first unlocked_at audit');
+select is((select count(*) from unlock_result where unlocked_by <> '00000000-0000-0000-0000-000000000001'),0::bigint,'reversed cross-caller duplicate preserves the first caller as unlocked_by');
+select is((select count(distinct status) from unlock_result),1::bigint,'reversed cross-caller duplicate preserves status');
+select is((select status::text from unlock_result limit 1),'unlocked','unlock status remains unlocked');
+select is((select count(distinct payment_provider) from unlock_result),1::bigint,'reversed cross-caller duplicate preserves payment provider');
+select is((select payment_provider from unlock_result limit 1),'mock','unlock payment provider remains mock');
+select is((select count(*) from unlock_result where payment_reference is not null),0::bigint,'reversed cross-caller duplicate preserves null payment reference');
 select throws_ok(format($sql$insert into public.relation_unlocks(group_id,member_low_id,member_high_id,status,payment_provider,unlocked_by) values (%L,%L,%L,'unlocked','mock','00000000-0000-0000-0000-000000000001')$sql$,(select group_id from created_group),(select member_id from created_group),(select member_id from created_group)), '23514', null, 'canonical pair check rejects identical members');
 select throws_ok(format($sql$insert into public.relation_unlocks(group_id,member_low_id,member_high_id,status,payment_provider,unlocked_by) values (%L,least(%L::uuid,%L::uuid),greatest(%L::uuid,%L::uuid),'unlocked','mock','00000000-0000-0000-0000-000000000001')$sql$,(select group_id from created_group),(select member_id from created_group),(select member_id from other_group),(select member_id from created_group),(select member_id from other_group)), '23503', null, 'same-group composite foreign keys reject cross-group pairs');
 

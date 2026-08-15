@@ -44,7 +44,7 @@ begin
   if p_zodiac_id is null
      or p_zodiac_id not in (
        'rat', 'ox', 'tiger', 'rabbit', 'dragon', 'snake',
-       'horse', 'goat', 'monkey', 'rooster', 'dog', 'pig'
+       'horse', 'sheep', 'monkey', 'rooster', 'dog', 'boar'
      )
      or (p_mbti is not null and p_mbti not in (
        'ISTJ', 'ISFJ', 'INFJ', 'INTJ', 'ISTP', 'ISFP', 'INFP', 'INTP',
@@ -70,11 +70,11 @@ begin
        'polarity', v_polarity
      )
      or v_mode not in ('date-only', 'date-time')
-     or v_boundary not in ('exact', 'ambiguous') then
+     or v_boundary not in ('exact', 'solar-term-ambiguous') then
     return false;
   end if;
 
-  if v_boundary = 'ambiguous' then
+  if v_boundary = 'solar-term-ambiguous' then
     if v_mode <> 'date-only'
        or v_five_elements <> 'null'::jsonb
        or v_yin_yang <> 'null'::jsonb then
@@ -152,11 +152,12 @@ $$;
 
 alter function public._eto_profile_is_valid(text, text, jsonb) owner to postgres;
 revoke all on function public._eto_profile_is_valid(text, text, jsonb) from public, anon, authenticated;
+grant execute on function public._eto_profile_is_valid(text, text, jsonb) to service_role;
 
 alter table public.group_members
   add constraint group_members_zodiac_id_check check (zodiac_id in (
     'rat', 'ox', 'tiger', 'rabbit', 'dragon', 'snake',
-    'horse', 'goat', 'monkey', 'rooster', 'dog', 'pig'
+    'horse', 'sheep', 'monkey', 'rooster', 'dog', 'boar'
   )),
   add constraint group_members_mbti_check check (mbti is null or mbti in (
     'ISTJ', 'ISFJ', 'INFJ', 'INTJ', 'ISTP', 'ISFP', 'INFP', 'INTP',
