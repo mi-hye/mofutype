@@ -92,6 +92,24 @@ describe("production source safety", () => {
     expect(globalStyles).toContain("@media (forced-colors: active)");
   });
 
+  it("defines Kawaii Zine contracts for relationship and checkout surfaces", () => {
+    const globalStyles = readFileSync(path.join(sourceRoot, "app/globals.css"), "utf8");
+
+    for (const selector of [
+      ".relation-sheet {",
+      ".relation-sheet__locked {",
+      ".relation-sheet__details {",
+      ".relation-sheet__skeleton {",
+      ".checkout-panel {",
+      ".checkout-panel__notice {",
+      ".checkout-panel__price {",
+      ".checkout-panel fieldset {",
+      ".checkout-panel input[type=\"radio\"]",
+    ]) {
+      expect(globalStyles).toContain(selector);
+    }
+  });
+
   it("keeps semantic selected-edge colors visible against cream", () => {
     const globalStyles = readFileSync(path.join(sourceRoot, "app/globals.css"), "utf8");
     const cream = colorToken(globalStyles, "--cream");
