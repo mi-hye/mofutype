@@ -69,6 +69,7 @@ const memberRow = {
   zodiac_id: "dragon",
   mbti: "INFP",
   profile_payload: profile,
+  profile_version: 1,
   joined_at: "2026-08-15T00:01:00Z",
 };
 
@@ -281,7 +282,7 @@ class FakeSupabaseClient implements GroupRepositoryClient {
   async loadGroupMembers(groupId: string): Promise<Result> {
     return await this.from("group_members")
       .select(
-        "id,group_id,user_id,nickname,zodiac_id,mbti,profile_payload,joined_at",
+        "id,group_id,user_id,nickname,zodiac_id,mbti,profile_payload,profile_version,joined_at",
       )
       .eq("group_id", groupId);
   }
@@ -634,7 +635,7 @@ describe("group repository", () => {
     });
     expect(client.queries.get("groups")?.selected).toBe("id,name,max_members,created_at");
     expect(client.queries.get("group_members")?.selected).toBe(
-      "id,group_id,user_id,nickname,zodiac_id,mbti,profile_payload,joined_at",
+      "id,group_id,user_id,nickname,zodiac_id,mbti,profile_payload,profile_version,joined_at",
     );
     expect(client.queries.get("relation_unlocks")?.selected).toBe(
       "id,group_id,member_low_id,member_high_id,status,payment_provider,payment_reference,unlocked_by,unlocked_at",
@@ -743,6 +744,8 @@ describe("group repository", () => {
     ["missing polarity key", { ...memberRow, profile_payload: { ...profile, yinYang: { YIN: 6 } } }],
     ["zodiac scalar mismatch", { ...memberRow, zodiac_id: "rat" }],
     ["MBTI scalar mismatch", { ...memberRow, mbti: null }],
+    ["profile version mismatch", { ...memberRow, profile_version: 2 }],
+    ["invalid scalar profile version", { ...memberRow, profile_version: 1.5 }],
     ["invalid zodiac", { ...memberRow, zodiac_id: "phoenix", profile_payload: { ...profile, zodiacId: "phoenix" } }],
     ["invalid MBTI", { ...memberRow, mbti: "XXXX", profile_payload: { ...profile, mbti: "XXXX" } }],
     ["invalid day-master enum", { ...memberRow, profile_payload: { ...profile, dayMaster: { element: "LIGHT", polarity: "YANG" } } }],
@@ -1131,7 +1134,7 @@ describe("production Supabase adapter", () => {
       {
         table: "group_members",
         columns:
-          "id,group_id,user_id,nickname,zodiac_id,mbti,profile_payload,joined_at",
+          "id,group_id,user_id,nickname,zodiac_id,mbti,profile_payload,profile_version,joined_at",
         filter: ["group_id", "group-1"],
         single: false,
       },

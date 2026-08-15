@@ -262,6 +262,7 @@ export function mapGroupMember(value: unknown): GroupMember {
       "zodiac_id",
       "mbti",
       "profile_payload",
+      "profile_version",
       "joined_at",
     ]);
     const zodiacId = row.zodiac_id;
@@ -273,7 +274,17 @@ export function mapGroupMember(value: unknown): GroupMember {
       throw invalidData();
     }
     const profile = mapDerivedProfileUnsafe(row.profile_payload);
-    if (profile.zodiacId !== zodiacId || profile.mbti !== mbti) throw invalidData();
+    const profileVersion = row.profile_version;
+    if (
+      typeof profileVersion !== "number" ||
+      !Number.isInteger(profileVersion) ||
+      profileVersion !== 1 ||
+      profileVersion !== profile.version ||
+      profile.zodiacId !== zodiacId ||
+      profile.mbti !== mbti
+    ) {
+      throw invalidData();
+    }
     return {
       id: stringField(row, "id"),
       groupId: stringField(row, "group_id"),

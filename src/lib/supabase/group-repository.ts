@@ -500,7 +500,7 @@ export function createBrowserGroupRepository() {
 
 const GROUP_COLUMNS = "id,name,max_members,created_at";
 const MEMBER_COLUMNS =
-  "id,group_id,user_id,nickname,zodiac_id,mbti,profile_payload,joined_at";
+  "id,group_id,user_id,nickname,zodiac_id,mbti,profile_payload,profile_version,joined_at";
 const UNLOCK_COLUMNS =
   "id,group_id,member_low_id,member_high_id,status,payment_provider,payment_reference,unlocked_by,unlocked_at";
 
