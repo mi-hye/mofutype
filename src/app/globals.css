@@ -215,11 +215,13 @@ button, input, textarea, select { font: inherit; }
 .group-member-header { position: relative; isolation: isolate; display: grid; gap: var(--space-18); overflow: hidden; margin-bottom: 1.4rem; border: var(--border-subtle); border-radius: var(--radius-18); padding: clamp(1rem, 4vw, 1.8rem); background: linear-gradient(125deg, #fff 0 72%, #e9edef 72%); box-shadow: var(--shadow-pop); animation: rise-in 420ms ease-out both; }
 .group-member-header::after { position: absolute; right: 0; bottom: 0; z-index: -1; width: 7rem; height: 0.35rem; background: var(--accent-vermilion); content: ""; opacity: 0.9; }
 .group-member-header p { margin-block: 0.45rem 0; color: var(--text-muted); }
+.group-member-header:not(:has(.status-banner)) > div:first-child { padding-right: 6.5rem; }
+.group-member-header:not(:has(.status-banner)) .group-member-actions { position: absolute; top: clamp(1rem, 4vw, 1.8rem); right: clamp(1rem, 4vw, 1.8rem); display: flex; flex-wrap: nowrap; align-items: center; gap: 0.25rem; }
 .group-member-actions { display: flex; min-width: 0; flex-wrap: wrap; align-items: flex-start; gap: 0.7rem; }
 .group-member-actions > * { max-width: 100%; }
 .group-share-controls { display: grid; min-width: 0; justify-items: end; gap: 0.55rem; }
 .group-share-controls p { margin: 0; color: var(--text-muted); font-size: 0.75rem; font-weight: 650; }
-.group-share-button { width: 46px; min-width: 46px; min-height: 46px; padding: 0 !important; border-radius: 0.8rem; background: var(--surface-mint) !important; box-shadow: 0 7px 16px rgb(41 75 99 / 10%); }
+.group-share-button { width: 46px; min-width: 46px; min-height: 46px; padding: 0 !important; border: 0 !important; border-radius: 0.8rem; background: transparent !important; box-shadow: none !important; }
 .group-share-button > span:first-child { display: grid; place-items: center; }
 .group-share-button svg { width: 1.2rem; height: 1.2rem; overflow: visible; fill: none; stroke: var(--ink); }
 .group-refresh-button { width: 46px; min-width: 46px; min-height: 46px; padding: 0 !important; border: 0 !important; background: transparent !important; box-shadow: none !important; }

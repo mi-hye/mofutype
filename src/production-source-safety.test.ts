@@ -93,6 +93,9 @@ describe("production source safety", () => {
     expect(globalStyles).toContain("@media (max-width: 23rem)");
     expect(globalStyles).toContain("@media (min-width: 64rem)");
     expect(globalStyles).toContain("@media (forced-colors: active)");
+    expect(globalStyles).toContain(
+      ".group-member-header:not(:has(.status-banner)) .group-member-actions",
+    );
   });
 
   it("defines Urban Utility contracts for relationship and checkout surfaces", () => {
