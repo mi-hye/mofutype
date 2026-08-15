@@ -104,7 +104,7 @@ button, input, textarea, select { font: inherit; }
 .hero__node { position: absolute; z-index: 1; width: clamp(4.2rem, 18vw, 5.4rem); aspect-ratio: 1; border: 0; padding: 0; background: transparent; color: var(--ink); cursor: pointer; transition: transform 180ms ease; -webkit-tap-highlight-color: transparent; }
 .hero__node-frame { position: relative; display: grid; width: 100%; height: 100%; place-items: center; }
 .hero__node-frame::before { position: absolute; inset: 0.18rem; z-index: 0; border: 2px solid var(--surface-elevated); border-radius: 50%; background: var(--surface-elevated); content: ""; filter: none; box-shadow: 0 8px 18px rgb(var(--ink-rgb) / 8%); }
-.hero__node-type { position: absolute; top: 0.68rem; left: 50%; z-index: 2; transform: translateX(-50%); font-size: 0.68rem; font-weight: 800; letter-spacing: 0.03em; line-height: 1; }
+.hero__node-type { position: absolute; top: calc(0.68rem + 1px); left: 50%; z-index: 2; transform: translateX(-50%); font-size: 0.68rem; font-weight: 800; letter-spacing: 0.03em; line-height: 1; }
 .hero__node img { position: absolute; right: 0.6rem; bottom: 0.32rem; left: 0.6rem; z-index: 1; width: calc(100% - 1.2rem); height: calc(100% - 1.45rem); object-fit: contain; filter: drop-shadow(0 2px 1px rgb(var(--ink-rgb) / 10%)); }
 .hero__tape .hero__node-frame::before { border-color: var(--animal-tiger-border); background: var(--animal-tiger-pastel); }
 .hero__dots .hero__node-frame::before { border-color: var(--animal-rat-border); background: var(--animal-rat-pastel); }

@@ -226,7 +226,7 @@ describe("production source safety", () => {
     ]) expect(globalStyles).toContain(token);
     expect(globalStyles).toContain("--relationship-warm: #b87716");
     expect(globalStyles).toMatch(/\.hero__node-frame::before[^}]*border:\s*2px solid var\(--surface-elevated\)[^}]*filter:\s*none/);
-    expect(globalStyles).toMatch(/\.hero__node-type[^}]*top:\s*0\.68rem/);
+    expect(globalStyles).toMatch(/\.hero__node-type[^}]*top:\s*calc\(0\.68rem \+ 1px\)/);
     expect(globalStyles).toMatch(/\.hero__tape \.hero__node-frame::before[^}]*background:\s*var\(--animal-tiger-pastel\)/);
     expect(globalStyles).toContain("border-color: var(--animal-tiger-border)");
     expect(globalStyles).toContain("border-color: var(--animal-rat-border)");
