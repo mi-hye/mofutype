@@ -9,6 +9,7 @@ import { StatusBanner, type ConnectionStatus } from "@/components/ui/status-bann
 import { RelationSheet } from "@/features/relationship/relation-sheet";
 import { GroupShareControls } from "@/features/share/group-share-controls";
 import { ANIMALS } from "@/lib/astrology/animals";
+import type { AnimalId } from "@/lib/astrology/types";
 import type {
   GroupAggregate,
   GroupSubscriptionCallbacks,
@@ -28,6 +29,57 @@ interface GroupScreenProps {
   inviteToken?: string;
   currentUserId?: string;
 }
+
+const ANIMAL_RESULT_COPY: Record<AnimalId, { title: string; description: string }> = {
+  fawn: {
+    title: "やさしいこじか",
+    description: "周りの空気を丁寧に感じ取り、安心できる関係を育てるタイプ。控えめに見えても、大切な人を守るときには芯の強さが表れます。",
+  },
+  raccoon: {
+    title: "勇ましいたぬき",
+    description: "人との縁を大切にしながら、いざというときには腹を決めて動けるタイプ。親しみやすさの奥に、現実をしっかり見つめる強さがあります。",
+  },
+  "black-panther": {
+    title: "凛とした黒ひょう",
+    description: "自分らしい美意識と判断軸を持ち、スマートに道を選ぶタイプ。静かな集中力で、決めたことを最後まで磨き上げます。",
+  },
+  sheep: {
+    title: "思いやり深いひつじ",
+    description: "相手の気持ちを汲み取り、みんなが落ち着ける場所をつくるタイプ。協調性の中にも、自分なりの誠実な基準があります。",
+  },
+  wolf: {
+    title: "芯のある狼",
+    description: "周囲に流されず、自分のペースで本質を追いかけるタイプ。ひとりで考える時間を力に変え、独自の答えを見つけます。",
+  },
+  monkey: {
+    title: "好奇心旺盛な猿",
+    description: "気になることへ素早く手を伸ばし、経験から学びを増やすタイプ。軽やかな発想と行動力で、場の流れを前へ進めます。",
+  },
+  tiger: {
+    title: "堂々とした虎",
+    description: "責任感が強く、決めた目標へまっすぐ進むタイプ。落ち着いた存在感と面倒見のよさで、自然と信頼を集めます。",
+  },
+  koala: {
+    title: "おおらかなコアラ",
+    description: "穏やかな雰囲気の中で、自分の楽しみと居心地を大切にするタイプ。柔らかな発想で、毎日に小さな余白をつくります。",
+  },
+  cheetah: {
+    title: "まっすぐなチータ",
+    description: "目標が見えると迷わず走り出し、スピード感を力に変えるタイプ。率直な情熱が、周囲にも前向きな勢いを与えます。",
+  },
+  lion: {
+    title: "誇り高いライオン",
+    description: "高い理想を掲げ、自分にも周囲にも誠実であろうとするタイプ。堂々とした決断力で、みんなの目印になる存在です。",
+  },
+  elephant: {
+    title: "頼もしいゾウ",
+    description: "目の前のことを着実に積み重ね、大きな安心感を生むタイプ。簡単には揺らがない粘り強さで、仲間を支えます。",
+  },
+  pegasus: {
+    title: "自由なペガサス",
+    description: "ひらめきと感性を頼りに、まだ見えない可能性へ飛び込むタイプ。型に収まらない視点が、新しい景色を連れてきます。",
+  },
+};
 
 function upsertById<T extends { id: string }>(items: readonly T[], incoming: T): T[] {
   const index = items.findIndex((item) => item.id === incoming.id);
@@ -304,6 +356,7 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken, curren
     ? aggregate.members.find((member) => member.userId === activeUserId) ?? null
     : null;
   const currentAnimal = currentMember ? ANIMALS[currentMember.animalId] : null;
+  const currentResultCopy = currentMember ? ANIMAL_RESULT_COPY[currentMember.animalId] : null;
   const animalGroupLabel = currentMember
     ? { MOON: "月タイプ", EARTH: "地球タイプ", SUN: "太陽タイプ" }[currentMember.animalGroup]
     : null;
@@ -354,28 +407,29 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken, curren
       ) : null}
 
       <GroupGraph members={aggregate.members} unlocks={aggregate.unlocks} onPairSelect={setSelectedPair} />
-      {currentMember && currentAnimal ? (
+      {currentMember && currentAnimal && currentResultCopy ? (
         <section className="my-result-card" aria-labelledby="my-result-title">
-          <div className="my-result-card__heading">
-            <h2 id="my-result-title">わたしの四柱推命結果</h2>
-          </div>
-          <div className="my-result-card__content">
+          <div className="my-result-card__summary">
             <AnimalAvatar
               animalId={currentMember.animalId}
               nickname={currentMember.nickname}
               size="md"
               src={`/animals/faces/${currentMember.animalId}.png`}
             />
-            <div>
-              <span className="my-result-card__label">動物タイプ</span>
-              <strong>{currentAnimal.nameJa}</strong>
-              <p>{currentMember.nickname}さんの生年月日から導いたタイプです。</p>
+            <div className="my-result-card__identity">
+              <span id="my-result-title">わたしの四柱推命</span>
+              <strong>{currentResultCopy.title}</strong>
               <ul aria-label="診断結果の詳細">
                 <li>{currentMember.mbti ?? "MBTI未設定"}</li>
                 <li>{animalGroupLabel}</li>
                 <li>{currentMember.profile.calculationMode === "date-time" ? "出生時刻を反映" : "生年月日で診断"}</li>
               </ul>
             </div>
+          </div>
+          <div className="my-result-card__reading">
+            <h2>生まれ持った気質</h2>
+            <p>{currentResultCopy.description}</p>
+            <small>{currentAnimal.nameJa}タイプとして、生年月日から導いた傾向です。</small>
           </div>
         </section>
       ) : null}
