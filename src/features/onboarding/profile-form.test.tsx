@@ -23,6 +23,9 @@ describe("ProfileForm", () => {
     expect(screen.getByLabelText("出生時刻")).toHaveAttribute("type", "time");
     expect(screen.getByLabelText("MBTI").tagName).toBe("SELECT");
     expect(screen.getByLabelText("MBTI").querySelectorAll("option")).toHaveLength(17);
+    expect(screen.getByText(
+      "十二支は1月1日を境にし、四柱は立春などの節入りを基準にします。",
+    )).toBeVisible();
   });
 
   it("clears and disables time when わからない is selected", async () => {

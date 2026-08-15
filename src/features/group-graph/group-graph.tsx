@@ -166,6 +166,9 @@ function GroupGraphComponent({
                 {node.data.member.nickname}を選択
                 {node.data.discriminator ? `（${node.data.discriminator}）` : ""}
               </button>
+              <span className="group-graph__member-character">
+                {node.data.characterTitleJa}
+              </span>
             </li>
           ))}
         </ul>

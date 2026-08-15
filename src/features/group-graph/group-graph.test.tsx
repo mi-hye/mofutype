@@ -73,6 +73,19 @@ function member(id: string, nickname = id, zodiacId: ZodiacId = "dragon"): Group
   };
 }
 
+function memberWithMbti(
+  id: string,
+  nickname: string,
+  zodiacId: ZodiacId,
+  mbti: "ENFP" | null,
+): GroupMember {
+  return {
+    ...member(id, nickname, zodiacId),
+    mbti,
+    profile: { ...profile(zodiacId), mbti },
+  };
+}
+
 function unlock(low: string, high: string): RelationUnlock {
   return {
     id: `u-${low}-${high}`, groupId: "g1", memberLowId: low, memberHighId: high,
@@ -95,6 +108,31 @@ describe("GroupGraph", () => {
     expect(screen.getByRole("status", { name: "選択中のメンバー" })).toHaveTextContent("2本");
     await user.click(screen.getByTestId("canvas-pane"));
     expect(screen.queryByRole("status", { name: "選択中のメンバー" })).not.toBeInTheDocument();
+  });
+
+  it("shows each free member's zodiac character title with and without MBTI", () => {
+    render(
+      <GroupGraph
+        members={[
+          memberWithMbti("a", "あお", "boar", "ENFP"),
+          memberWithMbti("b", "べに", "monkey", null),
+        ]}
+        unlocks={[]}
+        onPairSelect={vi.fn()}
+      />,
+    );
+
+    expect(within(screen.getByTestId("canvas-node-a"))
+      .getByText("好奇心のまま駆け出すいのしし")).toBeInTheDocument();
+    expect(within(screen.getByTestId("canvas-node-b"))
+      .getByText("さるタイプ")).toBeInTheDocument();
+
+    const accessibleList = screen.getByRole("region", {
+      name: "関係性グラフの操作リスト",
+    });
+    expect(within(accessibleList).getByText("好奇心のまま駆け出すいのしし"))
+      .toBeInTheDocument();
+    expect(within(accessibleList).getByText("さるタイプ")).toBeInTheDocument();
   });
 
   it("sends a stable complete payload when an edge is clicked", async () => {

@@ -34,6 +34,9 @@ export function ZodiacNode({ data }: { data: ZodiacNodeData }) {
       <span className="zodiac-graph-node__nickname">
         {data.member.nickname}
       </span>
+      <span className="zodiac-graph-node__character-title">
+        {data.characterTitleJa}
+      </span>
       {data.discriminator ? (
         <span className="zodiac-graph-node__discriminator">
           {data.discriminator}

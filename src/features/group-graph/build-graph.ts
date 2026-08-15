@@ -1,5 +1,6 @@
 import type { Edge, Node } from "@xyflow/react";
 
+import { createCharacterCopy } from "@/lib/eto/character";
 import {
   createEtoRelationship,
   type CreateEtoRelationshipInput,
@@ -22,6 +23,7 @@ export interface TopologyNodeData extends Record<string, unknown> {
   member: RelationshipGraphMember;
   size: GraphNodeSize;
   discriminator: string | null;
+  characterTitleJa: string;
   accessibleLabel: string;
 }
 
@@ -174,6 +176,7 @@ export function buildGraphTopology(
   const discriminators = uniquePrefixes(sorted);
   const nodes = sorted.map<TopologyNode>((item, index) => {
     const discriminator = discriminators.get(item.id) ?? null;
+    const characterTitleJa = createCharacterCopy(item.zodiacId, item.mbti).titleJa;
     return {
       id: item.id,
       type: "zodiac",
@@ -184,6 +187,7 @@ export function buildGraphTopology(
         member: item,
         size,
         discriminator,
+        characterTitleJa,
         accessibleLabel: discriminator
           ? `${item.nickname}（識別子 ${discriminator}）の関係性ノード`
           : `${item.nickname}の関係性ノード`,

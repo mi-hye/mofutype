@@ -39,6 +39,9 @@ export function RelationSheet({
   onClose,
 }: RelationSheetProps) {
   const boundaryDistributionUnavailable = hasUnavailableBoundaryDistribution(memberProfiles);
+  const usesDateOnlyAnalysis = memberProfiles.some(
+    (profile) => profile.calculationMode === "date-only",
+  );
   const mbtiInsight = relationship.mbtiInsight;
 
   return (
@@ -53,6 +56,9 @@ export function RelationSheet({
       </header>
       <p className="relation-sheet__category">{relationship.categoryLabelJa}</p>
       <h2 id="relation-sheet-title">{relationship.headlineJa}</h2>
+      {usesDateOnlyAnalysis ? (
+        <p className="relation-sheet__note">出生時刻を使わない分析です</p>
+      ) : null}
       {detailHref ? <a href={detailHref}>この関係の共有ページ</a> : null}
 
       {unlocked ? (

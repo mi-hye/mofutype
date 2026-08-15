@@ -161,6 +161,42 @@ describe("RelationSheet", () => {
     expect(screen.queryByText(/バランスが整|均衡して|不足がない/)).not.toBeInTheDocument();
   });
 
+  it("neutrally explains date-only analysis independent of solar-term ambiguity", () => {
+    const dateOnlyExactProfile: DerivedEtoProfile = {
+      ...exactProfile,
+      calculationMode: "date-only",
+      boundaryState: "exact",
+    };
+    render(
+      <RelationSheet
+        relationship={relationship}
+        memberNames={["あお", "もも"]}
+        memberProfiles={[exactProfile, dateOnlyExactProfile]}
+        unlocked={false}
+        checkoutHref="#"
+      />,
+    );
+
+    expect(screen.getByText("出生時刻を使わない分析です")).toBeInTheDocument();
+    expect(screen.queryByText("節入りの境界に近いため、五行と陰陽の分布は表示していません。"))
+      .not.toBeInTheDocument();
+    expect(screen.queryByText(/不利|不足|精度|ペナルティ/)).not.toBeInTheDocument();
+  });
+
+  it("omits the date-only note when both profiles use birth time", () => {
+    render(
+      <RelationSheet
+        relationship={relationship}
+        memberNames={["あお", "もも"]}
+        memberProfiles={[exactProfile, exactProfile]}
+        unlocked
+        checkoutHref="#"
+      />,
+    );
+
+    expect(screen.queryByText("出生時刻を使わない分析です")).not.toBeInTheDocument();
+  });
+
   it("does not infer a solar-term boundary from insight prose", () => {
     render(
       <RelationSheet

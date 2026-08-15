@@ -20,6 +20,12 @@ test("three independent members share one unlocked relationship", async ({ brows
       await expect(page.locator(".react-flow__edge")).toHaveCount(3);
       await expect(page.getByTestId("zodiac-avatar")).toHaveCount(3);
     }
+    await expect(pageA.locator(".zodiac-graph-node__character-title", {
+      hasText: "好奇心のまま駆け出すいのしし",
+    })).toBeVisible();
+    await expect(pageA.locator(".zodiac-graph-node__character-title", {
+      hasText: "さるタイプ",
+    })).toBeVisible();
 
     await pageA.getByRole("button", { name: "Aさんを選択" }).click();
     await pageA.getByRole("button", { name: /^AさんとBさんの関係を見る/ }).click();

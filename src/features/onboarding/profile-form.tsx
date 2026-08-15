@@ -53,6 +53,9 @@ export function ProfileForm({ value, onChange, errors, maxBirthDate, disabled = 
 
   return (
     <div className="profile-fields">
+      <p className="profile-fields__guidance">
+        十二支は1月1日を境にし、四柱は立春などの節入りを基準にします。
+      </p>
       {field("nickname", "ニックネーム", (
         <input id={`${prefix}-nickname`} type="text" value={value.nickname} maxLength={20}
           onChange={(event) => update("nickname", event.target.value)} disabled={disabled}
