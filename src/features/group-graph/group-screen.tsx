@@ -136,6 +136,57 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken }: Grou
     const revisionBeforeLoad = changeRevision.current;
     const request = loadRequest.current + 1;
     loadRequest.current = request;
+    let reconciliationTimer: ReturnType<typeof setTimeout> | undefined;
+    let periodicReconciliationActive = false;
+    let reconciliationInFlight: Promise<void> | null = null;
+    const reconcileLatestSnapshot = () => {
+      if (reconciliationInFlight) return reconciliationInFlight;
+      const run = (async () => {
+        const revisionBeforeReconcile = changeRevision.current;
+        const reconcileRequest = loadRequest.current + 1;
+        loadRequest.current = reconcileRequest;
+        try {
+          const fresh = await repository.loadGroup(initialAggregate.group.id);
+          if (
+            generation.current === currentGeneration &&
+            loadRequest.current === reconcileRequest
+          ) {
+            setLoadError(false);
+            setAggregate((current) => mergeSnapshotAggregate(
+              fresh,
+              current,
+              memberRevisions.current,
+              unlockRevisions.current,
+              revisionBeforeReconcile,
+            ));
+          }
+        } catch {
+          if (
+            generation.current === currentGeneration &&
+            loadRequest.current === reconcileRequest
+          ) setLoadError(true);
+        }
+      })();
+      reconciliationInFlight = run;
+      void run.then(() => {
+        if (reconciliationInFlight === run) reconciliationInFlight = null;
+      });
+      return run;
+    };
+    const scheduleReconciliation = (delay: number) => {
+      reconciliationTimer = setTimeout(() => {
+        if (document.visibilityState === "hidden") {
+          if (periodicReconciliationActive) scheduleReconciliation(30_000);
+          return;
+        }
+        void reconcileLatestSnapshot().finally(() => {
+          if (
+            periodicReconciliationActive &&
+            generation.current === currentGeneration
+          ) scheduleReconciliation(30_000);
+        });
+      }, delay);
+    };
     const callbacks: GroupSubscriptionCallbacks = {
       onMemberChange: ({ new: member }) => {
         if (generation.current === currentGeneration) applyMember(member);
@@ -146,6 +197,19 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken }: Grou
       onConnectionStatus: (nextStatus) => {
         if (generation.current === currentGeneration) {
           setStatus(connectionStatus(nextStatus));
+          if (nextStatus === "SUBSCRIBED") {
+            void reconcileLatestSnapshot();
+            if (!periodicReconciliationActive) {
+              periodicReconciliationActive = true;
+              scheduleReconciliation(5_000);
+            }
+          } else {
+            periodicReconciliationActive = false;
+            if (reconciliationTimer !== undefined) {
+              clearTimeout(reconciliationTimer);
+              reconciliationTimer = undefined;
+            }
+          }
         }
       },
       onError: () => {
@@ -183,6 +247,8 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken }: Grou
     });
 
     return () => {
+      periodicReconciliationActive = false;
+      if (reconciliationTimer !== undefined) clearTimeout(reconciliationTimer);
       if (generation.current === currentGeneration) generation.current += 1;
       if (cleanup) void cleanup();
     };
