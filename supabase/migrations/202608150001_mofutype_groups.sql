@@ -41,6 +41,16 @@ create table public.group_members (
     false
   )),
   joined_at timestamptz not null default now(),
+  constraint group_members_animal_group_check check (
+    animal_id not in (
+      'fawn', 'raccoon', 'black-panther', 'sheep',
+      'wolf', 'monkey', 'tiger', 'koala',
+      'cheetah', 'lion', 'elephant', 'pegasus'
+    )
+    or (animal_id in ('fawn', 'raccoon', 'black-panther', 'sheep') and animal_group = 'MOON')
+    or (animal_id in ('wolf', 'monkey', 'tiger', 'koala') and animal_group = 'EARTH')
+    or (animal_id in ('cheetah', 'lion', 'elephant', 'pegasus') and animal_group = 'SUN')
+  ),
   constraint group_members_group_user_key unique (group_id, user_id),
   constraint group_members_group_id_id_key unique (group_id, id)
 );

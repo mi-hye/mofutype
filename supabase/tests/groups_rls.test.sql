@@ -182,6 +182,25 @@ select throws_ok(
   format($sql$insert into public.group_members(group_id,user_id,nickname,animal_id,animal_group,mbti,profile_payload) values (%L,'00000000-0000-0000-0000-000000000003','Null MBTI','fawn','MOON','INFP','{"version":1,"animalId":"fawn","animalGroup":"MOON","mbti":null,"calculationMode":"date-only"}')$sql$, (select group_id from created_group)),
   '23514', 'new row for relation "group_members" violates check constraint "group_members_profile_payload_check"', 'table rejects null payload MBTI when scalar MBTI is non-null'
 );
+select throws_ok(
+  format($sql$insert into public.group_members(group_id,user_id,nickname,animal_id,animal_group,mbti,profile_payload) values (%L,'00000000-0000-0000-0000-000000000003','Wrong mapping','fawn','EARTH',null,'{"version":1,"animalId":"fawn","animalGroup":"EARTH","mbti":null,"calculationMode":"date-only"}')$sql$, (select group_id from created_group)),
+  '23514', 'new row for relation "group_members" violates check constraint "group_members_animal_group_check"', 'table rejects a valid animal paired with the wrong group'
+);
+delete from public.group_members where user_id = '00000000-0000-0000-0000-000000000003';
+select lives_ok(
+  format($sql$insert into public.group_members(group_id,user_id,nickname,animal_id,animal_group,mbti,profile_payload) values (%L,'00000000-0000-0000-0000-000000000003','Valid moon','fawn','MOON',null,'{"version":1,"animalId":"fawn","animalGroup":"MOON","mbti":null,"calculationMode":"date-only"}')$sql$, (select group_id from created_group)),
+  'table accepts a representative MOON mapping'
+);
+delete from public.group_members where user_id = '00000000-0000-0000-0000-000000000003';
+select lives_ok(
+  format($sql$insert into public.group_members(group_id,user_id,nickname,animal_id,animal_group,mbti,profile_payload) values (%L,'00000000-0000-0000-0000-000000000003','Valid earth','wolf','EARTH',null,'{"version":1,"animalId":"wolf","animalGroup":"EARTH","mbti":null,"calculationMode":"date-only"}')$sql$, (select group_id from created_group)),
+  'table accepts a representative EARTH mapping'
+);
+delete from public.group_members where user_id = '00000000-0000-0000-0000-000000000003';
+select lives_ok(
+  format($sql$insert into public.group_members(group_id,user_id,nickname,animal_id,animal_group,mbti,profile_payload) values (%L,'00000000-0000-0000-0000-000000000003','Valid sun','lion','SUN',null,'{"version":1,"animalId":"lion","animalGroup":"SUN","mbti":null,"calculationMode":"date-only"}')$sql$, (select group_id from created_group)),
+  'table accepts a representative SUN mapping'
+);
 delete from public.group_members where user_id = '00000000-0000-0000-0000-000000000003';
 
 select is((select name from public.groups where id = (select group_id from created_group)), 'Best Friends', 'create trims group name');
@@ -306,6 +325,10 @@ do $capacity$
 declare
   n integer;
 begin
+  -- pgTAP runs this file in one session. The group row's FOR UPDATE lock serializes
+  -- competing joins; the unique (group_id, user_id) constraint is the final guard.
+  -- A test-only cross-session extension would broaden database privileges, so the
+  -- suite verifies the same capacity and uniqueness invariants sequentially here.
   for n in 1..28 loop
     perform set_config('request.jwt.claim.sub', ('10000000-0000-0000-0000-' || lpad(n::text, 12, '0')), true);
     perform * from public.join_group((select invite_token from created_group), 'Member ' || n, 'koala', 'EARTH', null, '{"version":1,"animalId":"koala","animalGroup":"EARTH","mbti":null,"calculationMode":"date-only"}'::jsonb);
