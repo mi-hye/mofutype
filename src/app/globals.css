@@ -187,7 +187,8 @@ button, input, textarea, select { font: inherit; }
 .unknown-toggle:has(input:checked) { border-color: var(--accent-navy); background: var(--surface-mint); color: var(--ink); box-shadow: 0 5px 12px rgb(41 75 99 / 10%); }
 .unknown-toggle input { width: 1.2rem; height: 1.2rem; margin: 0; accent-color: var(--accent-vermilion); }
 .field-error, .form-error { width: fit-content; max-width: 100%; margin: 0; border: 1px solid #d98c86; border-left: 5px solid var(--accent-coral); border-radius: 0.55rem; padding: 0.34rem 0.62rem; background: var(--surface-error); color: var(--text-error); font-size: 0.82rem; font-weight: 700; overflow-wrap: anywhere; animation: nudge-in 220ms ease-out both; }
-.start-group-form { align-content: start; min-height: 15rem; }
+.start-group-form { align-content: start; }
+.start-group-form > .ui-button { width: fit-content; min-width: 7rem; justify-self: end; padding-inline: 1.4rem; }
 .start-group-form .form-field input { min-height: 56px; font-size: 1.05rem; font-weight: 650; }
 .start-group-form__note { margin: 0; color: var(--text-muted); font-size: 0.8rem; text-align: center; }
 

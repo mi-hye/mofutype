@@ -13,7 +13,7 @@ describe("Home", () => {
     expect(targetId).toBeTruthy();
     expect(document.getElementById(targetId!)).toBeInTheDocument();
     expect(screen.getByRole("form", { name: "グループ名入力フォーム" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "次へ：プロフィール入力" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "次へ" })).toBeInTheDocument();
     expect(screen.getByLabelText("グループ名")).toBeInTheDocument();
     expect(screen.queryByLabelText("ニックネーム")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("生年月日")).not.toBeInTheDocument();

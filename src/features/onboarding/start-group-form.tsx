@@ -49,7 +49,7 @@ export function StartGroupForm({
           aria-invalid={Boolean(error) || undefined} autoComplete="organization" />
         {error ? <p className="field-error" id="start-group-name-error" role="alert">{error}</p> : null}
       </div>
-      <Button type="submit" size="lg">次へ：プロフィール入力</Button>
+      <Button type="submit" size="lg">次へ</Button>
       <p className="start-group-form__note">グループはプロフィール入力のあとに作成されます。</p>
     </form>
   );

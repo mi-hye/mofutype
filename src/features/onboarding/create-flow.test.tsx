@@ -16,7 +16,7 @@ describe("two-step group creation", () => {
     const start = render(<StartGroupForm navigate={navigateToProfile} />);
 
     await user.type(screen.getByLabelText("グループ名"), "  放課後クラブ  ");
-    await user.click(screen.getByRole("button", { name: "次へ：プロフィール入力" }));
+    await user.click(screen.getByRole("button", { name: "次へ" }));
 
     expect(navigateToProfile).toHaveBeenCalledWith("/create/profile");
     expect(sessionStorage.getItem(CREATE_DRAFT_KEY)).toContain("放課後クラブ");
@@ -54,7 +54,7 @@ describe("two-step group creation", () => {
     const navigate = vi.fn();
     render(<StartGroupForm navigate={navigate} />);
 
-    await user.click(screen.getByRole("button", { name: "次へ：プロフィール入力" }));
+    await user.click(screen.getByRole("button", { name: "次へ" }));
 
     expect(screen.getByRole("alert")).toHaveTextContent("グループ名を入力してください");
     expect(navigate).not.toHaveBeenCalled();
