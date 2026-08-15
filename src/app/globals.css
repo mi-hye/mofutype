@@ -146,12 +146,12 @@ button, input, textarea, select { font: inherit; }
 .animal-avatar__fallback { display: grid; width: 100%; height: 100%; place-items: center; padding: 0.25rem; text-align: center; font-size: 0.72em; font-weight: 750; }
 .animal-avatar__selected-mark { position: absolute; right: 5%; bottom: 5%; width: 20%; min-width: 0.7rem; aspect-ratio: 1; border: 2px solid #fff; border-radius: 50%; background: var(--accent-vermilion); }
 
-.landing-shell { width: min(calc(100% - 1.5rem), var(--content-wide)); margin-inline: auto; padding: 0.9rem 0 5rem; }
+.landing-shell { width: min(calc(100% - 1.5rem), 58rem); margin-inline: auto; padding: 0.9rem 0 5rem; }
 .landing-nav { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.2rem 0 0.9rem; transform: rotate(-0.08deg); }
 .wordmark { color: var(--ink); font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; letter-spacing: -0.035em; text-decoration: none; }
 .edition-label { border: 1.5px solid rgb(18 59 93 / 48%); border-radius: 999px; padding: 0.42rem 0.75rem; background: var(--butter); color: var(--accent-navy); font-size: 0.62rem; font-weight: 700; letter-spacing: 0.07em; box-shadow: 2px 3px 0 rgb(18 59 93 / 8%); }
-.hero { position: relative; display: grid; min-width: 0; gap: 1.15rem; overflow: visible; margin-top: 2.5rem; border: 0; border-radius: 0; padding: 0; background: transparent; box-shadow: none; }
-.hero__decor { position: relative; order: 3; width: 100%; height: clamp(14rem, 70vw, 20rem); overflow: hidden; border: var(--border-panel); border-radius: 2.5rem 2.2rem 2.65rem 2.1rem / 2.25rem 2.6rem 2.15rem 2.55rem; outline: 1px solid rgb(18 59 93 / 12%); outline-offset: -5px; background-color: rgb(255 253 249 / 76%); background-image: linear-gradient(rgb(18 59 93 / 5%) 1px, transparent 1px), linear-gradient(90deg, rgb(18 59 93 / 5%) 1px, transparent 1px); background-size: 28px 28px; box-shadow: 3px 4px 0 rgb(18 59 93 / 6%), inset 0 0 40px rgb(246 221 162 / 18%); }
+.hero { position: relative; display: grid; width: min(100%, 52rem); min-width: 0; gap: 1.15rem; overflow: visible; margin: 2.75rem auto 0; border: 0; border-radius: 0; padding: 0; background: transparent; box-shadow: none; }
+.hero__decor { position: relative; order: 3; width: 100%; height: clamp(16rem, 62vw, 30rem); overflow: hidden; border: var(--border-panel); border-radius: 2.5rem 2.2rem 2.65rem 2.1rem / 2.25rem 2.6rem 2.15rem 2.55rem; outline: 1px solid rgb(18 59 93 / 12%); outline-offset: -5px; background-color: rgb(255 253 249 / 76%); background-image: linear-gradient(rgb(18 59 93 / 5%) 1px, transparent 1px), linear-gradient(90deg, rgb(18 59 93 / 5%) 1px, transparent 1px); background-size: 28px 28px; box-shadow: 3px 4px 0 rgb(18 59 93 / 6%), inset 0 0 40px rgb(246 221 162 / 18%); }
 .hero__connectors { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
 .hero__connectors line { stroke: #61798a; stroke-width: 1.35; stroke-linecap: round; vector-effect: non-scaling-stroke; }
 .hero__tape, .hero__dots, .hero__stripe { position: absolute; z-index: 1; display: grid; width: clamp(4.2rem, 18vw, 5.4rem); aspect-ratio: 1; place-items: center; border: 2px solid var(--accent-navy); border-radius: 46% 54% 49% 51% / 52% 46% 54% 48%; box-shadow: inset 0 0 0 4px rgb(255 255 255 / 18%), 0 10px 22px rgb(18 59 93 / 14%); color: #fff; font-size: 0.82rem; font-weight: 800; letter-spacing: 0.03em; }
@@ -171,8 +171,8 @@ button, input, textarea, select { font: inherit; }
 .hero__copy { order: 5; max-width: var(--content-reading); margin: 0; color: var(--text-muted); font-size: clamp(0.98rem, 2vw, 1.08rem); }
 .hero__actions { order: 6; display: flex; flex-direction: column; align-items: stretch; gap: 0.8rem; }
 .hero__cta { text-decoration: none; }
-.create-section { display: grid; gap: 1.5rem; margin: 4.5rem 0; padding-top: 1rem; scroll-margin-top: 1.5rem; }
-.create-section__intro { position: relative; max-width: 33rem; padding: 0; }
+.create-section { display: grid; width: min(100%, 46rem); gap: 1.5rem; margin: 5.5rem auto 0; padding-top: 1rem; scroll-margin-top: 1.5rem; }
+.create-section__intro { position: relative; max-width: 40rem; padding: 0; }
 .create-section__intro h2 { margin: 0.55rem 0 0; color: var(--accent-navy); font-family: var(--font-display); font-size: clamp(2rem, 6vw, 3.2rem); font-weight: 700; letter-spacing: -0.025em; line-height: 1.15; }
 .create-section__intro p:last-child { color: var(--text-muted); }
 .create-section > .ui-card { border-radius: var(--radius-18); background: radial-gradient(circle at 94% 8%, #fae4dd 0 7rem, transparent 15rem), #fffdf9; }
@@ -433,7 +433,6 @@ button, input, textarea, select { font: inherit; }
 @media (min-width: 40rem) {
   .landing-shell { padding-top: 1.5rem; }
   .hero__actions { flex-direction: row; }
-  .create-section { grid-template-columns: minmax(0, 0.9fr) minmax(20rem, 1.1fr); align-items: start; }
   .group-member-shell { width: min(calc(100% - 2rem), 82rem); padding-top: 2rem; }
   .group-member-header { grid-template-columns: minmax(0, 1fr) auto; align-items: end; }
   .group-member-actions { justify-content: flex-end; }
@@ -444,13 +443,8 @@ button, input, textarea, select { font: inherit; }
 }
 
 @media (min-width: 64rem) {
-  .hero { grid-template-columns: minmax(0, 1.05fr) minmax(24rem, 0.95fr); grid-template-rows: repeat(5, auto); align-items: start; column-gap: clamp(3rem, 7vw, 7rem); padding: 3rem 0 1rem; }
-  .hero__eyebrow, .hero h1, .hero__stickers, .hero__copy, .hero__actions { grid-column: 1; }
-  .hero__decor { grid-column: 2; grid-row: 1 / 7; height: 100%; min-height: 36rem; border: var(--border-panel); }
   .hero__tape, .hero__dots, .hero__stripe { width: 6.2rem; }
   .hero__tape { left: calc(50% - 3.1rem); }
-  .create-section { grid-template-columns: minmax(16rem, 0.75fr) minmax(30rem, 1.25fr); gap: clamp(3rem, 7vw, 6rem); }
-  .create-section__intro { position: sticky; top: 2rem; }
   .onboarding-form { gap: 1.35rem; }
   .profile-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: end; }
   .profile-fields .form-field:nth-of-type(1), .profile-fields .form-field:nth-of-type(2) { grid-column: 1 / -1; }
