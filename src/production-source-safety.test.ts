@@ -27,6 +27,15 @@ function productionSourceFiles(directory: string): string[] {
 }
 
 describe("production source safety", () => {
+  it("defines the Kawaii Zine tokens and reduced-motion fallback", () => {
+    const globalStyles = readFileSync(path.join(sourceRoot, "app/globals.css"), "utf8");
+
+    expect(globalStyles).toContain("--hot-pink:");
+    expect(globalStyles).toContain("--mint-pop:");
+    expect(globalStyles).toContain("--shadow-zine:");
+    expect(globalStyles).toContain("@media (prefers-reduced-motion: reduce)");
+  });
+
   it("detects a forbidden animal symbol in supplied source", () => {
     expect(findUnsafeProductionSource("const avatar = '🐯';")).toEqual([
       "animal emoji 🐯",

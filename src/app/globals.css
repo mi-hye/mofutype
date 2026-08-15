@@ -2,12 +2,14 @@
 
 :root {
   --cream: #fff8e8;
-  --coral: #ef705e;
-  --coral-deep: #b8382c;
-  --butter: #f8d867;
-  --mint: #9bd9be;
-  --lilac: #c9b6e4;
-  --ink: #25231f;
+  --hot-pink: #ff4fa3;
+  --coral: #ff675c;
+  --coral-deep: #c12f48;
+  --butter: #ffe45c;
+  --mint-pop: #66dfbd;
+  --mint: var(--mint-pop);
+  --lilac: #caa8ff;
+  --ink: #201b22;
   --surface: #fffdf7;
   --surface-raised: #ffffff;
   --surface-coral: #fff1ed;
@@ -16,16 +18,17 @@
   --glow-butter: rgb(248 216 103 / 45%);
   --text: var(--ink);
   --text-muted: #625e55;
-  --border: #3d3932;
-  --focus: #146b55;
+  --border: var(--ink);
+  --focus: #006a53;
   --space-12: 0.75rem;
   --space-18: 1.125rem;
   --space-26: 1.625rem;
   --radius-12: 0.75rem;
   --radius-18: 1.125rem;
   --radius-26: 1.625rem;
-  --shadow-sm: 0 3px 0 rgb(37 35 31 / 18%);
-  --shadow-pop: 5px 6px 0 var(--ink);
+  --shadow-sm: 0 3px 0 rgb(32 27 34 / 22%);
+  --shadow-zine: 6px 6px 0 var(--ink);
+  --shadow-pop: var(--shadow-zine);
 }
 
 * {
@@ -81,11 +84,12 @@ select {
   align-items: center;
   justify-content: center;
   gap: 0.65rem;
-  border: 2px solid var(--border);
-  border-radius: var(--radius-12);
+  border: 3px solid var(--border);
+  border-radius: 0.85rem;
   padding: 0.65rem 1.1rem;
   color: var(--ink);
-  font-weight: 800;
+  font-weight: 950;
+  letter-spacing: 0.01em;
   line-height: 1.2;
   cursor: pointer;
   transition: transform 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
@@ -93,19 +97,19 @@ select {
 
 .ui-button[data-variant="primary"] {
   background: var(--coral);
-  box-shadow: var(--shadow-pop);
+  box-shadow: var(--shadow-zine);
   color: var(--ink);
 }
 
 .ui-button[data-variant="secondary"] {
-  background: var(--butter);
-  box-shadow: var(--shadow-sm);
+  background: var(--mint-pop);
+  box-shadow: 4px 4px 0 var(--ink);
 }
 
 .ui-button[data-variant="ghost"] {
-  border-color: transparent;
-  background: transparent;
-  color: var(--coral-deep);
+  background: var(--surface-raised);
+  box-shadow: 3px 3px 0 var(--ink);
+  color: var(--ink);
 }
 
 .ui-button[data-size="sm"] { min-height: 44px; padding-inline: 0.85rem; font-size: 0.875rem; }
@@ -114,6 +118,11 @@ select {
 .ui-button:not(:disabled):active {
   transform: translate(3px, 3px);
   box-shadow: 1px 2px 0 var(--ink);
+}
+
+.ui-button:not(:disabled):hover {
+  transform: translate(1px, 1px) rotate(-0.35deg);
+  box-shadow: 4px 4px 0 var(--ink);
 }
 
 .ui-button:disabled {
@@ -133,28 +142,31 @@ select {
 }
 
 .ui-card {
-  border: 2px solid var(--border);
-  border-radius: var(--radius-18);
+  border: 3px solid var(--border);
+  border-radius: 1.2rem 1.8rem 1.1rem 1.55rem;
   padding: var(--space-26);
   background: var(--surface-raised);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 5px 5px 0 var(--ink);
 }
 
-.ui-card[data-variant="accent"] { background: var(--surface-coral); }
-.ui-card[data-variant="subtle"] { background: var(--surface-mint); }
+.ui-card[data-variant="accent"] { background: #ffe6f1; box-shadow: 6px 6px 0 var(--hot-pink); }
+.ui-card[data-variant="subtle"] { background: #dcfaef; box-shadow: 5px 5px 0 var(--mint-pop); }
 
 .status-banner {
   display: flex;
   align-items: flex-start;
   gap: var(--space-12);
-  border: 2px solid var(--border);
-  border-radius: var(--radius-12);
+  border: 3px solid var(--border);
+  border-radius: 0.5rem 1rem 0.6rem 0.85rem;
   padding: var(--space-12) var(--space-18);
-  background: var(--surface);
+  background:
+    repeating-linear-gradient(-45deg, transparent 0 7px, rgb(32 27 34 / 5%) 7px 9px),
+    var(--surface);
+  box-shadow: 3px 3px 0 var(--ink);
 }
 
 .status-banner > span:last-child { display: grid; }
-.status-banner__mark { width: 0.75rem; height: 0.75rem; margin-top: 0.4rem; border-radius: 50%; background: var(--mint); }
+.status-banner__mark { width: 0.75rem; height: 0.75rem; margin-top: 0.4rem; border: 2px solid var(--ink); border-radius: 2px; background: var(--mint-pop); transform: rotate(12deg); }
 .status-banner[data-status="offline"] .status-banner__mark,
 .status-banner[data-status="error"] .status-banner__mark { background: var(--coral); }
 
@@ -163,9 +175,10 @@ select {
   display: inline-grid;
   place-items: center;
   overflow: hidden;
-  border: 2px solid var(--border);
-  border-radius: 50%;
+  border: 3px solid var(--border);
+  border-radius: 52% 48% 43% 57% / 46% 54% 48% 52%;
   background: var(--butter);
+  box-shadow: 3px 3px 0 var(--ink);
 }
 
 .animal-avatar[data-size="sm"] { width: 44px; height: 44px; }
