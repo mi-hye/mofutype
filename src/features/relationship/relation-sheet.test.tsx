@@ -53,6 +53,9 @@ const relationship: EtoRelationshipResult = {
   },
 };
 
+const disclaimer =
+  "この分析は自己理解とコミュニケーションを楽しむためのもので、科学的・医学的な判定ではありません。";
+
 describe("RelationSheet", () => {
   it("shows the representative category and headline with meaningless skeletons while locked", () => {
     render(
@@ -73,6 +76,7 @@ describe("RelationSheet", () => {
       "/checkout/a%3Ab?invite=token",
     );
     expect(screen.getByLabelText("ロック中の詳細")).toBeInTheDocument();
+    expect(screen.getByText(disclaimer)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "この関係の共有ページ" })).toHaveAttribute(
       "href",
       "/g/token/relation/a%3Ab",
@@ -94,6 +98,7 @@ describe("RelationSheet", () => {
     );
 
     expect(screen.getByText("解放済み")).toBeInTheDocument();
+    expect(screen.getByText(disclaimer)).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "このふたりを300円で解放" })).not.toBeInTheDocument();
     for (const heading of ["十二支の関係", "五行と陰陽", "MBTIの4つの軸", "ふたりでいるとき"]) {
       expect(screen.getByRole("heading", { name: heading })).toBeInTheDocument();

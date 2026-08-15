@@ -317,6 +317,7 @@ select {
 .relation-sheet__skeletons { display: grid; gap: 0.65rem; }
 .relation-sheet__skeleton { display: block; height: 1rem; border-radius: 999px; background: var(--surface-disabled); }
 .relation-sheet__skeleton[data-length="short"] { width: 72%; }
+.relation-sheet__disclaimer { border-top: 2px dashed var(--border); padding-top: var(--space-12); color: var(--text-muted); font-size: 0.78rem; }
 
 @keyframes spin { to { transform: rotate(360deg); } }
 

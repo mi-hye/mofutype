@@ -140,6 +140,9 @@ export function RelationSheet({
           </a>
         </div>
       )}
+      <p className="relation-sheet__disclaimer">
+        この分析は自己理解とコミュニケーションを楽しむためのもので、科学的・医学的な判定ではありません。
+      </p>
     </section>
   );
 }
