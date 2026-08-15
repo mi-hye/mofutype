@@ -288,7 +288,7 @@ select {
 .profile-step .ui-card { width: min(100%, 38rem); max-width: 38rem; justify-self: center; }
 .profile-step .onboarding-form, .profile-step .profile-fields { gap: 1rem; }
 .profile-step .form-field input, .profile-step .form-field select { min-height: 46px; padding-block: 0.55rem; }
-.profile-step .unknown-toggle { min-height: 36px; gap: 0.32rem; border-width: 1.5px; padding: 0.12rem 0.52rem 0.12rem 0.28rem; box-shadow: 1.5px 1.5px 0 var(--ink); font-size: 0.75rem; }
+.profile-step .unknown-toggle { min-height: 36px; gap: 0.32rem; border-width: 1.5px; padding: 0.12rem 0.52rem; padding-left: 0.45rem; box-shadow: 1.5px 1.5px 0 var(--ink); font-size: 0.75rem; }
 .profile-step .unknown-toggle:has(input:checked) { box-shadow: 2px 2px 0 var(--hot-pink); }
 .profile-step .unknown-toggle input { width: 1rem; height: 1rem; }
 .profile-step .field-error { max-width: 100%; font-size: 0.75rem; line-height: 1.35; overflow-wrap: anywhere; border-left-width: 4px; padding: 0.08rem 0.35rem; background: transparent; }

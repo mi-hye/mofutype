@@ -121,6 +121,7 @@ describe("production source safety", () => {
     expect(globalStyles).toContain(
       ".profile-step .unknown-toggle input { width: 1rem; height: 1rem; }",
     );
+    expect(globalStyles).toContain("padding-left: 0.45rem;");
     expect(globalStyles).toContain(
       ".profile-step .field-error { max-width: 100%; font-size: 0.75rem;",
     );
