@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
 
-select plan(224);
+select plan(225);
 
 -- Schema and API contract.
 select tables_are('public', array['groups', 'group_members', 'relation_unlocks'], 'public has exactly the three group tables');
@@ -359,6 +359,7 @@ select is((select count(distinct payment_provider) from unlock_result),1::bigint
 select is((select payment_provider from unlock_result limit 1),'mock','unlock payment provider remains mock');
 select is((select count(*) from unlock_result where payment_reference is not null),0::bigint,'reversed cross-caller duplicate preserves null payment reference');
 select throws_ok(format($sql$insert into public.relation_unlocks(group_id,member_low_id,member_high_id,status,payment_provider,unlocked_by) values (%L,%L,%L,'unlocked','mock','00000000-0000-0000-0000-000000000001')$sql$,(select group_id from created_group),(select member_id from created_group),(select member_id from created_group)), '23514', null, 'canonical pair check rejects identical members');
+select throws_ok(format($sql$insert into public.relation_unlocks(group_id,member_low_id,member_high_id,status,payment_provider,unlocked_by) values (%L,greatest(%L::uuid,%L::uuid),least(%L::uuid,%L::uuid),'unlocked','mock','00000000-0000-0000-0000-000000000001')$sql$,(select group_id from created_group),(select member_id from created_group),(select member_id from joined_group limit 1),(select member_id from created_group),(select member_id from joined_group limit 1)), '23514', 'new row for relation "relation_unlocks" violates check constraint "relation_unlocks_ordered_pair_check"', 'ordered pair check rejects a distinct reversed pair at the table boundary');
 select throws_ok(format($sql$insert into public.relation_unlocks(group_id,member_low_id,member_high_id,status,payment_provider,unlocked_by) values (%L,least(%L::uuid,%L::uuid),greatest(%L::uuid,%L::uuid),'unlocked','mock','00000000-0000-0000-0000-000000000001')$sql$,(select group_id from created_group),(select member_id from created_group),(select member_id from other_group),(select member_id from created_group),(select member_id from other_group)), '23503', null, 'same-group composite foreign keys reject cross-group pairs');
 
 set local role authenticated;
