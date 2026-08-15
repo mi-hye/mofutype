@@ -231,6 +231,8 @@ describe("production source safety", () => {
     expect(globalStyles).toContain("border-color: var(--animal-tiger-border)");
     expect(globalStyles).toContain("border-color: var(--animal-rat-border)");
     expect(globalStyles).toContain("border-color: var(--animal-rabbit-border)");
+    expect(globalStyles).toMatch(/\.hero__node\[aria-pressed="true"\] \.hero__node-frame::before[^}]*box-shadow:\s*0 12px 24px/);
+    expect(globalStyles).not.toMatch(/\.hero__node\[aria-pressed="true"\] \.hero__node-frame::before[^}]*0 0 0 4px/);
     expect(globalStyles).toMatch(/\.hero__connectors line[^}]*stroke-width:\s*1\.25[^}]*stroke-opacity:\s*0\.72/);
     expect(globalStyles).toMatch(/\.ui-button::before[^}]*animation:\s*squigglevision/);
     expect(globalStyles).toContain(".ui-button > span { position: relative; z-index: 1; }");

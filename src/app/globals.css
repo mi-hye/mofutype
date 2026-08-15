@@ -110,7 +110,7 @@ button, input, textarea, select { font: inherit; }
 .hero__dots .hero__node-frame::before { border-color: var(--animal-rat-border); background: var(--animal-rat-pastel); }
 .hero__stripe .hero__node-frame::before { border-color: var(--animal-rabbit-border); background: var(--animal-rabbit-pastel); }
 .hero__node[aria-pressed="true"] { z-index: 2; transform: scale(1.07); }
-.hero__node[aria-pressed="true"] .hero__node-frame::before { border-width: 3px; box-shadow: 0 0 0 4px rgb(var(--paper-rgb) / 88%), 0 10px 22px rgb(var(--ink-rgb) / 16%); }
+.hero__node[aria-pressed="true"] .hero__node-frame::before { border-width: 3px; box-shadow: 0 12px 24px rgb(var(--ink-rgb) / 20%), 0 3px 8px rgb(var(--ink-rgb) / 12%); }
 .hero__node:focus-visible { border-radius: 50%; outline-offset: 0.35rem; }
 .hero__tape { top: 12%; left: calc(50% - 2.35rem); }
 .hero__dots { bottom: 12%; left: 12%; }
