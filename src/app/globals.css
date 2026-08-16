@@ -144,7 +144,7 @@ button, input, textarea, select { font: inherit; }
 .field-error, .form-error { width: fit-content; max-width: 100%; margin: 0; border: 1px solid rgb(var(--ink-rgb) / 34%); border-left: 5px solid var(--status-danger); border-radius: 0.55rem; padding: 0.34rem 0.62rem; background: var(--surface-error); color: var(--text-error); font-size: 0.82rem; font-weight: 700; overflow-wrap: anywhere; animation: nudge-in 220ms ease-out both; }
 .start-group-form { align-content: start; gap: 0.9rem; }
 .start-group-form > .ui-button { width: fit-content; min-width: 5.75rem; min-height: 44px; justify-self: start; padding-inline: 1rem; }
-.start-group-form > .ui-button::before { border-width: 2.5px; }
+.start-group-form > .ui-button::before { border-width: 2px; }
 .start-group-form > .ui-button::after { display: none; }
 .start-group-form .form-field { width: min(100%, 28rem); }
 .start-group-form .form-field input { min-height: 44px; padding-block: 0.45rem; font-size: 0.96rem; font-weight: 600; }
