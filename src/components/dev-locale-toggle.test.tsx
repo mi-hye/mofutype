@@ -51,4 +51,29 @@ describe("DevLocaleToggle", () => {
     expect(screen.getByText("プロフィールを入力")).toBeInTheDocument();
     expect(document.documentElement).toHaveAttribute("lang", "ja");
   });
+
+  it("translates derived zodiac results from the local development JSON", async () => {
+    const user = userEvent.setup();
+    render(
+      <>
+        <p>たつタイプ</p>
+        <p>金・陰</p>
+        <p>大きな理想を掲げ、その存在感で新しい景色へ飛躍できる人です。</p>
+        <p>たつタイプとして、生年月日から導いた傾向です。</p>
+        <p><span>金</span>・<span>陰</span></p>
+        <p><span>たつ</span>タイプとして、生年月日から導いた傾向です。</p>
+        <DevLocaleToggle />
+      </>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: "한국어로 보기" }));
+
+    expect(screen.getByText("용띠 타입")).toBeInTheDocument();
+    expect(screen.getByText("금・음")).toBeInTheDocument();
+    expect(screen.getByText(/큰 이상을 품고/)).toBeInTheDocument();
+    expect(screen.getByText("용띠 유형으로 생년월일에서 도출한 성향입니다.")).toBeInTheDocument();
+    expect(screen.getByText("금")).toBeInTheDocument();
+    expect(screen.getByText("음")).toBeInTheDocument();
+    expect(screen.getByText(/용띠 유형으로 생년월일에서 도출한 성향입니다/)).toBeInTheDocument();
+  });
 });

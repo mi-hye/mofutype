@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
+import devKo from "@/locales/dev-ko.json";
+
 type DevLocale = "ja" | "ko";
 
 const STORAGE_KEY = "mofutype:dev-locale";
@@ -117,10 +119,45 @@ function koreanCopy(value: string): string {
   const exact = KO_COPY[content];
   if (exact) return `${leading}${exact}${trailing}`;
 
+  const zodiacEntries = Object.entries(devKo.zodiacNames);
+  const zodiacName = devKo.zodiacNames[content as keyof typeof devKo.zodiacNames];
+  if (zodiacName) return `${leading}${zodiacName}${trailing}`;
+  const zodiacType = zodiacEntries.find(([name]) => content === `${name}タイプ`);
+  if (zodiacType) return `${leading}${zodiacType[1]} 타입${trailing}`;
+
+  for (const [modifierJa, modifierKo] of Object.entries(devKo.characterModifiers)) {
+    const zodiac = zodiacEntries.find(([name]) => content === `${modifierJa}${name}`);
+    if (zodiac) return `${leading}${modifierKo} ${zodiac[1]}${trailing}`;
+  }
+
+  const elementPolarity = content.match(/^(木|火|土|金|水)・(陰|陽)$/);
+  if (elementPolarity) {
+    const element = devKo.fiveElements[elementPolarity[1] as keyof typeof devKo.fiveElements];
+    const polarity = devKo.polarities[elementPolarity[2] as keyof typeof devKo.polarities];
+    return `${leading}${element}・${polarity}${trailing}`;
+  }
+  const element = devKo.fiveElements[content as keyof typeof devKo.fiveElements];
+  if (element) return `${leading}${element}${trailing}`;
+  const polarity = devKo.polarities[content as keyof typeof devKo.polarities];
+  if (polarity) return `${leading}${polarity}${trailing}`;
+  if (content === "タイプとして、生年月日から導いた傾向です。") {
+    return `${leading} 유형으로 생년월일에서 도출한 성향입니다.${trailing}`;
+  }
+
+  let translatedCharacter = content;
+  for (const [ja, ko] of Object.entries(devKo.characterFragments)) {
+    translatedCharacter = translatedCharacter.replace(ja, ko);
+  }
+  if (translatedCharacter !== content) return `${leading}${translatedCharacter}${trailing}`;
+
   const memberCount = content.match(/^メンバー\s*(\d+)人$/);
   if (memberCount) return `${leading}멤버 ${memberCount[1]}명${trailing}`;
-  const animalTendency = content.match(/^(.+)タイプとして、生年月日から導いた傾向です。$/);
-  if (animalTendency) return `${leading}${animalTendency[1]} 유형으로 생년월일에서 도출한 성향입니다.${trailing}`;
+  const zodiacTendency = content.match(/^(.+)タイプとして、生年月日から導いた傾向です。$/);
+  if (zodiacTendency) {
+    const zodiac = devKo.zodiacNames[zodiacTendency[1] as keyof typeof devKo.zodiacNames]
+      ?? zodiacTendency[1];
+    return `${leading}${zodiac} 유형으로 생년월일에서 도출한 성향입니다.${trailing}`;
+  }
   return value;
 }
 
