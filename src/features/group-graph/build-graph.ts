@@ -1,31 +1,40 @@
 import type { Edge, Node } from "@xyflow/react";
 
-import { createRelationship } from "@/lib/relationship/local-provider";
+import { createCharacterCopy } from "@/lib/eto/character";
+import {
+  createEtoRelationship,
+  RELATIONSHIP_SHORT_LABELS,
+  type CreateEtoRelationshipInput,
+  type EtoRelationshipResult,
+  type RelationshipCategory,
+} from "@/lib/eto/relationship";
 import { canonicalPairKey } from "@/lib/relationship/pair-key";
-import type { CreateRelationshipInput, RelationshipResult } from "@/lib/relationship/types";
 import type { GroupMember, RelationUnlock } from "@/lib/supabase/models";
 
 export type GraphNodeSize = "sm" | "md" | "lg";
 export type EdgeEmphasis = "default" | "incident" | "faint";
-export type RelationshipFactory = (input: CreateRelationshipInput) => RelationshipResult;
+export type RelationshipFactory = (
+  input: CreateEtoRelationshipInput,
+) => EtoRelationshipResult;
 export type RelationshipGraphMember = Pick<
   GroupMember,
-  "id" | "nickname" | "animalId" | "animalGroup" | "mbti" | "profile"
+  "id" | "nickname" | "zodiacId" | "mbti" | "profile"
 >;
 
 export interface TopologyNodeData extends Record<string, unknown> {
   member: RelationshipGraphMember;
   size: GraphNodeSize;
   discriminator: string | null;
+  characterTitleJa: string;
   accessibleLabel: string;
 }
 
-export interface AnimalNodeData extends TopologyNodeData {
+export interface ZodiacNodeData extends TopologyNodeData {
   selected: boolean;
 }
 
 export interface TopologyEdgeData extends Record<string, unknown> {
-  relationship: RelationshipResult;
+  relationship: EtoRelationshipResult;
   memberIds: readonly [RelationshipGraphMember["id"], RelationshipGraphMember["id"]];
 }
 
@@ -34,9 +43,9 @@ export interface RelationshipEdgeData extends TopologyEdgeData {
   emphasis: EdgeEmphasis;
 }
 
-export type TopologyNode = Node<TopologyNodeData, "animal">;
+export type TopologyNode = Node<TopologyNodeData, "zodiac">;
 export type TopologyEdge = Edge<TopologyEdgeData> & { data: TopologyEdgeData };
-export type AnimalGraphNode = Node<AnimalNodeData, "animal">;
+export type ZodiacGraphNode = Node<ZodiacNodeData, "zodiac">;
 export type RelationshipGraphEdge = Edge<RelationshipEdgeData> & {
   data: RelationshipEdgeData;
 };
@@ -47,9 +56,16 @@ export interface GraphTopology {
 }
 
 export interface BuiltGraph {
-  nodes: AnimalGraphNode[];
+  nodes: ZodiacGraphNode[];
   edges: RelationshipGraphEdge[];
 }
+
+const RELATIONSHIP_LABEL_COLORS: Readonly<Record<RelationshipCategory, string>> = {
+  NATURAL_INTERLOCK: "var(--edge-mint)",
+  EXPANDING_POSSIBILITIES: "var(--edge-unlocked)",
+  POSITIVE_STIMULATION: "var(--coral-deep)",
+  LEARNING_EACH_OTHERS_PACE: "var(--edge-violet)",
+};
 
 function nodeSize(count: number): GraphNodeSize {
   if (count <= 6) return "lg";
@@ -124,15 +140,22 @@ export function graphMemberSnapshot(
     .map((member) => ({
       id: member.id,
       nickname: member.nickname,
-      animalId: member.animalId,
-      animalGroup: member.animalGroup,
+      zodiacId: member.zodiacId,
       mbti: member.mbti,
       profile: {
         version: member.profile.version,
-        animalId: member.profile.animalId,
-        animalGroup: member.profile.animalGroup,
+        zodiacId: member.profile.zodiacId,
         mbti: member.profile.mbti,
+        dayMaster: { ...member.profile.dayMaster },
+        fiveElements: member.profile.fiveElements === null
+          ? null
+          : { ...member.profile.fiveElements },
+        yinYang: member.profile.yinYang === null
+          ? null
+          : { ...member.profile.yinYang },
         calculationMode: member.profile.calculationMode,
+        boundaryState: member.profile.boundaryState,
+        engineVersion: member.profile.engineVersion,
       },
     }));
 }
@@ -145,7 +168,7 @@ export function graphMembersVersion(
 
 export function buildGraphTopology(
   members: readonly RelationshipGraphMember[],
-  relationshipFactory: RelationshipFactory = createRelationship,
+  relationshipFactory: RelationshipFactory = createEtoRelationship,
 ): GraphTopology {
   if (members.length > 30) {
     throw new Error("A group graph supports at most 30 members");
@@ -162,9 +185,10 @@ export function buildGraphTopology(
   const discriminators = uniquePrefixes(sorted);
   const nodes = sorted.map<TopologyNode>((item, index) => {
     const discriminator = discriminators.get(item.id) ?? null;
+    const characterTitleJa = createCharacterCopy(item.zodiacId, item.mbti).titleJa;
     return {
       id: item.id,
-      type: "animal",
+      type: "zodiac",
       position: positionAt(index, sorted.length),
       draggable: false,
       selectable: true,
@@ -172,6 +196,7 @@ export function buildGraphTopology(
         member: item,
         size,
         discriminator,
+        characterTitleJa,
         accessibleLabel: discriminator
           ? `${item.nickname}（識別子 ${discriminator}）の関係性ノード`
           : `${item.nickname}の関係性ノード`,
@@ -185,7 +210,10 @@ export function buildGraphTopology(
       const first = sorted[firstIndex];
       const second = sorted[secondIndex];
       const pairKey = canonicalPairKey(first.id, second.id);
-      const relationship = relationshipFactory({ memberA: first, memberB: second });
+      const relationship = relationshipFactory({
+        memberA: { id: first.id, profile: first.profile },
+        memberB: { id: second.id, profile: second.profile },
+      });
       edges.push({
         id: pairKey,
         source: first.id,
@@ -212,7 +240,7 @@ export function decorateGraph(
       .filter((item) => item.status === "unlocked")
       .map((item) => canonicalPairKey(item.memberLowId, item.memberHighId)),
   );
-  const nodes = topology.nodes.map<AnimalGraphNode>((node) => ({
+  const nodes = topology.nodes.map<ZodiacGraphNode>((node) => ({
     ...node,
     data: {
       ...node.data,
@@ -226,6 +254,10 @@ export function decorateGraph(
       ? "default"
       : incident ? "incident" : "faint";
     const unlocked = unlockedPairs.has(edge.id);
+    const showLabel = selectedNodeId === null
+      ? topology.nodes.length <= 6
+      : incident;
+    const category = edge.data.relationship.category;
     const strokeWidth = incident ? (unlocked ? 5 : 4) : unlocked ? 3 : 1.5;
     const opacity = emphasis === "faint"
       ? unlocked ? 0.28 : 0.06
@@ -238,6 +270,22 @@ export function decorateGraph(
         `relationship-edge--${unlocked ? "unlocked" : "locked"}`,
         `relationship-edge--${emphasis}`,
       ].join(" "),
+      label: showLabel ? RELATIONSHIP_SHORT_LABELS[category] : undefined,
+      labelShowBg: showLabel,
+      labelStyle: {
+        fill: "var(--surface-raised)",
+        fontSize: 11,
+        fontWeight: 950,
+        pointerEvents: "none",
+      },
+      labelBgStyle: {
+        fill: RELATIONSHIP_LABEL_COLORS[category],
+        stroke: "var(--surface-raised)",
+        strokeWidth: 1.5,
+        pointerEvents: "none",
+      },
+      labelBgPadding: [9, 5],
+      labelBgBorderRadius: 999,
       style: {
         strokeWidth,
         opacity,

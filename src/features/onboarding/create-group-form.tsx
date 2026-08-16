@@ -1,17 +1,17 @@
 "use client";
 
-import Link from "next/link";
-import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import { flushSync } from "react-dom";
 
 import { Button } from "@/components/ui/button";
-import { localAstrologyProvider } from "@/lib/astrology/local-provider";
-import type { AstrologyProvider } from "@/lib/astrology/types";
+import { localEtoProvider } from "@/lib/eto/provider";
+import type { EtoProvider } from "@/lib/eto/types";
 import { createBrowserGroupRepository } from "@/lib/supabase/group-repository";
-import { INVITE_TOKEN_PATTERN } from "@/lib/invite-token";
 import { ProfileForm, emptyProfileDraft, type ProfileDraft, type ProfileErrors } from "./profile-form";
-import { createOnboardingSchema } from "./schema";
+import { createOnboardingSchema, todayIsoInTokyo } from "./schema";
 
 export const CREATE_DRAFT_KEY = "mofutype:create-group:draft";
+export const INVITE_TOKEN_PATTERN = /^[a-f0-9]{64}$/;
 
 type BrowserRepository = ReturnType<typeof createBrowserGroupRepository>;
 type Draft = ProfileDraft & { groupName: string };
@@ -20,18 +20,12 @@ function emptyDraft(): Draft {
   return { groupName: "", ...emptyProfileDraft() };
 }
 
-function readDraft(storage?: Storage): Draft {
+function defaultSessionStorage(): Storage | undefined {
+  if (typeof window === "undefined") return undefined;
   try {
-    if (!storage) return emptyDraft();
-    const value = JSON.parse(storage.getItem(CREATE_DRAFT_KEY) ?? "null") as Partial<Draft> | null;
-    if (!value || typeof value !== "object") return emptyDraft();
-    const initial = emptyDraft();
-    for (const key of Object.keys(initial) as (keyof Draft)[]) {
-      if (typeof value[key] !== typeof initial[key]) return initial;
-    }
-    return value as Draft;
+    return window.sessionStorage;
   } catch {
-    return emptyDraft();
+    return undefined;
   }
 }
 
@@ -46,35 +40,22 @@ function publicCreateError(error: unknown): string {
 
 export interface CreateGroupFormProps {
   repositoryFactory?: () => Pick<BrowserRepository, "createGroup">;
-  astrologyProvider?: AstrologyProvider;
+  etoProvider?: EtoProvider;
   navigate?: (path: string) => void;
   storage?: Storage;
   clock?: () => Date;
-  profileOnly?: boolean;
 }
 
-const subscribeToHydration = () => () => {};
-
-export function CreateGroupForm(props: CreateGroupFormProps) {
-  const hydrated = useSyncExternalStore(subscribeToHydration, () => true, () => false);
-
-  if (props.profileOnly && !hydrated) {
-    return <p className="profile-step-loading" role="status">入力内容を確認しています</p>;
-  }
-
-  return <ReadyCreateGroupForm {...props} />;
-}
-
-function ReadyCreateGroupForm({
+export function CreateGroupForm({
   repositoryFactory = createBrowserGroupRepository,
-  astrologyProvider = localAstrologyProvider,
+  etoProvider = localEtoProvider,
   navigate = (path) => window.location.assign(path),
   storage,
   clock = () => new Date(),
-  profileOnly = false,
 }: CreateGroupFormProps) {
-  const activeStorage = storage ?? (typeof window === "undefined" ? undefined : window.sessionStorage);
-  const [draft, setDraft] = useState<Draft>(() => readDraft(activeStorage));
+  const activeStorage = storage ?? defaultSessionStorage();
+  const maxBirthDate = todayIsoInTokyo(clock);
+  const [draft, setDraft] = useState<Draft>(emptyDraft);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [failure, setFailure] = useState("");
   const [loading, setLoading] = useState(false);
@@ -83,11 +64,16 @@ function ReadyCreateGroupForm({
 
   useEffect(() => {
     mounted.current = true;
+    try {
+      activeStorage?.removeItem(CREATE_DRAFT_KEY);
+    } catch {
+      // Removing obsolete privacy-sensitive drafts is best-effort.
+    }
     return () => {
       mounted.current = false;
       generation.current += 1;
     };
-  }, []);
+  }, [activeStorage]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -109,11 +95,11 @@ function ReadyCreateGroupForm({
     const isCurrent = () => mounted.current && generation.current === submission;
     let profile;
     try {
-      profile = await astrologyProvider.derive({
+      profile = await etoProvider.derive({
         birthDate: result.data.birthDate,
         birthTime: result.data.birthTime,
         mbti: result.data.mbti,
-      });
+      }, maxBirthDate);
     } catch {
       if (!isCurrent()) return;
       setFailure("プロフィールを作成できませんでした。入力内容を確認してください。");
@@ -133,17 +119,12 @@ function ReadyCreateGroupForm({
       inviteToken = response.inviteToken;
     } catch (error) {
       if (!isCurrent()) return;
-      try { activeStorage?.setItem(CREATE_DRAFT_KEY, JSON.stringify(draft)); } catch { /* storage may be unavailable */ }
       setFailure(publicCreateError(error));
       setLoading(false);
       return;
     }
-    try {
-      activeStorage?.removeItem(CREATE_DRAFT_KEY);
-    } catch {
-      // Browser storage cleanup is best-effort after a successful mutation.
-    }
     if (!isCurrent()) return;
+    flushSync(() => setDraft(emptyDraft()));
     try {
       navigate(`/g/${inviteToken}`);
     } catch {
@@ -154,37 +135,18 @@ function ReadyCreateGroupForm({
     if (isCurrent()) setLoading(false);
   }
 
-  if (profileOnly && !draft.groupName.trim()) {
-    return (
-      <div className="profile-step-missing" role="status">
-        <p>先にグループ名を入力してください。</p>
-        <Link className="ui-button" data-size="lg" data-variant="secondary" href="/#create">
-          グループ名を入力する
-        </Link>
-      </div>
-    );
-  }
-
   return (
-    <form className="onboarding-form" aria-label={profileOnly ? "プロフィール入力フォーム" : "グループ作成フォーム"}
-      onSubmit={submit} noValidate>
-      {profileOnly ? (
-        <p className="profile-step-group" aria-label="作成するグループ">
-          <span>GROUP</span>
-          <strong>{draft.groupName}</strong>
-        </p>
-      ) : (
-        <div className="form-field">
-          <label htmlFor="create-group-name">グループ名</label>
-          <input id="create-group-name" type="text" maxLength={30} value={draft.groupName}
-            onChange={(event) => setDraft({ ...draft, groupName: event.target.value })}
-            disabled={loading} aria-describedby={errors.groupName ? "create-group-name-error" : undefined}
-            aria-invalid={Boolean(errors.groupName) || undefined} />
-          {errors.groupName ? <p className="field-error" id="create-group-name-error" role="alert">{errors.groupName}</p> : null}
-        </div>
-      )}
+    <form className="onboarding-form" aria-label="グループ作成フォーム" onSubmit={submit} noValidate>
+      <div className="form-field">
+        <label htmlFor="create-group-name">グループ名</label>
+        <input id="create-group-name" type="text" maxLength={30} value={draft.groupName}
+          onChange={(event) => setDraft({ ...draft, groupName: event.target.value })}
+          disabled={loading} aria-describedby={errors.groupName ? "create-group-name-error" : undefined}
+          aria-invalid={Boolean(errors.groupName) || undefined} />
+        {errors.groupName ? <p className="field-error" id="create-group-name-error" role="alert">{errors.groupName}</p> : null}
+      </div>
       <ProfileForm value={draft} onChange={(profile) => setDraft({ ...draft, ...profile })}
-        errors={errors as ProfileErrors} disabled={loading} />
+        errors={errors as ProfileErrors} maxBirthDate={maxBirthDate} disabled={loading} />
       {failure ? <p className="form-error" role="alert">{failure}</p> : null}
       <Button type="submit" size="lg" loading={loading}>グループを作成</Button>
     </form>

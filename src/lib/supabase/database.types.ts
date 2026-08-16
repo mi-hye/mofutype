@@ -36,37 +36,37 @@ export type Database = {
     Tables: {
       group_members: {
         Row: {
-          animal_group: Database["public"]["Enums"]["animal_group"]
-          animal_id: string
           group_id: string
           id: string
           joined_at: string
           mbti: string | null
           nickname: string
           profile_payload: Json
+          profile_version: number
           user_id: string
+          zodiac_id: string
         }
         Insert: {
-          animal_group: Database["public"]["Enums"]["animal_group"]
-          animal_id: string
           group_id: string
           id?: string
           joined_at?: string
           mbti?: string | null
           nickname: string
           profile_payload: Json
+          profile_version: number
           user_id: string
+          zodiac_id: string
         }
         Update: {
-          animal_group?: Database["public"]["Enums"]["animal_group"]
-          animal_id?: string
           group_id?: string
           id?: string
           joined_at?: string
           mbti?: string | null
           nickname?: string
           profile_payload?: Json
+          profile_version?: number
           user_id?: string
+          zodiac_id?: string
         }
         Relationships: [
           {
@@ -104,6 +104,76 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      payment_orders: {
+        Row: {
+          amount_jpy: number
+          created_at: string
+          created_by: string
+          currency: string
+          group_id: string
+          id: string
+          member_high_id: string
+          member_low_id: string
+          method: string
+          paid_at: string | null
+          provider: string | null
+          provider_reference: string | null
+          status: Database["public"]["Enums"]["payment_order_status"]
+        }
+        Insert: {
+          amount_jpy?: number
+          created_at?: string
+          created_by: string
+          currency?: string
+          group_id: string
+          id?: string
+          member_high_id: string
+          member_low_id: string
+          method: string
+          paid_at?: string | null
+          provider?: string | null
+          provider_reference?: string | null
+          status?: Database["public"]["Enums"]["payment_order_status"]
+        }
+        Update: {
+          amount_jpy?: number
+          created_at?: string
+          created_by?: string
+          currency?: string
+          group_id?: string
+          id?: string
+          member_high_id?: string
+          member_low_id?: string
+          method?: string
+          paid_at?: string | null
+          provider?: string | null
+          provider_reference?: string | null
+          status?: Database["public"]["Enums"]["payment_order_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_orders_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_orders_high_member_fk"
+            columns: ["group_id", "member_high_id"]
+            isOneToOne: false
+            referencedRelation: "group_members"
+            referencedColumns: ["group_id", "id"]
+          },
+          {
+            foreignKeyName: "payment_orders_low_member_fk"
+            columns: ["group_id", "member_low_id"]
+            isOneToOne: false
+            referencedRelation: "group_members"
+            referencedColumns: ["group_id", "id"]
+          },
+        ]
       }
       relation_unlocks: {
         Row: {
@@ -168,29 +238,76 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      _profile_is_valid: {
-        Args: {
-          p_animal_group: string
-          p_animal_id: string
-          p_mbti: string
-          p_profile_payload: Json
-        }
+      _eto_profile_is_valid: {
+        Args: { p_mbti: string; p_profile_payload: Json; p_zodiac_id: string }
         Returns: boolean
+      }
+      confirm_payment_order: {
+        Args: {
+          p_order_id: string
+          p_provider: string
+          p_provider_reference: string
+        }
+        Returns: {
+          group_id: string
+          id: string
+          member_high_id: string
+          member_low_id: string
+          payment_provider: string
+          payment_reference: string | null
+          status: Database["public"]["Enums"]["unlock_status"]
+          unlocked_at: string | null
+          unlocked_by: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "relation_unlocks"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       create_group_and_join: {
         Args: {
-          p_animal_group: string
-          p_animal_id: string
           p_mbti: string
           p_name: string
           p_nickname: string
           p_profile_payload: Json
+          p_zodiac_id: string
         }
         Returns: {
           group_id: string
           invite_token: string
           member_id: string
         }[]
+      }
+      create_payment_order: {
+        Args: {
+          p_group_id: string
+          p_member_a: string
+          p_member_b: string
+          p_method: string
+        }
+        Returns: {
+          amount_jpy: number
+          created_at: string
+          created_by: string
+          currency: string
+          group_id: string
+          id: string
+          member_high_id: string
+          member_low_id: string
+          method: string
+          paid_at: string | null
+          provider: string | null
+          provider_reference: string | null
+          status: Database["public"]["Enums"]["payment_order_status"]
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "payment_orders"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       get_group_invite_preview: {
         Args: { p_invite_token: string }
@@ -204,12 +321,11 @@ export type Database = {
       is_group_member: { Args: { p_group_id: string }; Returns: boolean }
       join_group: {
         Args: {
-          p_animal_group: string
-          p_animal_id: string
           p_invite_token: string
           p_mbti: string
           p_nickname: string
           p_profile_payload: Json
+          p_zodiac_id: string
         }
         Returns: {
           group_id: string
@@ -238,7 +354,7 @@ export type Database = {
       }
     }
     Enums: {
-      animal_group: "MOON" | "EARTH" | "SUN"
+      payment_order_status: "pending" | "paid"
       unlock_status: "pending" | "unlocked" | "failed"
     }
     CompositeTypes: {
@@ -370,7 +486,7 @@ export const Constants = {
   },
   public: {
     Enums: {
-      animal_group: ["MOON", "EARTH", "SUN"],
+      payment_order_status: ["pending", "paid"],
       unlock_status: ["pending", "unlocked", "failed"],
     },
   },

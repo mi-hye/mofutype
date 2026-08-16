@@ -22,16 +22,26 @@ vi.mock("./group-graph", () => ({
           unlocked: false,
           relationship: {
             pairKey: "a:b",
-            dynamic: "SAME_GROUP",
-            freeTitleJa: "ふたりの無料タイトル",
-            freeSummaryJa: "ふたりの無料まとめ",
-            detail: {
-              attractionJa: "惹かれ合う理由の本文",
-              frictionJa: "すれ違いの本文",
-              unspokenJa: "本音の本文",
-              communicationJa: "会話の本文",
-              reconciliationJa: "仲直りの本文",
-              longTermJa: "長期の本文",
+            category: "NATURAL_INTERLOCK",
+            categoryLabelJa: "自然にかみ合う関係",
+            headlineJa: "たつとうさぎは、自然にかみ合う関係です",
+            zodiacInsight: {
+              relation: "LIUHE",
+              category: "NATURAL_INTERLOCK",
+              title: "自然に支え合う十二支",
+              summary: "十二支の本文",
+            },
+            fiveElementInsight: {
+              relation: "COMPLEMENT",
+              category: "NATURAL_INTERLOCK",
+              title: "五行を補い合う関係",
+              summary: "五行と陰陽の本文",
+            },
+            mbtiInsight: null,
+            tips: {
+              togetherJa: "ふたりで試すヒント",
+              forPersonAJa: "aへのヒント",
+              forPersonBJa: "bへのヒント",
             },
           },
         })}>aとbの関係を選択</button>
@@ -45,9 +55,36 @@ import { GroupScreen } from "./group-screen";
 function member(id: string, nickname = id): GroupMember {
   return {
     id, groupId: "g1", userId: `u-${id}`, nickname,
-    animalId: "fawn", animalGroup: "MOON", mbti: null,
-    profile: { version: 1, animalId: "fawn", animalGroup: "MOON", mbti: null, calculationMode: "date-only" },
+    zodiacId: id === "b" ? "rabbit" : "dragon", mbti: null,
+    profile: {
+      version: 1,
+      zodiacId: id === "b" ? "rabbit" : "dragon",
+      mbti: null,
+      dayMaster: { element: id === "b" ? "FIRE" : "WOOD", polarity: "YANG" },
+      fiveElements: { WOOD: 2, FIRE: 2, EARTH: 1, METAL: 1, WATER: 2 },
+      yinYang: { YIN: 4, YANG: 4 },
+      calculationMode: "date-time",
+      boundaryState: "exact",
+      engineVersion: "mofu-eto-four-pillars-v1",
+    },
     joinedAt: "2026-08-15T00:00:00Z",
+  };
+}
+
+function ambiguousMember(id: string, nickname = id): GroupMember {
+  const base = member(id, nickname);
+  return {
+    ...base,
+    zodiacId: "rooster",
+    profile: {
+      ...base.profile,
+      zodiacId: "rooster",
+      dayMaster: { element: "EARTH", polarity: "YIN" },
+      fiveElements: null,
+      yinYang: null,
+      calculationMode: "date-only",
+      boundaryState: "solar-term-ambiguous",
+    },
   };
 }
 
@@ -87,8 +124,8 @@ describe("GroupScreen", () => {
   it("shows the signed-in member's derived astrology result below the graph", () => {
     const initial = aggregate("g1", [
       member("a", "わたし"),
-      { ...member("b", "ともだち"), animalId: "lion", animalGroup: "SUN", mbti: "ENTJ",
-        profile: { version: 1, animalId: "lion", animalGroup: "SUN", mbti: "ENTJ", calculationMode: "date-time" } },
+      { ...member("b", "ともだち"), mbti: "ENTJ",
+        profile: { ...member("b").profile, mbti: "ENTJ" } },
     ]);
     const repo = repository(initial);
 
@@ -96,11 +133,11 @@ describe("GroupScreen", () => {
 
     expect(screen.getByText("わたしの四柱推命")).toBeInTheDocument();
     expect(screen.queryByText("MY PROFILE")).not.toBeInTheDocument();
-    expect(screen.getByText("誇り高いライオン")).toBeInTheDocument();
+    expect(screen.getByText("大胆に道を切り開くうさぎ")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "生まれ持った気質" })).toBeInTheDocument();
-    expect(screen.getByText(/高い理想を掲げ/)).toBeInTheDocument();
-    expect(screen.getByRole("list", { name: "診断結果の詳細" })).toHaveTextContent("ENTJ太陽タイプ出生時刻を反映");
-    expect(screen.queryByText("こじか")).not.toBeInTheDocument();
+    expect(screen.getByText(/豊かな感性と気配り/)).toBeInTheDocument();
+    expect(screen.getByRole("list", { name: "診断結果の詳細" })).toHaveTextContent("ENTJ火・陽出生時刻を反映");
+    expect(screen.queryByText("たつタイプとして")).not.toBeInTheDocument();
   });
 
   it("subscribes once with the group filter, refreshes initial data, and cleans up", async () => {
@@ -173,7 +210,29 @@ describe("GroupScreen", () => {
     expect(sessionA.getByText("解放済み")).toBeInTheDocument();
     expect(sessionB.getByText("解放済み")).toBeInTheDocument();
     expect(sessionA.queryByRole("link", { name: "このふたりを300円で解放" })).not.toBeInTheDocument();
-    expect(sessionB.getByText("惹かれ合う理由の本文")).toBeInTheDocument();
+    expect(sessionB.getByText("言葉を交わしながら互いに心地よい進み方を見つけていける組み合わせです。")).toBeInTheDocument();
+  });
+
+  it("recomputes an open relationship from the latest realtime member profiles", async () => {
+    const user = userEvent.setup();
+    const initial = aggregate("g1", [member("a"), member("b")], [unlock("open", "unlocked")]);
+    const repo = repository(initial);
+    render(<GroupScreen initialAggregate={initial} repository={repo.api} inviteToken="token-a" />);
+    await waitFor(() => expect(repo.callbacks()).toBeDefined());
+    await user.click(screen.getByRole("button", { name: "aとbの関係を選択" }));
+
+    act(() => repo.callbacks()?.onMemberChange?.({
+      eventType: "UPDATE",
+      new: ambiguousMember("b", "更新もも"),
+    }));
+
+    expect(screen.getByRole("heading", {
+      name: "たつととりは、自然にかみ合う関係です",
+    })).toBeInTheDocument();
+    expect(screen.getByText("互いの持ち味が無理なくかみ合い、自然な連携を育てやすい組み合わせです。")).toBeInTheDocument();
+    expect(screen.getByText("木の視点を穏やかに伝え、相手の土の選択肢を広げましょう。")).toBeInTheDocument();
+    expect(screen.getByText("節入りの境界に近いため、五行と陰陽の分布は表示していません。")).toBeInTheDocument();
+    expect(screen.queryByText("十二支の本文")).not.toBeInTheDocument();
   });
 
   it("maps connection states to Japanese status and can retry", async () => {

@@ -1,16 +1,19 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import type { DerivedProfile } from "../astrology/types";
+import type { DerivedEtoProfile } from "../eto/types";
+import type { PaymentMethod } from "../payment/types";
 import type { AppDatabase } from "./app-database.types";
 import { createSupabaseBrowserClient } from "./browser";
 import {
   GroupRepositoryError,
   mapGroup,
   mapGroupMember,
+  mapPaymentOrder,
   mapRelationUnlock,
   type Group,
   type GroupMember,
   type GroupRepositoryErrorCode,
+  type PaymentOrder,
   type RelationUnlock,
 } from "./models";
 
@@ -23,6 +26,7 @@ type CreateGroupArgs = Functions["create_group_and_join"]["Args"];
 type JoinGroupArgs = Functions["join_group"]["Args"];
 type PreviewGroupInviteArgs = Functions["get_group_invite_preview"]["Args"];
 type UnlockRelationArgs = Functions["unlock_relation_mock"]["Args"];
+type CreatePaymentOrderArgs = Functions["create_payment_order"]["Args"];
 
 interface RealtimeChannel {
   on(
@@ -58,6 +62,7 @@ export interface GroupRepositoryClient {
   joinGroup(args: JoinGroupArgs): Promise<ClientResult>;
   previewGroupInvite(args: PreviewGroupInviteArgs): Promise<ClientResult>;
   unlockRelation(args: UnlockRelationArgs): Promise<ClientResult>;
+  createPaymentOrder(args: CreatePaymentOrderArgs): Promise<ClientResult>;
   loadGroup(groupId: string): Promise<ClientResult>;
   findJoinedGroupId(inviteTokenHash: string): Promise<ClientResult>;
   loadGroupMembers(groupId: string): Promise<ClientResult>;
@@ -68,13 +73,13 @@ export interface GroupRepositoryClient {
 export interface CreateGroupInput {
   name: string;
   nickname: string;
-  profile: DerivedProfile;
+  profile: DerivedEtoProfile;
 }
 
 export interface JoinGroupInput {
   inviteToken: string;
   nickname: string;
-  profile: DerivedProfile;
+  profile: DerivedEtoProfile;
 }
 
 export interface GroupAggregate {
@@ -114,6 +119,7 @@ const publicMessages: Record<GroupRepositoryErrorCode, string> = {
   JOIN_FAILED: "Unable to join the group.",
   LOAD_FAILED: "Unable to load the group.",
   NOT_FOUND: "The group was not found.",
+  PAYMENT_FAILED: "Unable to create the payment order.",
   UNLOCK_FAILED: "Unable to unlock the relationship.",
   SUBSCRIPTION_FAILED: "The group subscription failed.",
   INVALID_DATA: "Supabase returned invalid group data.",
@@ -130,13 +136,29 @@ function repositoryError(
   );
 }
 
-function safeProfile(profile: DerivedProfile) {
+function safeProfile(profile: DerivedEtoProfile) {
   return {
     version: 1 as const,
-    animalId: profile.animalId,
-    animalGroup: profile.animalGroup,
+    zodiacId: profile.zodiacId,
     mbti: profile.mbti,
+    dayMaster: {
+      element: profile.dayMaster.element,
+      polarity: profile.dayMaster.polarity,
+    },
+    fiveElements: profile.fiveElements === null ? null : {
+      WOOD: profile.fiveElements.WOOD,
+      FIRE: profile.fiveElements.FIRE,
+      EARTH: profile.fiveElements.EARTH,
+      METAL: profile.fiveElements.METAL,
+      WATER: profile.fiveElements.WATER,
+    },
+    yinYang: profile.yinYang === null ? null : {
+      YIN: profile.yinYang.YIN,
+      YANG: profile.yinYang.YANG,
+    },
     calculationMode: profile.calculationMode,
+    boundaryState: profile.boundaryState,
+    engineVersion: "mofu-eto-four-pillars-v1",
   };
 }
 
@@ -192,7 +214,7 @@ export function createGroupRepository(client: GroupRepositoryClient) {
 
   async function callOperation(
     operation: () => Promise<ClientResult>,
-    errorCode: "CREATE_FAILED" | "JOIN_FAILED" | "UNLOCK_FAILED",
+    errorCode: "CREATE_FAILED" | "JOIN_FAILED" | "PAYMENT_FAILED" | "UNLOCK_FAILED",
   ): Promise<ClientResult> {
     try {
       const result = await operation();
@@ -245,8 +267,7 @@ export function createGroupRepository(client: GroupRepositoryClient) {
     const args: CreateGroupArgs = {
       p_name: input.name,
       p_nickname: input.nickname,
-      p_animal_id: payload.animalId,
-      p_animal_group: payload.animalGroup,
+      p_zodiac_id: payload.zodiacId,
       p_mbti: payload.mbti,
       p_profile_payload: payload,
     };
@@ -268,8 +289,7 @@ export function createGroupRepository(client: GroupRepositoryClient) {
     const args: JoinGroupArgs = {
       p_invite_token: input.inviteToken,
       p_nickname: input.nickname,
-      p_animal_id: payload.animalId,
-      p_animal_group: payload.animalGroup,
+      p_zodiac_id: payload.zodiacId,
       p_mbti: payload.mbti,
       p_profile_payload: payload,
     };
@@ -393,6 +413,26 @@ export function createGroupRepository(client: GroupRepositoryClient) {
     return mapRelationUnlock(exactlyOneRow(result.data));
   }
 
+  async function createPaymentOrder(
+    groupId: string,
+    memberA: string,
+    memberB: string,
+    method: PaymentMethod,
+  ): Promise<PaymentOrder> {
+    await ensureAnonymousSession();
+    const args: CreatePaymentOrderArgs = {
+      p_group_id: groupId,
+      p_member_a: memberA,
+      p_member_b: memberB,
+      p_method: method,
+    };
+    const result = await callOperation(
+      () => client.createPaymentOrder(args),
+      "PAYMENT_FAILED",
+    );
+    return mapPaymentOrder(exactlyOneRow(result.data));
+  }
+
   function subscribeToGroup(
     groupId: string,
     callbacks: GroupSubscriptionCallbacks,
@@ -473,6 +513,7 @@ export function createGroupRepository(client: GroupRepositoryClient) {
     previewGroupInvite,
     findJoinedGroupByInviteToken,
     loadGroup,
+    createPaymentOrder,
     unlockPair,
     subscribeToGroup,
   };
@@ -486,7 +527,7 @@ export function createBrowserGroupRepository() {
 
 const GROUP_COLUMNS = "id,name,max_members,created_at";
 const MEMBER_COLUMNS =
-  "id,group_id,user_id,nickname,animal_id,animal_group,mbti,profile_payload,joined_at";
+  "id,group_id,user_id,nickname,zodiac_id,mbti,profile_payload,profile_version,joined_at";
 const UNLOCK_COLUMNS =
   "id,group_id,member_low_id,member_high_id,status,payment_provider,payment_reference,unlocked_by,unlocked_at";
 
@@ -531,6 +572,8 @@ export function createSupabaseGroupRepositoryAdapter(
       await client.rpc("get_group_invite_preview", args),
     unlockRelation: async (args) =>
       await client.rpc("unlock_relation_mock", args),
+    createPaymentOrder: async (args) =>
+      await client.rpc("create_payment_order", args),
     loadGroup: async (groupId) =>
       await client
         .from("groups")

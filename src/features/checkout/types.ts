@@ -1,13 +1,21 @@
+import type { PaymentMethod } from "@/lib/payment/types";
+
+export type { PaymentMethod } from "@/lib/payment/types";
+
 export interface PaymentInput {
   groupId: string;
   memberA: string;
   memberB: string;
 }
 
-export interface PaymentResult {
-  status: "unlocked";
+export interface PaymentRequest extends PaymentInput {
+  method: PaymentMethod;
 }
 
+export type PaymentStartResult =
+  | { status: "confirmed" }
+  | { status: "redirect"; checkoutUrl: string };
+
 export interface PaymentProvider {
-  unlock(input: PaymentInput): Promise<PaymentResult>;
+  start(input: PaymentRequest): Promise<PaymentStartResult>;
 }

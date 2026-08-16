@@ -1,9 +1,12 @@
 import { defineConfig, devices } from "@playwright/test";
 
+const appPort = process.env.PLAYWRIGHT_PORT ?? "3101";
+const appUrl = `http://127.0.0.1:${appPort}`;
+
 export default defineConfig({
   testDir: "./tests/e2e",
   use: {
-    baseURL: "http://127.0.0.1:3100",
+    baseURL: appUrl,
     trace: "on-first-retry",
   },
   projects: [
@@ -13,8 +16,8 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "npm run dev -- --port 3100",
-    url: "http://127.0.0.1:3100",
+    command: `npm run dev -- --port ${appPort}`,
+    url: appUrl,
     reuseExistingServer: false,
     env: {
       NEXT_PUBLIC_SUPABASE_URL: "http://127.0.0.1:54321",

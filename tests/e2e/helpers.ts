@@ -8,12 +8,16 @@ export async function fillProfile(
   page: Page,
   nickname: string,
   birthDate: string,
-  mbti: string,
+  mbti: string | null,
 ) {
   await page.getByLabel("ニックネーム").fill(nickname);
   await page.getByLabel("生年月日").fill(birthDate);
   await page.getByLabel("出生時刻はわからない").check();
-  await page.getByLabel("MBTI", { exact: true }).selectOption(mbti);
+  if (mbti === null) {
+    await page.getByRole("checkbox", { name: "MBTIはわからない" }).check();
+  } else {
+    await page.getByLabel("MBTI", { exact: true }).selectOption(mbti);
+  }
 }
 
 export async function createGroup(
@@ -37,7 +41,7 @@ export async function joinGroup(
   inviteUrl: string,
   nickname: string,
   birthDate: string,
-  mbti: string,
+  mbti: string | null,
 ) {
   await page.goto(inviteUrl);
   await expect(page.getByRole("heading", { name: "グループに招待されています" })).toBeVisible();

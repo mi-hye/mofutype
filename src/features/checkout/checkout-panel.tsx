@@ -4,13 +4,30 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
-import type { PaymentInput, PaymentProvider } from "./types";
+import type {
+  PaymentInput,
+  PaymentMethod,
+  PaymentProvider,
+  PaymentStartResult,
+} from "./types";
 
 interface CheckoutPanelProps {
   pairNames: readonly [string, string];
   input: PaymentInput;
   provider: PaymentProvider;
   onSuccess(): void;
+  onRedirect?(checkoutUrl: string): void;
+}
+
+function safeCheckoutUrl(result: PaymentStartResult): string | null {
+  if (result.status !== "redirect") return null;
+  try {
+    const url = new URL(result.checkoutUrl);
+    if (url.protocol !== "https:" || url.username || url.password) return null;
+    return url.toString();
+  } catch {
+    return null;
+  }
 }
 
 export function CheckoutPanel({
@@ -18,8 +35,9 @@ export function CheckoutPanel({
   input,
   provider,
   onSuccess,
+  onRedirect = (checkoutUrl) => window.location.assign(checkoutUrl),
 }: CheckoutPanelProps) {
-  const [method, setMethod] = useState<"paypay" | "card">("paypay");
+  const [method, setMethod] = useState<PaymentMethod>("paypay");
   const [loading, setLoading] = useState(false);
   const [failure, setFailure] = useState(false);
   const [returnFailure, setReturnFailure] = useState(false);
@@ -41,12 +59,18 @@ export function CheckoutPanel({
     setReturnFailure(false);
     const submission = ++generation.current;
     try {
-      const result = await provider.unlock(input);
+      const result = await provider.start({ ...input, method });
       if (
         !mounted.current ||
         generation.current !== submission
       ) return;
-      if (result.status !== "unlocked") throw new Error("invalid payment result");
+      if (result.status === "redirect") {
+        const checkoutUrl = safeCheckoutUrl(result);
+        if (!checkoutUrl) throw new Error("invalid payment redirect");
+        onRedirect(checkoutUrl);
+        return;
+      }
+      if (result.status !== "confirmed") throw new Error("invalid payment result");
     } catch {
       if (mounted.current && generation.current === submission) {
         setFailure(true);

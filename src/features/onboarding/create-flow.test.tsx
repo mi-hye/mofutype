@@ -3,33 +3,21 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CreateGroupForm, CREATE_DRAFT_KEY } from "./create-group-form";
-import { StartGroupForm } from "./start-group-form";
 
 const token = "c".repeat(64);
 
-describe("two-step group creation", () => {
+describe("combined group creation", () => {
   beforeEach(() => sessionStorage.clear());
 
-  it("stores the group name, routes to profile input, and creates only after profile submission", async () => {
+  it("collects the group and creator profile together and creates after submission", async () => {
     const user = userEvent.setup();
-    const navigateToProfile = vi.fn();
-    const start = render(<StartGroupForm navigate={navigateToProfile} />);
-
-    await user.type(screen.getByLabelText("グループ名"), "  放課後クラブ  ");
-    await user.click(screen.getByRole("button", { name: "次へ" }));
-
-    expect(navigateToProfile).toHaveBeenCalledWith("/create/profile");
-    expect(sessionStorage.getItem(CREATE_DRAFT_KEY)).toContain("放課後クラブ");
-    start.unmount();
-
     const createGroup = vi.fn(async () => ({ groupId: "g1", memberId: "m1", inviteToken: token }));
     const navigateToGroup = vi.fn();
-    render(<CreateGroupForm profileOnly repositoryFactory={() => ({ createGroup } as never)}
+    render(<CreateGroupForm repositoryFactory={() => ({ createGroup } as never)}
       navigate={navigateToGroup} />);
 
-    expect(screen.getByRole("form", { name: "プロフィール入力フォーム" })).toBeInTheDocument();
-    expect(screen.getByLabelText("作成するグループ")).toHaveTextContent("放課後クラブ");
-    expect(screen.queryByLabelText("グループ名")).not.toBeInTheDocument();
+    expect(screen.getByRole("form", { name: "グループ作成フォーム" })).toBeInTheDocument();
+    await user.type(screen.getByLabelText("グループ名"), "  放課後クラブ  ");
     await user.type(screen.getByLabelText("ニックネーム"), "もふ");
     fireEvent.change(screen.getByLabelText("生年月日"), { target: { value: "2000-02-29" } });
     fireEvent.change(screen.getByLabelText("出生時刻"), { target: { value: "09:05" } });
@@ -39,24 +27,28 @@ describe("two-step group creation", () => {
     await waitFor(() => expect(createGroup).toHaveBeenCalledOnce());
     expect(createGroup).toHaveBeenCalledWith(expect.objectContaining({ name: "放課後クラブ" }));
     expect(navigateToGroup).toHaveBeenCalledWith(`/g/${token}`);
+    expect(sessionStorage.getItem(CREATE_DRAFT_KEY)).toBeNull();
   });
 
-  it("keeps an empty profile route from exposing an unusable submit form", () => {
-    render(<CreateGroupForm profileOnly repositoryFactory={vi.fn()} navigate={vi.fn()} />);
+  it("does not restore obsolete privacy-sensitive drafts", () => {
+    sessionStorage.setItem(CREATE_DRAFT_KEY, JSON.stringify({ groupName: "残さない" }));
+    render(<CreateGroupForm repositoryFactory={vi.fn()} navigate={vi.fn()} />);
 
-    expect(screen.queryByRole("form", { name: "プロフィール入力フォーム" })).not.toBeInTheDocument();
-    expect(screen.getByText("先にグループ名を入力してください。")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "グループ名を入力する" })).toHaveAttribute("href", "/#create");
+    expect(screen.getByRole("form", { name: "グループ作成フォーム" })).toBeInTheDocument();
+    expect(screen.getByLabelText("グループ名")).toHaveValue("");
+    expect(sessionStorage.getItem(CREATE_DRAFT_KEY)).toBeNull();
   });
 
-  it("validates the first step before storing or routing", async () => {
+  it("validates the combined form before creating or routing", async () => {
     const user = userEvent.setup();
     const navigate = vi.fn();
-    render(<StartGroupForm navigate={navigate} />);
+    const createGroup = vi.fn();
+    render(<CreateGroupForm repositoryFactory={() => ({ createGroup } as never)} navigate={navigate} />);
 
-    await user.click(screen.getByRole("button", { name: "次へ" }));
+    await user.click(screen.getByRole("button", { name: "グループを作成" }));
 
-    expect(screen.getByRole("alert")).toHaveTextContent("グループ名を入力してください");
+    expect(screen.getAllByRole("alert")[0]).toHaveTextContent("グループ名を入力してください");
+    expect(createGroup).not.toHaveBeenCalled();
     expect(navigate).not.toHaveBeenCalled();
     expect(sessionStorage.getItem(CREATE_DRAFT_KEY)).toBeNull();
   });

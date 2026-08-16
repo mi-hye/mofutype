@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
-import { Share, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -134,7 +133,9 @@ export function GroupShareControls({
           setOpen((value) => !value);
         }}
       >
-        <Share data-testid="share-icon" aria-hidden="true" focusable="false" strokeWidth={2.4} />
+        <svg data-testid="share-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24">
+          <path d="M12 3v12m0-12 4 4m-4-4L8 7M5 11v8h14v-8" />
+        </svg>
       </Button>
       {open && typeof document !== "undefined" ? createPortal(
         <div className="group-share-backdrop" onMouseDown={(event) => {
@@ -151,7 +152,9 @@ export function GroupShareControls({
                   setOpen(false);
                   triggerRef.current?.focus();
                 }}>
-                <X aria-hidden="true" focusable="false" />
+                <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24">
+                  <path d="m6 6 12 12M18 6 6 18" />
+                </svg>
               </button>
             </header>
             <Button ref={firstActionRef} type="button" variant="ghost" size="sm"

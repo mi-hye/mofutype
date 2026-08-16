@@ -55,7 +55,7 @@ export default function Home() {
               <span className="service-flow__number" aria-hidden="true">01</span>
               <div>
                 <h3>わたしを知る</h3>
-                <p>誕生日とMBTIから、自分らしい動物タイプへ。</p>
+                <p>生年月日からわかる十二支に、出生時刻とMBTIを重ねて、自分らしいタイプへ。</p>
               </div>
               <Image
                 className="service-flow__animal"
@@ -98,7 +98,6 @@ export default function Home() {
           </div>
         </section>
       </section>
-
     </main>
   );
 }

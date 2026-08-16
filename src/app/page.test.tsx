@@ -15,7 +15,7 @@ describe("Home", () => {
     expect(screen.queryByLabelText("生年月日")).not.toBeInTheDocument();
   });
 
-  it("uses the approved Kawaii Zine headline and sticker copy", () => {
+  it("uses the approved Kawaii Zine headline and zodiac sticker copy", () => {
     render(<Home />);
 
     const homeLink = screen.getByRole("link", { name: "MofuType ホーム" });
@@ -29,6 +29,7 @@ describe("Home", () => {
     expect(screen.getByText("#MBTI")).toBeInTheDocument();
     expect(screen.getByText("#12干支")).toBeInTheDocument();
     expect(screen.queryByText("GROUP EDITION")).not.toBeInTheDocument();
+    expect(screen.queryByText("性格タイプ × 十二支キャラクター")).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "グループを作る" })).toHaveAttribute(
       "href",
       "/create/profile",
@@ -68,5 +69,8 @@ describe("Home", () => {
     expect(screen.getByText("わたしを知る")).toBeInTheDocument();
     expect(screen.getByText("みんなをつなぐ")).toBeInTheDocument();
     expect(screen.getByText("違いを楽しむ")).toBeInTheDocument();
+    expect(screen.getByText(
+      "生年月日からわかる十二支に、出生時刻とMBTIを重ねて、自分らしいタイプへ。",
+    )).toBeInTheDocument();
   });
 });

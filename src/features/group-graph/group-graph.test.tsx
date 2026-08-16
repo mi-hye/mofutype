@@ -1,12 +1,13 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createRelationship } from "@/lib/relationship/local-provider";
+import { createEtoRelationship } from "@/lib/eto/relationship";
+import type { DerivedEtoProfile, ZodiacId } from "@/lib/eto/types";
 import type { GroupMember, RelationUnlock } from "@/lib/supabase/models";
 
 type MockNode = { id: string; type: string; data: Record<string, unknown> };
-type MockEdge = { id: string; data: Record<string, unknown> };
+type MockEdge = { id: string; label?: string; data: Record<string, unknown> };
 
 const flowProps = vi.hoisted(() => ({ current: null as Record<string, unknown> | null }));
 
@@ -51,12 +52,38 @@ vi.mock("@xyflow/react", async () => {
 
 import { GroupGraph } from "./group-graph";
 
-function member(id: string, nickname = id): GroupMember {
+function profile(zodiacId: ZodiacId = "dragon"): DerivedEtoProfile {
+  return {
+    version: 1,
+    zodiacId,
+    mbti: null,
+    dayMaster: { element: "WOOD", polarity: "YANG" },
+    fiveElements: { WOOD: 2, FIRE: 1, EARTH: 1, METAL: 1, WATER: 1 },
+    yinYang: { YIN: 3, YANG: 3 },
+    calculationMode: "date-only",
+    boundaryState: "exact",
+    engineVersion: "mofu-eto-four-pillars-v1",
+  };
+}
+
+function member(id: string, nickname = id, zodiacId: ZodiacId = "dragon"): GroupMember {
   return {
     id, groupId: "g1", userId: `u-${id}`, nickname,
-    animalId: "fawn", animalGroup: "MOON", mbti: null,
-    profile: { version: 1, animalId: "fawn", animalGroup: "MOON", mbti: null, calculationMode: "date-only" },
+    zodiacId, mbti: null, profile: profile(zodiacId),
     joinedAt: "2026-08-15T00:00:00Z",
+  };
+}
+
+function memberWithMbti(
+  id: string,
+  nickname: string,
+  zodiacId: ZodiacId,
+  mbti: "ENFP" | null,
+): GroupMember {
+  return {
+    ...member(id, nickname, zodiacId),
+    mbti,
+    profile: { ...profile(zodiacId), mbti },
   };
 }
 
@@ -75,13 +102,45 @@ describe("GroupGraph", () => {
     const user = userEvent.setup();
     render(<GroupGraph members={[member("a", "あお"), member("b", "べに"), member("c", "ちゃ")]} unlocks={[]} onPairSelect={vi.fn()} />);
 
+    expect((flowProps.current?.edges as MockEdge[]).map((edge) => edge.label))
+      .toEqual(["ペース発見", "ペース発見", "ペース発見"]);
+
     await user.click(screen.getByTestId("canvas-node-b"));
+    expect((flowProps.current?.edges as MockEdge[]).filter((edge) => edge.label))
+      .toHaveLength(2);
     expect(within(screen.getByTestId("canvas-node-b")).getByText("SELECTED"))
-      .toHaveClass("animal-graph-node__selected-sticker");
+      .toHaveClass("zodiac-graph-node__selected-sticker");
     expect(screen.getByRole("status", { name: "選択中のメンバー" })).toHaveTextContent("べに");
     expect(screen.getByRole("status", { name: "選択中のメンバー" })).toHaveTextContent("2本");
     await user.click(screen.getByTestId("canvas-pane"));
+    expect((flowProps.current?.edges as MockEdge[]).map((edge) => edge.label))
+      .toEqual(["ペース発見", "ペース発見", "ペース発見"]);
     expect(screen.queryByRole("status", { name: "選択中のメンバー" })).not.toBeInTheDocument();
+  });
+
+  it("shows each free member's zodiac character title with and without MBTI", () => {
+    render(
+      <GroupGraph
+        members={[
+          memberWithMbti("a", "あお", "boar", "ENFP"),
+          memberWithMbti("b", "べに", "monkey", null),
+        ]}
+        unlocks={[]}
+        onPairSelect={vi.fn()}
+      />,
+    );
+
+    expect(within(screen.getByTestId("canvas-node-a"))
+      .getByText("好奇心のまま駆け出すいのしし")).toBeInTheDocument();
+    expect(within(screen.getByTestId("canvas-node-b"))
+      .getByText("さるタイプ")).toBeInTheDocument();
+
+    const accessibleList = screen.getByRole("region", {
+      name: "関係性グラフの操作リスト",
+    });
+    expect(within(accessibleList).getByText("好奇心のまま駆け出すいのしし"))
+      .toBeInTheDocument();
+    expect(within(accessibleList).getByText("さるタイプ")).toBeInTheDocument();
   });
 
   it("sends a stable complete payload when an edge is clicked", async () => {
@@ -107,7 +166,7 @@ describe("GroupGraph", () => {
     expect(screen.getByRole("region", { name: "関係性グラフの操作リスト" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "あおを選択" }));
     const relationshipButton = screen.getByRole("button", { name: /あおとべにの関係を見る.*解放済み/ });
-    expect(relationshipButton).toHaveTextContent("こじか × こじか");
+    expect(relationshipButton).toHaveTextContent("たつとたつ");
     expect(relationshipButton).not.toHaveTextContent("a:b");
     const lockedRelationshipButton = screen.getByRole("button", { name: /あおとちゃの関係を見る/ });
     expect(lockedRelationshipButton).not.toHaveTextContent("解放済み");
@@ -116,7 +175,7 @@ describe("GroupGraph", () => {
     expect(onPairSelect).toHaveBeenCalledWith(expect.objectContaining({ pairKey: "a:b" }));
   });
 
-  it("uses animal PNGs and locks viewport navigation and graph editing", () => {
+  it("uses zodiac PNGs and locks viewport navigation and graph editing", () => {
     render(<GroupGraph members={[member("a")]} unlocks={[]} onPairSelect={vi.fn()} />);
     expect(flowProps.current).toEqual(expect.objectContaining({
       fitView: true,
@@ -136,7 +195,7 @@ describe("GroupGraph", () => {
     }));
     const canvas = screen.getByTestId("group-graph-canvas");
     expect(canvas.querySelector("img"))
-      .toHaveAttribute("src", "/animals/faces/fawn.png");
+      .toHaveAttribute("src", "/zodiac/dragon.png");
     expect(screen.queryByText("React Flow")).not.toBeInTheDocument();
     expect(screen.queryByText("全体")).not.toBeInTheDocument();
     expect(canvas).toHaveAttribute("aria-hidden", "true");
@@ -145,6 +204,34 @@ describe("GroupGraph", () => {
     expect(screen.queryByRole("button", { name: "aの関係性ノード" })).not.toBeInTheDocument();
     const accessibleList = screen.getByRole("region", { name: "関係性グラフの操作リスト" });
     expect(within(accessibleList).queryByText("a:b")).not.toBeInTheDocument();
+  });
+
+  it("keeps remounted canvas descendants out of the tab order after a semantic change", () => {
+    const view = render(
+      <GroupGraph members={[member("a")]} unlocks={[]} onPairSelect={vi.fn()} />,
+    );
+
+    view.rerender(
+      <GroupGraph
+        members={[member("a", "semantic-change")]}
+        unlocks={[]}
+        onPairSelect={vi.fn()}
+      />,
+    );
+
+    const canvas = screen.getByTestId("group-graph-canvas");
+    expect(Array.from(canvas.querySelectorAll<HTMLElement>("a, button, [tabindex]"))
+      .every((element) => element.tabIndex === -1)).toBe(true);
+  });
+
+  it("keeps asynchronously inserted canvas descendants out of the tab order", async () => {
+    render(<GroupGraph members={[member("a")]} unlocks={[]} onPairSelect={vi.fn()} />);
+    const canvas = screen.getByTestId("group-graph-canvas");
+    const lateButton = document.createElement("button");
+
+    canvas.append(lateButton);
+
+    await waitFor(() => expect(lateButton.tabIndex).toBe(-1));
   });
 
   it("does not rebuild when a parent rerenders with identical graph inputs", () => {
@@ -163,16 +250,22 @@ describe("GroupGraph", () => {
   it("builds 30-member relationships once across presentation-only changes", async () => {
     const user = userEvent.setup();
     const members = Array.from({ length: 30 }, (_, index) => member(`m-${String(index).padStart(2, "0")}`));
-    const relationshipFactory = vi.fn(createRelationship);
+    const relationshipFactory = vi.fn(createEtoRelationship);
     const onPairSelect = vi.fn();
     const view = render(
       <GroupGraph members={members} unlocks={[]} onPairSelect={onPairSelect}
         relationshipFactory={relationshipFactory} />,
     );
     expect(relationshipFactory).toHaveBeenCalledTimes(435);
+    expect((flowProps.current?.edges as MockEdge[]).filter((edge) => edge.label))
+      .toHaveLength(0);
 
     await user.click(screen.getByTestId("canvas-node-m-12"));
+    expect((flowProps.current?.edges as MockEdge[]).filter((edge) => edge.label))
+      .toHaveLength(29);
     await user.click(screen.getByTestId("canvas-pane"));
+    expect((flowProps.current?.edges as MockEdge[]).filter((edge) => edge.label))
+      .toHaveLength(0);
     expect(relationshipFactory).toHaveBeenCalledTimes(435);
 
     view.rerender(

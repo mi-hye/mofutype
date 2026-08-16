@@ -1,15 +1,15 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { RefreshCw } from "lucide-react";
 
-import { AnimalAvatar } from "@/components/animal-avatar";
+import { ZodiacAvatar } from "@/components/zodiac-avatar";
 import { Button } from "@/components/ui/button";
 import { StatusBanner, type ConnectionStatus } from "@/components/ui/status-banner";
 import { RelationSheet } from "@/features/relationship/relation-sheet";
 import { GroupShareControls } from "@/features/share/group-share-controls";
-import { ANIMALS } from "@/lib/astrology/animals";
-import type { AnimalId } from "@/lib/astrology/types";
+import { createCharacterCopy } from "@/lib/eto/character";
+import { createEtoRelationship } from "@/lib/eto/relationship";
+import { ZODIACS } from "@/lib/eto/zodiac";
 import type {
   GroupAggregate,
   GroupSubscriptionCallbacks,
@@ -29,57 +29,6 @@ interface GroupScreenProps {
   inviteToken?: string;
   currentUserId?: string;
 }
-
-const ANIMAL_RESULT_COPY: Record<AnimalId, { title: string; description: string }> = {
-  fawn: {
-    title: "やさしいこじか",
-    description: "周りの空気を丁寧に感じ取り、安心できる関係を育てるタイプ。控えめに見えても、大切な人を守るときには芯の強さが表れます。",
-  },
-  raccoon: {
-    title: "勇ましいたぬき",
-    description: "人との縁を大切にしながら、いざというときには腹を決めて動けるタイプ。親しみやすさの奥に、現実をしっかり見つめる強さがあります。",
-  },
-  "black-panther": {
-    title: "凛とした黒ひょう",
-    description: "自分らしい美意識と判断軸を持ち、スマートに道を選ぶタイプ。静かな集中力で、決めたことを最後まで磨き上げます。",
-  },
-  sheep: {
-    title: "思いやり深いひつじ",
-    description: "相手の気持ちを汲み取り、みんなが落ち着ける場所をつくるタイプ。協調性の中にも、自分なりの誠実な基準があります。",
-  },
-  wolf: {
-    title: "芯のある狼",
-    description: "周囲に流されず、自分のペースで本質を追いかけるタイプ。ひとりで考える時間を力に変え、独自の答えを見つけます。",
-  },
-  monkey: {
-    title: "好奇心旺盛な猿",
-    description: "気になることへ素早く手を伸ばし、経験から学びを増やすタイプ。軽やかな発想と行動力で、場の流れを前へ進めます。",
-  },
-  tiger: {
-    title: "堂々とした虎",
-    description: "責任感が強く、決めた目標へまっすぐ進むタイプ。落ち着いた存在感と面倒見のよさで、自然と信頼を集めます。",
-  },
-  koala: {
-    title: "おおらかなコアラ",
-    description: "穏やかな雰囲気の中で、自分の楽しみと居心地を大切にするタイプ。柔らかな発想で、毎日に小さな余白をつくります。",
-  },
-  cheetah: {
-    title: "まっすぐなチータ",
-    description: "目標が見えると迷わず走り出し、スピード感を力に変えるタイプ。率直な情熱が、周囲にも前向きな勢いを与えます。",
-  },
-  lion: {
-    title: "誇り高いライオン",
-    description: "高い理想を掲げ、自分にも周囲にも誠実であろうとするタイプ。堂々とした決断力で、みんなの目印になる存在です。",
-  },
-  elephant: {
-    title: "頼もしいゾウ",
-    description: "目の前のことを着実に積み重ね、大きな安心感を生むタイプ。簡単には揺らがない粘り強さで、仲間を支えます。",
-  },
-  pegasus: {
-    title: "自由なペガサス",
-    description: "ひらめきと感性を頼りに、まだ見えない可能性へ飛び込むタイプ。型に収まらない視点が、新しい景色を連れてきます。",
-  },
-};
 
 function upsertById<T extends { id: string }>(items: readonly T[], incoming: T): T[] {
   const index = items.findIndex((item) => item.id === incoming.id);
@@ -153,17 +102,26 @@ function isPairUnlocked(
   );
 }
 
+function findSelectedMembers(
+  members: readonly GroupMember[],
+  memberIds: readonly [string, string],
+): readonly [GroupMember, GroupMember] | null {
+  const memberA = members.find((member) => member.id === memberIds[0]);
+  const memberB = members.find((member) => member.id === memberIds[1]);
+  return memberA && memberB ? [memberA, memberB] : null;
+}
+
 export function GroupScreen(props: GroupScreenProps) {
   return <GroupScreenForGroup key={props.initialAggregate.group.id} {...props} />;
 }
 
 function GroupScreenForGroup({ initialAggregate, repository, inviteToken, currentUserId }: GroupScreenProps) {
   const [aggregate, setAggregate] = useState(initialAggregate);
-  const [resolvedUserId, setResolvedUserId] = useState<string | null>(null);
   const [status, setStatus] = useState<ConnectionStatus>("connecting");
   const [loadError, setLoadError] = useState(false);
   const [subscriptionAttempt, setSubscriptionAttempt] = useState(0);
   const [selectedPair, setSelectedPair] = useState<PairSelection | null>(null);
+  const [resolvedUserId, setResolvedUserId] = useState<string | null>(null);
   const generation = useRef(0);
   const changeRevision = useRef(0);
   const memberRevisions = useRef(new Map<string, number>());
@@ -342,25 +300,39 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken, curren
   }, [initialAggregate.group.id, repository]);
 
   useEffect(() => {
-    if (currentUserId) return;
-    if (!repository?.ensureAnonymousSession) return;
-    let current = true;
+    if (currentUserId || !repository?.ensureAnonymousSession) return;
+    let active = true;
     void repository.ensureAnonymousSession().then((userId) => {
-      if (current) setResolvedUserId(userId);
+      if (active) setResolvedUserId(userId);
     }).catch(() => {
-      // Connection status already provides the user-facing recovery path.
+      // The connection banner already exposes the recovery state.
     });
-    return () => { current = false; };
+    return () => { active = false; };
   }, [currentUserId, repository]);
 
   const activeUserId = currentUserId ?? resolvedUserId;
   const currentMember = activeUserId
     ? aggregate.members.find((member) => member.userId === activeUserId) ?? null
     : null;
-  const currentAnimal = currentMember ? ANIMALS[currentMember.animalId] : null;
-  const currentResultCopy = currentMember ? ANIMAL_RESULT_COPY[currentMember.animalId] : null;
-  const animalGroupLabel = currentMember
-    ? { MOON: "月タイプ", EARTH: "地球タイプ", SUN: "太陽タイプ" }[currentMember.animalGroup]
+  const currentZodiac = currentMember ? ZODIACS[currentMember.zodiacId] : null;
+  const currentCharacter = currentMember
+    ? createCharacterCopy(currentMember.zodiacId, currentMember.mbti)
+    : null;
+  const elementLabel = currentMember
+    ? { WOOD: "木", FIRE: "火", EARTH: "土", METAL: "金", WATER: "水" }[currentMember.profile.dayMaster.element]
+    : null;
+  const polarityLabel = currentMember
+    ? { YIN: "陰", YANG: "陽" }[currentMember.profile.dayMaster.polarity]
+    : null;
+
+  const selectedMembers = selectedPair
+    ? findSelectedMembers(aggregate.members, selectedPair.memberIds)
+    : null;
+  const selectedRelationship = selectedMembers
+    ? createEtoRelationship({
+        memberA: { id: selectedMembers[0].id, profile: selectedMembers[0].profile },
+        memberB: { id: selectedMembers[1].id, profile: selectedMembers[1].profile },
+      })
     : null;
 
   return (
@@ -398,7 +370,9 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken, curren
             disabled={!repository}
             onClick={() => void refresh()}
           >
-            <RefreshCw aria-hidden="true" focusable="false" strokeWidth={2.2} />
+            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24">
+              <path d="M20 11a8 8 0 1 0-2.34 5.66M20 4v7h-7" />
+            </svg>
           </Button>
         </div>
       </header>
@@ -410,38 +384,36 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken, curren
       ) : null}
 
       <GroupGraph members={aggregate.members} unlocks={aggregate.unlocks} onPairSelect={setSelectedPair} />
-      {currentMember && currentAnimal && currentResultCopy ? (
+      {currentMember && currentZodiac && currentCharacter ? (
         <section className="my-result-card" aria-labelledby="my-result-title">
           <div className="my-result-card__summary">
-            <AnimalAvatar
-              animalId={currentMember.animalId}
+            <ZodiacAvatar
+              zodiacId={currentMember.zodiacId}
               nickname={currentMember.nickname}
               size="md"
-              src={`/animals/faces/${currentMember.animalId}.png`}
             />
             <div className="my-result-card__identity">
               <span id="my-result-title">わたしの四柱推命</span>
-              <strong>{currentResultCopy.title}</strong>
+              <strong>{currentCharacter.titleJa}</strong>
               <ul aria-label="診断結果の詳細">
                 <li>{currentMember.mbti ?? "MBTI未設定"}</li>
-                <li>{animalGroupLabel}</li>
+                <li>{elementLabel}・{polarityLabel}</li>
                 <li>{currentMember.profile.calculationMode === "date-time" ? "出生時刻を反映" : "生年月日で診断"}</li>
               </ul>
             </div>
           </div>
           <div className="my-result-card__reading">
             <h2>生まれ持った気質</h2>
-            <p>{currentResultCopy.description}</p>
-            <small>{currentAnimal.nameJa}タイプとして、生年月日から導いた傾向です。</small>
+            <p>{currentCharacter.descriptionJa}</p>
+            <small>{currentZodiac.nameJa}タイプとして、生年月日から導いた傾向です。</small>
           </div>
         </section>
       ) : null}
-      {selectedPair ? (
+      {selectedPair && selectedMembers && selectedRelationship ? (
         <RelationSheet
-          relationship={selectedPair.relationship}
-          memberNames={selectedPair.memberIds.map((memberId) =>
-            aggregate.members.find((member) => member.id === memberId)?.nickname ?? "メンバー"
-          ) as [string, string]}
+          relationship={selectedRelationship}
+          memberNames={[selectedMembers[0].nickname, selectedMembers[1].nickname]}
+          memberProfiles={[selectedMembers[0].profile, selectedMembers[1].profile]}
           unlocked={isPairUnlocked(aggregate.unlocks, selectedPair.memberIds)}
           checkoutHref={inviteToken
             ? `/checkout/${encodeURIComponent(selectedPair.pairKey)}?invite=${encodeURIComponent(inviteToken)}`

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 import { CheckoutPanel } from "@/features/checkout/checkout-panel";
 import { MockPaymentProvider } from "@/features/checkout/mock-payment-provider";
-import { createRelationship } from "@/lib/relationship/local-provider";
+import { createEtoRelationship } from "@/lib/eto/relationship";
 import { canonicalPairKey } from "@/lib/relationship/pair-key";
 import { createBrowserGroupRepository } from "@/lib/supabase/group-repository";
 import type { GroupMember, RelationUnlock } from "@/lib/supabase/models";
@@ -15,7 +15,11 @@ const INVITE_TOKEN_PATTERN = /^[a-f0-9]{64}$/;
 type BrowserRepository = ReturnType<typeof createBrowserGroupRepository>;
 type RelationRepository = Pick<
   BrowserRepository,
-  "findJoinedGroupByInviteToken" | "loadGroup" | "subscribeToGroup" | "unlockPair"
+  | "createPaymentOrder"
+  | "findJoinedGroupByInviteToken"
+  | "loadGroup"
+  | "subscribeToGroup"
+  | "unlockPair"
 >;
 
 interface PairData {
@@ -76,6 +80,25 @@ function upsertUnlock(
   return unlocks.map((unlock, itemIndex) => itemIndex === index ? incoming : unlock);
 }
 
+function upsertMember(
+  members: readonly GroupMember[],
+  incoming: GroupMember,
+): GroupMember[] {
+  const index = members.findIndex((member) => member.id === incoming.id);
+  if (index < 0) return [...members, incoming];
+  return members.map((member, itemIndex) => itemIndex === index ? incoming : member);
+}
+
+function updatePairMember(
+  members: readonly [GroupMember, GroupMember],
+  incoming: GroupMember,
+): readonly [GroupMember, GroupMember] {
+  return [
+    members[0].id === incoming.id ? incoming : members[0],
+    members[1].id === incoming.id ? incoming : members[1],
+  ];
+}
+
 export function RelationRouteGate(props: RelationRouteGateProps) {
   return (
     <RelationRouteGateForPair
@@ -102,6 +125,7 @@ function RelationRouteGateForPair({
     if (!validInvite) return;
     let active = true;
     let cleanup: (() => Promise<void>) | undefined;
+    const realtimeMembers: GroupMember[] = [];
     const realtimeUnlocks: RelationUnlock[] = [];
 
     void (async () => {
@@ -121,6 +145,17 @@ function RelationRouteGateForPair({
         setRepository(activeRepository);
         setPair({ groupId: aggregate.group.id, members, unlocks: aggregate.unlocks });
         cleanup = activeRepository.subscribeToGroup(aggregate.group.id, {
+          onMemberChange: ({ new: member }) => {
+            if (active) {
+              const index = realtimeMembers.findIndex((item) => item.id === member.id);
+              if (index < 0) realtimeMembers.push(member);
+              else realtimeMembers[index] = member;
+              setPair((current) => current ? {
+                ...current,
+                members: updatePairMember(current.members, member),
+              } : current);
+            }
+          },
           onUnlockChange: ({ new: unlock }) => {
             if (active) {
               const index = realtimeUnlocks.findIndex((item) => item.id === unlock.id);
@@ -138,7 +173,11 @@ function RelationRouteGateForPair({
         });
         const fresh = await activeRepository.loadGroup(aggregate.group.id);
         if (!active) return;
-        const freshMembers = findPair(fresh.members, normalizedPairKey);
+        const mergedMembers = realtimeMembers.reduce<GroupMember[]>(
+          (current, member) => upsertMember(current, member),
+          [...fresh.members],
+        );
+        const freshMembers = findPair(mergedMembers, normalizedPairKey);
         if (!freshMembers) {
           setPair(null);
           setStatus("pair");
@@ -187,7 +226,10 @@ function RelationRouteGateForPair({
   }
 
   const [memberA, memberB] = pair.members;
-  const relationship = createRelationship({ memberA, memberB });
+  const relationship = createEtoRelationship({
+    memberA: { id: memberA.id, profile: memberA.profile },
+    memberB: { id: memberB.id, profile: memberB.profile },
+  });
   const unlocked = pairIsUnlocked(pair.unlocks, pair.members);
   const encodedPairKey = encodeURIComponent(normalizedPairKey);
   const encodedInvite = encodeURIComponent(inviteToken);
@@ -211,6 +253,7 @@ function RelationRouteGateForPair({
       <RelationSheet
         relationship={relationship}
         memberNames={[memberA.nickname, memberB.nickname]}
+        memberProfiles={[memberA.profile, memberB.profile]}
         unlocked={unlocked}
         checkoutHref={`/checkout/${encodedPairKey}?invite=${encodedInvite}`}
         detailHref={detailHref}
