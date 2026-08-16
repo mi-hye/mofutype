@@ -229,7 +229,7 @@ describe("production source safety", () => {
     expect(globalStyles).toMatch(/\.start-group-form > \.ui-button::before[^}]*border-width:\s*2px/);
     expect(globalStyles).toMatch(/\.start-group-form \.field-error[^}]*border:\s*0[^}]*padding:\s*0[^}]*background:\s*transparent/);
     expect(globalStyles).toMatch(/\.field-error, \.form-error, p\[role="alert"\][^}]*border:\s*0[^}]*padding:\s*0[^}]*background:\s*transparent[^}]*color:\s*var\(--text-error\)/);
-    expect(globalStyles).toMatch(/\.profile-step \.unknown-toggle[^}]*margin-top:\s*-11px/);
+    expect(globalStyles).toMatch(/\.profile-step \.unknown-toggle[^}]*margin-top:\s*-13px/);
     expect(globalStyles).toMatch(/\.hero\s*\{[^}]*margin:\s*calc\(2\.75rem - 12px\) auto 0/);
     expect(startFormSource).not.toContain("start-group-form__note");
     expect(startFormSource).not.toContain("グループはプロフィール入力のあとに作成されます。");
