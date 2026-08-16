@@ -227,7 +227,7 @@ describe("production source safety", () => {
     expect(previewSource.match(/className: "hero__connector--/g)).toHaveLength(3);
     expect(previewSource).toContain('aria-pressed={selected}');
     expect(pageSource).toContain("#12干支");
-    expect(globalStyles).toMatch(/\.hero__stickers[^}]*align-items:\s*center/);
+    expect(globalStyles).toMatch(/\.hero__stickers[^}]*align-items:\s*center[^}]*margin:\s*-3px 0 0/);
     expect(globalStyles).toMatch(/\.hero__stickers span[^}]*display:\s*flex[^}]*min-height:\s*2\.125rem[^}]*align-items:\s*center[^}]*line-height:\s*1/);
     expect(pageSource).not.toContain("#動物うらない");
     expect(pageSource).not.toContain("性格タイプ × 動物キャラクター");
