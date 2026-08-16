@@ -214,7 +214,8 @@ describe("production source safety", () => {
     expect(globalStyles).toMatch(/\.hero__decor\s*\{[^}]*background-image:\s*none/);
     expect(globalStyles).toMatch(/\.hero\s*\{[^}]*box-shadow:\s*none/);
     expect(globalStyles).toMatch(/\.landing-nav[^}]*justify-content:\s*center/);
-    expect(globalStyles).toMatch(/\.start-group-form > \.ui-button[^}]*justify-self:\s*start/);
+    expect(globalStyles).toMatch(/\.start-group-form > \.ui-button[^}]*min-width:\s*6\.5rem[^}]*min-height:\s*48px[^}]*justify-self:\s*start/);
+    expect(globalStyles).toMatch(/\.start-group-form > \.ui-button::before[^}]*border-width:\s*2\.5px/);
     expect(globalStyles).toMatch(/\.start-group-form \.field-error[^}]*border:\s*0[^}]*padding:\s*0[^}]*background:\s*transparent/);
     expect(globalStyles).toMatch(/\.hero\s*\{[^}]*margin:\s*calc\(2\.75rem - 12px\) auto 0/);
     expect(startFormSource).not.toContain("start-group-form__note");
