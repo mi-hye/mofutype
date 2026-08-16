@@ -210,6 +210,7 @@ describe("production source safety", () => {
     expect(globalStyles).toMatch(/\.hero__decor\s*\{[^}]*background-image:\s*none/);
     expect(globalStyles).toMatch(/\.hero\s*\{[^}]*box-shadow:\s*none/);
     expect(globalStyles).toMatch(/\.landing-nav[^}]*justify-content:\s*center/);
+    expect(globalStyles).toMatch(/\.start-group-form > \.ui-button[^}]*justify-self:\s*center/);
     expect(globalStyles).toMatch(/\.hero\s*\{[^}]*margin:\s*calc\(2\.75rem - 6px\) auto 0/);
     expect(globalStyles).toContain(".hero__connectors line");
     expect(pageSource).toContain("<LandingRelationshipPreview />");
@@ -218,6 +219,7 @@ describe("production source safety", () => {
     expect(previewSource).toContain('aria-pressed={selected}');
     expect(pageSource).toContain("#12干支");
     expect(globalStyles).toMatch(/\.hero__stickers[^}]*align-items:\s*center/);
+    expect(globalStyles).toMatch(/\.hero__stickers span[^}]*display:\s*inline-flex[^}]*min-height:\s*2\.125rem[^}]*align-items:\s*center[^}]*line-height:\s*1/);
     expect(pageSource).not.toContain("#動物うらない");
     expect(pageSource).not.toContain("性格タイプ × 動物キャラクター");
     for (const animalImage of ["tiger.png", "rat.png", "rabbit.png"]) {
