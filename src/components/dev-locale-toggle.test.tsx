@@ -76,4 +76,30 @@ describe("DevLocaleToggle", () => {
     expect(screen.getByText("음")).toBeInTheDocument();
     expect(screen.getByText(/용띠 유형으로 생년월일에서 도출한 성향입니다/)).toBeInTheDocument();
   });
+
+  it("translates the detailed MBTI and four-pillars reading in local preview", async () => {
+    const user = userEvent.setup();
+    render(
+      <>
+        <h2>十二支の気質</h2>
+        <h2>INTJの思考と行動</h2>
+        <strong>I · エネルギー</strong>
+        <p>ひとりで考える時間で心を整え、内側で考えを深めてから言葉にします。</p>
+        <h2>火・陰の行動スタイル</h2>
+        <p>情熱と表現力を軸に、心が動いたことを周りへあたたかく伝える傾向があります。</p>
+        <h2>へび × INTJ × 火・陰</h2>
+        <DevLocaleToggle />
+      </>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: "한국어로 보기" }));
+
+    expect(screen.getByRole("heading", { name: "십이지의 기질" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "INTJ의 사고와 행동" })).toBeInTheDocument();
+    expect(screen.getByText("I · 에너지")).toBeInTheDocument();
+    expect(screen.getByText(/혼자 생각하는 시간으로 마음을 정돈하고/)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "화・음의 행동 스타일" })).toBeInTheDocument();
+    expect(screen.getByText(/열정과 표현력을 중심으로/)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "뱀띠 × INTJ × 화・음" })).toBeInTheDocument();
+  });
 });

@@ -78,6 +78,13 @@ const KO_COPY: Readonly<Record<string, string>> = {
   "出生時刻を反映": "출생 시각 반영",
   "生年月日で診断": "생년월일로 진단",
   "生まれ持った気質": "타고난 기질",
+  "十二支の気質": "십이지의 기질",
+  "エネルギー": "에너지",
+  "情報の捉え方": "정보를 받아들이는 방식",
+  "判断の軸": "판단의 기준",
+  "進め方": "진행 방식",
+  "MBTIの4つの視点": "MBTI의 네 가지 관점",
+  "十二支・MBTI・五行と陰陽を重ねた、自己理解のための読み解きです。": "십이지·MBTI·오행과 음양을 함께 살펴보는 자기 이해를 위한 해석입니다.",
   "メンバー": "멤버",
   "招待リンクを共有": "초대 링크 공유",
   "共有方法": "공유 방법",
@@ -124,6 +131,16 @@ function koreanCopy(value: string): string {
   if (zodiacName) return `${leading}${zodiacName}${trailing}`;
   const zodiacType = zodiacEntries.find(([name]) => content === `${name}タイプ`);
   if (zodiacType) return `${leading}${zodiacType[1]} 타입${trailing}`;
+  const zodiacTemperament = zodiacEntries.find(([name]) => content === `${name}の気質`);
+  if (zodiacTemperament) return `${leading}${zodiacTemperament[1]}의 기질${trailing}`;
+
+  const mbtiReading = content.match(/^([EISNTFJP]{4})の思考と行動$/);
+  if (mbtiReading) return `${leading}${mbtiReading[1]}의 사고와 행동${trailing}`;
+
+  const axisReading = content.match(/^([EISNTFJP]) · (エネルギー|情報の捉え方|判断の軸|進め方)$/);
+  if (axisReading) {
+    return `${leading}${axisReading[1]} · ${KO_COPY[axisReading[2]]}${trailing}`;
+  }
 
   for (const [modifierJa, modifierKo] of Object.entries(devKo.characterModifiers)) {
     const zodiac = zodiacEntries.find(([name]) => content === `${modifierJa}${name}`);
@@ -135,6 +152,21 @@ function koreanCopy(value: string): string {
     const element = devKo.fiveElements[elementPolarity[1] as keyof typeof devKo.fiveElements];
     const polarity = devKo.polarities[elementPolarity[2] as keyof typeof devKo.polarities];
     return `${leading}${element}・${polarity}${trailing}`;
+  }
+  const elementStyle = content.match(/^(木|火|土|金|水)・(陰|陽)の行動スタイル$/);
+  if (elementStyle) {
+    const element = devKo.fiveElements[elementStyle[1] as keyof typeof devKo.fiveElements];
+    const polarity = devKo.polarities[elementStyle[2] as keyof typeof devKo.polarities];
+    return `${leading}${element}・${polarity}의 행동 스타일${trailing}`;
+  }
+  const combinedReading = content.match(/^(.+?) × (?:([EISNTFJP]{4}) × )?(木|火|土|金|水)・(陰|陽)$/);
+  if (combinedReading) {
+    const zodiac = devKo.zodiacNames[combinedReading[1] as keyof typeof devKo.zodiacNames]
+      ?? combinedReading[1];
+    const element = devKo.fiveElements[combinedReading[3] as keyof typeof devKo.fiveElements];
+    const polarity = devKo.polarities[combinedReading[4] as keyof typeof devKo.polarities];
+    const mbti = combinedReading[2] ? ` × ${combinedReading[2]}` : "";
+    return `${leading}${zodiac}${mbti} × ${element}・${polarity}${trailing}`;
   }
   const element = devKo.fiveElements[content as keyof typeof devKo.fiveElements];
   if (element) return `${leading}${element}${trailing}`;

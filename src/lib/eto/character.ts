@@ -5,6 +5,8 @@ export interface CharacterCopy {
   titleJa: string;
   zodiacTraitsJa: readonly [string, string, string];
   mbtiModifierJa: string | null;
+  zodiacDescriptionJa: string;
+  mbtiDescriptionJa: string | null;
   descriptionJa: string;
 }
 
@@ -76,14 +78,18 @@ export function createCharacterCopy(
   }
 
   const modifier = mbti === null ? null : MBTI_MODIFIERS[mbti];
+  const zodiacDescriptionJa = BASE_DESCRIPTIONS_JA[zodiacId];
+  const mbtiDescriptionJa = mbti === null ? null : MBTI_CONTRIBUTIONS_JA[mbti];
   const descriptionJa = mbti === null
-    ? BASE_DESCRIPTIONS_JA[zodiacId]
-    : `${BASE_DESCRIPTIONS_JA[zodiacId]}${MBTI_CONTRIBUTIONS_JA[mbti]}`;
+    ? zodiacDescriptionJa
+    : `${zodiacDescriptionJa}${mbtiDescriptionJa}`;
 
   return Object.freeze({
     titleJa: modifier === null ? `${zodiac.nameJa}タイプ` : `${modifier}${zodiac.nameJa}`,
     zodiacTraitsJa: zodiac.keywordsJa,
     mbtiModifierJa: modifier,
+    zodiacDescriptionJa,
+    mbtiDescriptionJa,
     descriptionJa,
   });
 }

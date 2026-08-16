@@ -134,10 +134,31 @@ describe("GroupScreen", () => {
     expect(screen.getByText("わたしの四柱推命")).toBeInTheDocument();
     expect(screen.queryByText("MY PROFILE")).not.toBeInTheDocument();
     expect(screen.getByText("大胆に道を切り開くうさぎ")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "生まれ持った気質" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "十二支の気質" })).toBeInTheDocument();
     expect(screen.getByText(/豊かな感性と気配り/)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "ENTJの思考と行動" })).toBeInTheDocument();
+    const mbtiAxes = screen.getByRole("list", { name: "MBTIの4つの視点" });
+    expect(mbtiAxes).toHaveTextContent("E · エネルギー");
+    expect(mbtiAxes).toHaveTextContent("N · 情報の捉え方");
+    expect(mbtiAxes).toHaveTextContent("T · 判断の軸");
+    expect(mbtiAxes).toHaveTextContent("J · 進め方");
+    expect(screen.getByRole("heading", { name: "火・陽の行動スタイル" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "うさぎ × ENTJ × 火・陽" })).toBeInTheDocument();
     expect(screen.getByRole("list", { name: "診断結果の詳細" })).toHaveTextContent("ENTJ火・陽出生時刻を反映");
     expect(screen.queryByText("たつタイプとして")).not.toBeInTheDocument();
+  });
+
+  it("keeps the personal result complete and neutral when MBTI is unknown", () => {
+    const initial = aggregate("g1", [member("a", "わたし")]);
+    const repo = repository(initial);
+
+    render(<GroupScreen initialAggregate={initial} repository={repo.api} currentUserId="u-a" />);
+
+    expect(screen.getByRole("heading", { name: "十二支の気質" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "木・陽の行動スタイル" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "たつ × 木・陽" })).toBeInTheDocument();
+    expect(screen.queryByText(/MBTIの思考と行動/)).not.toBeInTheDocument();
+    expect(screen.getByText("MBTI未設定")).toBeInTheDocument();
   });
 
   it("subscribes once with the group filter, refreshes initial data, and cleans up", async () => {
@@ -241,7 +262,7 @@ describe("GroupScreen", () => {
     const repo = repository(initial);
     render(<GroupScreen initialAggregate={initial} repository={repo.api} />);
 
-    expect(screen.getByRole("status")).toHaveTextContent("接続中");
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
     act(() => repo.callbacks()?.onConnectionStatus?.("SUBSCRIBED"));
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
     act(() => repo.callbacks()?.onConnectionStatus?.("TIMED_OUT"));

@@ -8,6 +8,7 @@ import { StatusBanner, type ConnectionStatus } from "@/components/ui/status-bann
 import { RelationSheet } from "@/features/relationship/relation-sheet";
 import { GroupShareControls } from "@/features/share/group-share-controls";
 import { createCharacterCopy } from "@/lib/eto/character";
+import { createPersonalReading } from "@/lib/eto/personal-reading";
 import { createEtoRelationship } from "@/lib/eto/relationship";
 import { ZODIACS } from "@/lib/eto/zodiac";
 import type {
@@ -318,6 +319,9 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken, curren
   const currentCharacter = currentMember
     ? createCharacterCopy(currentMember.zodiacId, currentMember.mbti)
     : null;
+  const currentReading = currentMember
+    ? createPersonalReading(currentMember.profile)
+    : null;
   const elementLabel = currentMember
     ? { WOOD: "木", FIRE: "火", EARTH: "土", METAL: "金", WATER: "水" }[currentMember.profile.dayMaster.element]
     : null;
@@ -344,7 +348,9 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken, curren
           <p>メンバー {aggregate.members.length}人</p>
         </div>
         <div className="group-member-actions">
-          {status !== "success" ? <StatusBanner status={status} /> : null}
+          {status === "offline" || status === "error"
+            ? <StatusBanner status={status} />
+            : null}
           {inviteToken ? (
             <GroupShareControls
               groupName={aggregate.group.name}
@@ -384,7 +390,7 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken, curren
       ) : null}
 
       <GroupGraph members={aggregate.members} unlocks={aggregate.unlocks} onPairSelect={setSelectedPair} />
-      {currentMember && currentZodiac && currentCharacter ? (
+      {currentMember && currentZodiac && currentCharacter && currentReading ? (
         <section className="my-result-card" aria-labelledby="my-result-title">
           <div className="my-result-card__summary">
             <ZodiacAvatar
@@ -402,10 +408,37 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken, curren
               </ul>
             </div>
           </div>
-          <div className="my-result-card__reading">
-            <h2>生まれ持った気質</h2>
-            <p>{currentCharacter.descriptionJa}</p>
-            <small>{currentZodiac.nameJa}タイプとして、生年月日から導いた傾向です。</small>
+          <div className="my-result-card__reading-grid">
+            <section className="my-result-card__reading">
+              <h2>十二支の気質</h2>
+              <h3>{currentReading.zodiac.titleJa}</h3>
+              <p>{currentReading.zodiac.summaryJa}</p>
+            </section>
+            {currentReading.mbti ? (
+              <section className="my-result-card__reading my-result-card__reading--mbti">
+                <h2>{currentReading.mbti.titleJa}</h2>
+                <p>{currentReading.mbti.leadJa}</p>
+                <ul className="my-result-card__axes" aria-label="MBTIの4つの視点">
+                  {currentReading.mbti.axes.map((axisReading) => (
+                    <li key={axisReading.code}>
+                      <strong>{axisReading.code} · {axisReading.labelJa}</strong>
+                      <span>{axisReading.summaryJa}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ) : null}
+            <section className="my-result-card__reading">
+              <h2>{currentReading.fourPillars.titleJa}</h2>
+              <p>{currentReading.fourPillars.summaryJa}</p>
+            </section>
+            <section className="my-result-card__reading my-result-card__reading--combined">
+              <h2>{currentReading.combined.titleJa}</h2>
+              <p>{currentReading.combined.summaryJa}</p>
+            </section>
+            <small className="my-result-card__note">
+              十二支・MBTI・五行と陰陽を重ねた、自己理解のための読み解きです。
+            </small>
           </div>
         </section>
       ) : null}
