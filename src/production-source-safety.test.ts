@@ -155,6 +155,9 @@ describe("production source safety", () => {
     }
     expect(globalStyles).toContain(".group-graph__accessible:focus-within");
     expect(globalStyles).toMatch(/\.my-result-card\s*\{[^}]*margin-top:/);
+    expect(globalStyles).toMatch(
+      /\.group-share-actions__close\s*\{[^}]*width:\s*1px[^}]*clip-path:\s*inset\(50%\)/,
+    );
   });
 
   it("keeps the profile step compact without replacing native controls", () => {

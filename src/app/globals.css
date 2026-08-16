@@ -252,8 +252,7 @@ button, input, textarea, select { font: inherit; }
 .group-share-actions header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
 .group-share-actions h2 { margin: 0; font-size: 1rem; }
 .group-share-actions .ui-button { width: 100%; }
-.group-share-actions__close { display: grid; width: 36px; height: 36px; place-items: center; border: var(--border-subtle); border-radius: 50%; background: var(--surface); color: var(--ink); cursor: pointer; }
-.group-share-actions__close svg { width: 1rem; height: 1rem; }
+.group-share-actions__close { position: absolute; width: 1px; height: 1px; overflow: hidden; margin: -1px; border: 0; padding: 0; clip-path: inset(50%); white-space: nowrap; }
 
 .group-graph { display: grid; gap: 1rem; }
 .group-graph__canvas { width: 100%; height: clamp(30rem, 68svh, 52rem); min-height: 30rem; overflow: hidden; border: var(--border-panel); border-radius: 2.5rem 2.15rem 2.65rem 2.05rem / 2.2rem 2.55rem 2.1rem 2.45rem; outline: 1px solid rgb(var(--ink-rgb) / 12%); outline-offset: -5px; background: var(--surface-elevated); box-shadow: 3px 4px 0 rgb(var(--ink-rgb) / 6%), var(--shadow-pop), inset 0 0 0 4px rgb(255 255 255 / 46%); touch-action: pan-y; }
