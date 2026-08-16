@@ -198,6 +198,10 @@ describe("production source safety", () => {
       path.join(sourceRoot, "features/landing/landing-relationship-preview.tsx"),
       "utf8",
     );
+    const startFormSource = readFileSync(
+      path.join(sourceRoot, "features/onboarding/start-group-form.tsx"),
+      "utf8",
+    );
 
     expect(globalStyles).not.toContain("min-width: 320px");
     expect(globalStyles).not.toContain("overflow-x: hidden");
@@ -210,8 +214,11 @@ describe("production source safety", () => {
     expect(globalStyles).toMatch(/\.hero__decor\s*\{[^}]*background-image:\s*none/);
     expect(globalStyles).toMatch(/\.hero\s*\{[^}]*box-shadow:\s*none/);
     expect(globalStyles).toMatch(/\.landing-nav[^}]*justify-content:\s*center/);
-    expect(globalStyles).toMatch(/\.start-group-form > \.ui-button[^}]*justify-self:\s*center/);
-    expect(globalStyles).toMatch(/\.hero\s*\{[^}]*margin:\s*calc\(2\.75rem - 6px\) auto 0/);
+    expect(globalStyles).toMatch(/\.start-group-form > \.ui-button[^}]*justify-self:\s*start/);
+    expect(globalStyles).toMatch(/\.start-group-form \.field-error[^}]*border:\s*0[^}]*padding:\s*0[^}]*background:\s*transparent/);
+    expect(globalStyles).toMatch(/\.hero\s*\{[^}]*margin:\s*calc\(2\.75rem - 12px\) auto 0/);
+    expect(startFormSource).not.toContain("start-group-form__note");
+    expect(startFormSource).not.toContain("グループはプロフィール入力のあとに作成されます。");
     expect(globalStyles).toContain(".hero__connectors line");
     expect(pageSource).toContain("<LandingRelationshipPreview />");
     expect(previewSource).toContain('className="hero__connectors"');
