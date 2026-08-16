@@ -160,6 +160,13 @@ describe("buildGraph", () => {
     expect(reordered.edges).toEqual(first.edges);
   });
 
+  it("uses a tighter radius for small social groups", () => {
+    const graph = buildGraph([member("a"), member("b"), member("c")], null, []);
+
+    expect(graph.nodes.every((node) => Math.hypot(node.position.x, node.position.y) <= 161))
+      .toBe(true);
+  });
+
   it("rejects duplicate member IDs and groups over 30", () => {
     expect(() => buildGraph([member("same"), member("same")], null, [])).toThrow(/duplicate/i);
     expect(() => buildGraph(Array.from({ length: 31 }, (_, index) => member(`m-${index}`)), null, [])).toThrow(/30/);

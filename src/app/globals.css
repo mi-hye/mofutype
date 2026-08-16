@@ -261,7 +261,7 @@ button, input, textarea, select { font: inherit; }
 .zodiac-graph-node { position: relative; display: grid; min-width: 7rem; justify-items: center; gap: 0.28rem; text-align: center; transition: opacity 180ms ease, transform 180ms ease; }
 .zodiac-graph-node[data-selected="true"] { z-index: 2; transform: translateY(-4px) scale(1.045); }
 .zodiac-graph-node__handle { width: 1px !important; height: 1px !important; border: 0 !important; opacity: 0; pointer-events: none; }
-.zodiac-graph-node__frame { --node-pastel: var(--surface-elevated); --node-border: var(--color-line-strong); width: 5.5rem; height: 5.5rem; }
+.zodiac-graph-node__frame { --node-pastel: var(--surface-elevated); --node-border: var(--color-line-strong); width: 6.25rem; height: 6.25rem; }
 .zodiac-graph-node__frame[data-size="md"] { width: 4.75rem; height: 4.75rem; }
 .zodiac-graph-node__frame[data-size="sm"] { width: 4rem; height: 4rem; }
 .zodiac-graph-node__frame::before { border-color: var(--node-border); background: var(--node-pastel); }

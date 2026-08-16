@@ -105,7 +105,7 @@ function positionAt(index: number, count: number): { x: number; y: number } {
   if (count === 1) return { x: 0, y: 0 };
 
   if (count <= 15) {
-    const radius = Math.max(230, count * 28);
+    const radius = count <= 6 ? 160 : Math.max(230, count * 28);
     const angle = -Math.PI / 2 + (index * Math.PI * 2) / count;
     return {
       x: Math.round(Math.cos(angle) * radius),
