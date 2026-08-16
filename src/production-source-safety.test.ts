@@ -209,6 +209,8 @@ describe("production source safety", () => {
     expect(globalStyles).toMatch(/\.hero__decor\s*\{[^}]*order:\s*3/);
     expect(globalStyles).toMatch(/\.hero__decor\s*\{[^}]*background-image:\s*none/);
     expect(globalStyles).toMatch(/\.hero\s*\{[^}]*box-shadow:\s*none/);
+    expect(globalStyles).toMatch(/\.landing-nav[^}]*justify-content:\s*center/);
+    expect(globalStyles).toMatch(/\.hero\s*\{[^}]*margin:\s*calc\(2\.75rem - 6px\) auto 0/);
     expect(globalStyles).toContain(".hero__connectors line");
     expect(pageSource).toContain("<LandingRelationshipPreview />");
     expect(previewSource).toContain('className="hero__connectors"');
