@@ -102,4 +102,24 @@ describe("DevLocaleToggle", () => {
     expect(screen.getByText(/열정과 표현력을 중심으로/)).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "뱀띠 × INTJ × 화・음" })).toBeInTheDocument();
   });
+
+  it("translates every relationship label used by the graph", async () => {
+    const user = userEvent.setup();
+    render(
+      <>
+        <span>息ぴったり</span>
+        <span>可能性ひろがる</span>
+        <span>いい刺激</span>
+        <span>ペース発見</span>
+        <DevLocaleToggle />
+      </>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: "한국어로 보기" }));
+
+    expect(screen.getByText("찰떡 호흡")).toBeInTheDocument();
+    expect(screen.getByText("가능성이 넓어져요")).toBeInTheDocument();
+    expect(screen.getByText("좋은 자극")).toBeInTheDocument();
+    expect(screen.getByText("서로의 속도 발견")).toBeInTheDocument();
+  });
 });

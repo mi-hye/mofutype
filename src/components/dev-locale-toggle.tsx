@@ -126,6 +126,11 @@ function koreanCopy(value: string): string {
   const exact = KO_COPY[content];
   if (exact) return `${leading}${exact}${trailing}`;
 
+  const relationshipLabel = devKo.relationshipLabels[
+    content as keyof typeof devKo.relationshipLabels
+  ];
+  if (relationshipLabel) return `${leading}${relationshipLabel}${trailing}`;
+
   const zodiacEntries = Object.entries(devKo.zodiacNames);
   const zodiacName = devKo.zodiacNames[content as keyof typeof devKo.zodiacNames];
   if (zodiacName) return `${leading}${zodiacName}${trailing}`;
