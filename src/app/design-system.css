@@ -53,6 +53,24 @@
   --animal-tiger-border: #dfbd52;
   --animal-rat-border: #aeb9ca;
   --animal-rabbit-border: #dfadb9;
+  --animal-ox-pastel: #f3e5d2;
+  --animal-ox-border: #b99a73;
+  --animal-dragon-pastel: #dff1e5;
+  --animal-dragon-border: #7faa91;
+  --animal-snake-pastel: #e2edda;
+  --animal-snake-border: #8ca376;
+  --animal-horse-pastel: #f4e0d3;
+  --animal-horse-border: #bd9279;
+  --animal-sheep-pastel: #f4edda;
+  --animal-sheep-border: #b7a36e;
+  --animal-monkey-pastel: #f0dfcf;
+  --animal-monkey-border: #b28a68;
+  --animal-rooster-pastel: #f7dfd8;
+  --animal-rooster-border: #c48d7e;
+  --animal-dog-pastel: #dfeaf2;
+  --animal-dog-border: #809fb4;
+  --animal-boar-pastel: #eedfdc;
+  --animal-boar-border: #ad8580;
 
   /* Borders and elevation. */
   --border-subtle: 1.5px solid rgb(var(--ink-rgb) / 58%);

@@ -108,8 +108,8 @@ describe("GroupGraph", () => {
     await user.click(screen.getByTestId("canvas-node-b"));
     expect((flowProps.current?.edges as MockEdge[]).filter((edge) => edge.label))
       .toHaveLength(2);
-    expect(within(screen.getByTestId("canvas-node-b")).getByText("SELECTED"))
-      .toHaveClass("zodiac-graph-node__selected-sticker");
+    expect(within(screen.getByTestId("canvas-node-b")).getByLabelText("べにの関係性ノード"))
+      .toHaveAttribute("data-selected", "true");
     expect(screen.getByRole("status", { name: "選択中のメンバー" })).toHaveTextContent("べに");
     expect(screen.getByRole("status", { name: "選択中のメンバー" })).toHaveTextContent("2本");
     await user.click(screen.getByTestId("canvas-pane"));
@@ -134,6 +134,10 @@ describe("GroupGraph", () => {
       .getByText("好奇心のまま駆け出すいのしし")).toBeInTheDocument();
     expect(within(screen.getByTestId("canvas-node-b"))
       .getByText("さるタイプ")).toBeInTheDocument();
+    const firstFrame = within(screen.getByTestId("canvas-node-a"))
+      .getByText("あお").closest(".zodiac-graph-node__frame");
+    expect(firstFrame).toHaveAttribute("data-zodiac", "boar");
+    expect(firstFrame).toHaveTextContent("ENFPあお");
 
     const accessibleList = screen.getByRole("region", {
       name: "関係性グラフの操作リスト",
