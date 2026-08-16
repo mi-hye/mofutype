@@ -225,6 +225,7 @@ describe("production source safety", () => {
     expect(globalStyles).toMatch(/\.start-group-form > \.ui-button[^}]*min-width:\s*5\.75rem[^}]*min-height:\s*44px[^}]*justify-self:\s*start/);
     expect(globalStyles).toMatch(/\.start-group-form > \.ui-button::before[^}]*border-width:\s*2px/);
     expect(globalStyles).toMatch(/\.start-group-form \.field-error[^}]*border:\s*0[^}]*padding:\s*0[^}]*background:\s*transparent/);
+    expect(globalStyles).toMatch(/\.profile-step \.unknown-toggle[^}]*margin-top:\s*-8px/);
     expect(globalStyles).toMatch(/\.hero\s*\{[^}]*margin:\s*calc\(2\.75rem - 12px\) auto 0/);
     expect(startFormSource).not.toContain("start-group-form__note");
     expect(startFormSource).not.toContain("グループはプロフィール入力のあとに作成されます。");
