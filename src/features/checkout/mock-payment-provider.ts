@@ -1,4 +1,4 @@
-import type { PaymentInput, PaymentProvider, PaymentResult } from "./types";
+import type { PaymentProvider, PaymentRequest, PaymentStartResult } from "./types";
 
 interface UnlockRepository {
   unlockPair(groupId: string, memberA: string, memberB: string): Promise<unknown>;
@@ -7,8 +7,8 @@ interface UnlockRepository {
 export class MockPaymentProvider implements PaymentProvider {
   constructor(private readonly repository: UnlockRepository) {}
 
-  async unlock(input: PaymentInput): Promise<PaymentResult> {
+  async start(input: PaymentRequest): Promise<PaymentStartResult> {
     await this.repository.unlockPair(input.groupId, input.memberA, input.memberB);
-    return { status: "unlocked" };
+    return { status: "confirmed" };
   }
 }

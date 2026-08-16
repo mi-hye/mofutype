@@ -4,10 +4,16 @@ export interface PaymentInput {
   memberB: string;
 }
 
-export interface PaymentResult {
-  status: "unlocked";
+export type PaymentMethod = "paypay" | "card";
+
+export interface PaymentRequest extends PaymentInput {
+  method: PaymentMethod;
 }
 
+export type PaymentStartResult =
+  | { status: "confirmed" }
+  | { status: "redirect"; checkoutUrl: string };
+
 export interface PaymentProvider {
-  unlock(input: PaymentInput): Promise<PaymentResult>;
+  start(input: PaymentRequest): Promise<PaymentStartResult>;
 }
