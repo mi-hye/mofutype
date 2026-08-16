@@ -18,6 +18,15 @@ export type RelationshipCategory =
 
 export type EtoRelationshipCategory = RelationshipCategory;
 
+export const RELATIONSHIP_SHORT_LABELS: Readonly<
+  Record<RelationshipCategory, string>
+> = Object.freeze({
+  NATURAL_INTERLOCK: "息ぴったり",
+  EXPANDING_POSSIBILITIES: "可能性ひろがる",
+  POSITIVE_STIMULATION: "いい刺激",
+  LEARNING_EACH_OTHERS_PACE: "ペース発見",
+});
+
 export type ZodiacRelationship =
   | "LIUHE"
   | "SANHE"

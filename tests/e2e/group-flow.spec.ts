@@ -18,6 +18,7 @@ test("three independent members share one unlocked relationship", async ({ brows
       await expect(page.getByText("メンバー 3人")).toBeVisible({ timeout: 15_000 });
       await expect(page.locator(".react-flow__node")).toHaveCount(3);
       await expect(page.locator(".react-flow__edge")).toHaveCount(3);
+      await expect(page.locator(".react-flow__edge-text")).toHaveCount(3);
       await expect(page.getByTestId("zodiac-avatar")).toHaveCount(3);
     }
     await expect(pageA.locator(".zodiac-graph-node__character-title", {

@@ -7,7 +7,7 @@ import type { DerivedEtoProfile, ZodiacId } from "@/lib/eto/types";
 import type { GroupMember, RelationUnlock } from "@/lib/supabase/models";
 
 type MockNode = { id: string; type: string; data: Record<string, unknown> };
-type MockEdge = { id: string; data: Record<string, unknown> };
+type MockEdge = { id: string; label?: string; data: Record<string, unknown> };
 
 const flowProps = vi.hoisted(() => ({ current: null as Record<string, unknown> | null }));
 
@@ -101,12 +101,19 @@ describe("GroupGraph", () => {
     const user = userEvent.setup();
     render(<GroupGraph members={[member("a", "あお"), member("b", "べに"), member("c", "ちゃ")]} unlocks={[]} onPairSelect={vi.fn()} />);
 
+    expect((flowProps.current?.edges as MockEdge[]).map((edge) => edge.label))
+      .toEqual(["ペース発見", "ペース発見", "ペース発見"]);
+
     await user.click(screen.getByTestId("canvas-node-b"));
+    expect((flowProps.current?.edges as MockEdge[]).filter((edge) => edge.label))
+      .toHaveLength(2);
     expect(within(screen.getByTestId("canvas-node-b")).getByText("SELECTED"))
       .toHaveClass("zodiac-graph-node__selected-sticker");
     expect(screen.getByRole("status", { name: "選択中のメンバー" })).toHaveTextContent("べに");
     expect(screen.getByRole("status", { name: "選択中のメンバー" })).toHaveTextContent("2本");
     await user.click(screen.getByTestId("canvas-pane"));
+    expect((flowProps.current?.edges as MockEdge[]).map((edge) => edge.label))
+      .toEqual(["ペース発見", "ペース発見", "ペース発見"]);
     expect(screen.queryByRole("status", { name: "選択中のメンバー" })).not.toBeInTheDocument();
   });
 
@@ -243,9 +250,15 @@ describe("GroupGraph", () => {
         relationshipFactory={relationshipFactory} />,
     );
     expect(relationshipFactory).toHaveBeenCalledTimes(435);
+    expect((flowProps.current?.edges as MockEdge[]).filter((edge) => edge.label))
+      .toHaveLength(0);
 
     await user.click(screen.getByTestId("canvas-node-m-12"));
+    expect((flowProps.current?.edges as MockEdge[]).filter((edge) => edge.label))
+      .toHaveLength(29);
     await user.click(screen.getByTestId("canvas-pane"));
+    expect((flowProps.current?.edges as MockEdge[]).filter((edge) => edge.label))
+      .toHaveLength(0);
     expect(relationshipFactory).toHaveBeenCalledTimes(435);
 
     view.rerender(

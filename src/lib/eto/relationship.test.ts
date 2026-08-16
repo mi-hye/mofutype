@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   createEtoRelationship,
+  RELATIONSHIP_SHORT_LABELS,
   RelationshipValidationError,
   type RelationshipCategory,
 } from "./relationship";
@@ -62,6 +63,18 @@ function collectKeys(value: unknown, result: string[] = []): string[] {
   }
   return result;
 }
+
+describe("relationship short labels", () => {
+  it("provides exactly four concise Japanese graph labels", () => {
+    expect(RELATIONSHIP_SHORT_LABELS).toEqual({
+      NATURAL_INTERLOCK: "息ぴったり",
+      EXPANDING_POSSIBILITIES: "可能性ひろがる",
+      POSITIVE_STIMULATION: "いい刺激",
+      LEARNING_EACH_OTHERS_PACE: "ペース発見",
+    });
+    expect(Object.isFrozen(RELATIONSHIP_SHORT_LABELS)).toBe(true);
+  });
+});
 
 describe("zodiac relationship layer", () => {
   const natural = [

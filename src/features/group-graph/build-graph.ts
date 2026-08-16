@@ -3,8 +3,10 @@ import type { Edge, Node } from "@xyflow/react";
 import { createCharacterCopy } from "@/lib/eto/character";
 import {
   createEtoRelationship,
+  RELATIONSHIP_SHORT_LABELS,
   type CreateEtoRelationshipInput,
   type EtoRelationshipResult,
+  type RelationshipCategory,
 } from "@/lib/eto/relationship";
 import { canonicalPairKey } from "@/lib/relationship/pair-key";
 import type { GroupMember, RelationUnlock } from "@/lib/supabase/models";
@@ -57,6 +59,13 @@ export interface BuiltGraph {
   nodes: ZodiacGraphNode[];
   edges: RelationshipGraphEdge[];
 }
+
+const RELATIONSHIP_LABEL_COLORS: Readonly<Record<RelationshipCategory, string>> = {
+  NATURAL_INTERLOCK: "var(--edge-mint)",
+  EXPANDING_POSSIBILITIES: "var(--edge-unlocked)",
+  POSITIVE_STIMULATION: "var(--coral-deep)",
+  LEARNING_EACH_OTHERS_PACE: "var(--edge-violet)",
+};
 
 function nodeSize(count: number): GraphNodeSize {
   if (count <= 6) return "lg";
@@ -245,6 +254,10 @@ export function decorateGraph(
       ? "default"
       : incident ? "incident" : "faint";
     const unlocked = unlockedPairs.has(edge.id);
+    const showLabel = selectedNodeId === null
+      ? topology.nodes.length <= 6
+      : incident;
+    const category = edge.data.relationship.category;
     const strokeWidth = incident ? (unlocked ? 5 : 4) : unlocked ? 3 : 1.5;
     const opacity = emphasis === "faint"
       ? unlocked ? 0.28 : 0.06
@@ -257,6 +270,22 @@ export function decorateGraph(
         `relationship-edge--${unlocked ? "unlocked" : "locked"}`,
         `relationship-edge--${emphasis}`,
       ].join(" "),
+      label: showLabel ? RELATIONSHIP_SHORT_LABELS[category] : undefined,
+      labelShowBg: showLabel,
+      labelStyle: {
+        fill: "var(--surface-raised)",
+        fontSize: 11,
+        fontWeight: 950,
+        pointerEvents: "none",
+      },
+      labelBgStyle: {
+        fill: RELATIONSHIP_LABEL_COLORS[category],
+        stroke: "var(--surface-raised)",
+        strokeWidth: 1.5,
+        pointerEvents: "none",
+      },
+      labelBgPadding: [9, 5],
+      labelBgBorderRadius: 999,
       style: {
         strokeWidth,
         opacity,

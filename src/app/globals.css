@@ -29,6 +29,7 @@
   --edge-hot-pink: #c12668;
   --edge-mint: #0b765e;
   --edge-unlocked: #7b5900;
+  --edge-violet: #5d3f91;
   --tape-mint: rgb(102 223 189 / 76%);
   --tape-violet: rgb(202 168 255 / 80%);
   --space-12: 0.75rem;
@@ -283,6 +284,7 @@ select {
 .relationship-edge--unlocked .react-flow__edge-path { stroke: var(--edge-unlocked); stroke-dasharray: 12 5; }
 .relationship-edge--incident.relationship-edge--locked .react-flow__edge-path { stroke: var(--edge-hot-pink); }
 .relationship-edge--incident.relationship-edge--unlocked .react-flow__edge-path { stroke: var(--edge-mint); }
+.group-graph__canvas .react-flow__edge-text { font-family: inherit; letter-spacing: 0.01em; }
 .zodiac-graph-node { position: relative; display: grid; min-width: 7rem; justify-items: center; gap: 0.22rem; text-align: center; transition: transform 150ms ease; }
 .zodiac-graph-node[data-selected="true"] { z-index: 2; transform: scale(1.06) rotate(-1deg); }
 .zodiac-graph-node__handle { width: 1px !important; height: 1px !important; border: 0 !important; opacity: 0; pointer-events: none; }
