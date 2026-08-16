@@ -1,8 +1,6 @@
 import Image from "next/image";
 
-import { Card } from "@/components/ui/card";
 import { LandingRelationshipPreview } from "@/features/landing/landing-relationship-preview";
-import { StartGroupForm } from "@/features/onboarding/start-group-form";
 
 export default function Home() {
   return (
@@ -41,22 +39,11 @@ export default function Home() {
             className="ui-button hero__cta"
             data-size="lg"
             data-variant="primary"
-            href="#create"
+            href="/create/profile"
           >
             グループを作る
           </a>
         </div>
-      </section>
-
-      <section className="create-section" id="create" aria-labelledby="create-title">
-        <div className="create-section__intro">
-          <span className="create-section__tape" aria-hidden="true" />
-          <p className="hero__eyebrow">はじめる</p>
-          <h2 id="create-title">グループを作る</h2>
-        </div>
-        <Card variant="accent">
-          <StartGroupForm />
-        </Card>
       </section>
 
     </main>

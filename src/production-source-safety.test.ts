@@ -202,6 +202,14 @@ describe("production source safety", () => {
       path.join(sourceRoot, "features/onboarding/start-group-form.tsx"),
       "utf8",
     );
+    const createProfileSource = readFileSync(
+      path.join(sourceRoot, "app/create/profile/page.tsx"),
+      "utf8",
+    );
+    const joinFormSource = readFileSync(
+      path.join(sourceRoot, "features/onboarding/join-group-form.tsx"),
+      "utf8",
+    );
 
     expect(globalStyles).not.toContain("min-width: 320px");
     expect(globalStyles).not.toContain("overflow-x: hidden");
@@ -221,6 +229,13 @@ describe("production source safety", () => {
     expect(startFormSource).not.toContain("start-group-form__note");
     expect(startFormSource).not.toContain("グループはプロフィール入力のあとに作成されます。");
     expect(pageSource).not.toContain("まずはグループ名から。次のページであなたのプロフィールを入力します。");
+    expect(pageSource).not.toContain("<StartGroupForm");
+    expect(pageSource).not.toContain('id="create"');
+    expect(pageSource).toContain('href="/create/profile"');
+    expect(createProfileSource).toContain("<CreateGroupForm />");
+    expect(createProfileSource).not.toContain("profileOnly");
+    expect(joinFormSource).toContain("<ProfileForm");
+    expect(joinFormSource).not.toContain('htmlFor="create-group-name"');
     expect(globalStyles).toContain(".hero__connectors line");
     expect(pageSource).toContain("<LandingRelationshipPreview />");
     expect(previewSource).toContain('className="hero__connectors"');

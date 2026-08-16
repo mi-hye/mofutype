@@ -4,17 +4,13 @@ import { describe, expect, it } from "vitest";
 import Home from "./page";
 
 describe("Home", () => {
-  it("starts group creation with only a group name before profile routing", () => {
+  it("routes group creators to the combined group and profile form", () => {
     render(<Home />);
 
     const link = screen.getByRole("link", { name: "グループを作る" });
-    const targetId = link.getAttribute("href")?.replace(/^#/, "");
-
-    expect(targetId).toBeTruthy();
-    expect(document.getElementById(targetId!)).toBeInTheDocument();
-    expect(screen.getByRole("form", { name: "グループ名入力フォーム" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "次へ" })).toBeInTheDocument();
-    expect(screen.getByLabelText("グループ名")).toBeInTheDocument();
+    expect(link).toHaveAttribute("href", "/create/profile");
+    expect(screen.queryByRole("form", { name: "グループ名入力フォーム" })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("グループ名")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("ニックネーム")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("生年月日")).not.toBeInTheDocument();
   });
@@ -35,7 +31,7 @@ describe("Home", () => {
     expect(screen.queryByText("GROUP EDITION")).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "グループを作る" })).toHaveAttribute(
       "href",
-      "#create",
+      "/create/profile",
     );
   });
 
@@ -45,7 +41,6 @@ describe("Home", () => {
     for (const selector of [
       ".hero__cutout",
       ".hero__issue-note",
-      ".create-section__tape",
     ]) {
       expect(container.querySelector(selector)).toHaveAttribute(
         "aria-hidden",
