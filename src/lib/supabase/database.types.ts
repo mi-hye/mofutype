@@ -105,6 +105,76 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_orders: {
+        Row: {
+          amount_jpy: number
+          created_at: string
+          created_by: string
+          currency: string
+          group_id: string
+          id: string
+          member_high_id: string
+          member_low_id: string
+          method: string
+          paid_at: string | null
+          provider: string | null
+          provider_reference: string | null
+          status: Database["public"]["Enums"]["payment_order_status"]
+        }
+        Insert: {
+          amount_jpy?: number
+          created_at?: string
+          created_by: string
+          currency?: string
+          group_id: string
+          id?: string
+          member_high_id: string
+          member_low_id: string
+          method: string
+          paid_at?: string | null
+          provider?: string | null
+          provider_reference?: string | null
+          status?: Database["public"]["Enums"]["payment_order_status"]
+        }
+        Update: {
+          amount_jpy?: number
+          created_at?: string
+          created_by?: string
+          currency?: string
+          group_id?: string
+          id?: string
+          member_high_id?: string
+          member_low_id?: string
+          method?: string
+          paid_at?: string | null
+          provider?: string | null
+          provider_reference?: string | null
+          status?: Database["public"]["Enums"]["payment_order_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_orders_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_orders_high_member_fk"
+            columns: ["group_id", "member_high_id"]
+            isOneToOne: false
+            referencedRelation: "group_members"
+            referencedColumns: ["group_id", "id"]
+          },
+          {
+            foreignKeyName: "payment_orders_low_member_fk"
+            columns: ["group_id", "member_low_id"]
+            isOneToOne: false
+            referencedRelation: "group_members"
+            referencedColumns: ["group_id", "id"]
+          },
+        ]
+      }
       relation_unlocks: {
         Row: {
           group_id: string
@@ -172,6 +242,30 @@ export type Database = {
         Args: { p_mbti: string; p_profile_payload: Json; p_zodiac_id: string }
         Returns: boolean
       }
+      confirm_payment_order: {
+        Args: {
+          p_order_id: string
+          p_provider: string
+          p_provider_reference: string
+        }
+        Returns: {
+          group_id: string
+          id: string
+          member_high_id: string
+          member_low_id: string
+          payment_provider: string
+          payment_reference: string | null
+          status: Database["public"]["Enums"]["unlock_status"]
+          unlocked_at: string | null
+          unlocked_by: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "relation_unlocks"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       create_group_and_join: {
         Args: {
           p_mbti: string
@@ -185,6 +279,35 @@ export type Database = {
           invite_token: string
           member_id: string
         }[]
+      }
+      create_payment_order: {
+        Args: {
+          p_group_id: string
+          p_member_a: string
+          p_member_b: string
+          p_method: string
+        }
+        Returns: {
+          amount_jpy: number
+          created_at: string
+          created_by: string
+          currency: string
+          group_id: string
+          id: string
+          member_high_id: string
+          member_low_id: string
+          method: string
+          paid_at: string | null
+          provider: string | null
+          provider_reference: string | null
+          status: Database["public"]["Enums"]["payment_order_status"]
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "payment_orders"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       get_group_invite_preview: {
         Args: { p_invite_token: string }
@@ -231,6 +354,7 @@ export type Database = {
       }
     }
     Enums: {
+      payment_order_status: "pending" | "paid"
       unlock_status: "pending" | "unlocked" | "failed"
     }
     CompositeTypes: {
@@ -362,6 +486,7 @@ export const Constants = {
   },
   public: {
     Enums: {
+      payment_order_status: ["pending", "paid"],
       unlock_status: ["pending", "unlocked", "failed"],
     },
   },

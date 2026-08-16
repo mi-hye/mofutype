@@ -10,12 +10,14 @@ const input = { groupId: "g1", memberA: "b", memberB: "a" };
 
 describe("MockPaymentProvider", () => {
   it("uses the repository unlock boundary only for the explicit test provider", async () => {
+    const createPaymentOrder = vi.fn(async () => ({ id: "order-1" }));
     const unlockPair = vi.fn(async () => ({ id: "private-row" }));
-    const provider = new MockPaymentProvider({ unlockPair });
+    const provider = new MockPaymentProvider({ createPaymentOrder, unlockPair });
 
     await expect(provider.start({ ...input, method: "paypay" })).resolves.toEqual({
       status: "confirmed",
     });
+    expect(createPaymentOrder).toHaveBeenCalledWith("g1", "b", "a", "paypay");
     expect(unlockPair).toHaveBeenCalledWith("g1", "b", "a");
   });
 });

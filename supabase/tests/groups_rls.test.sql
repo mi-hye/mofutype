@@ -6,7 +6,11 @@ set search_path = public, extensions;
 select plan(224);
 
 -- Schema and API contract.
-select tables_are('public', array['groups', 'group_members', 'relation_unlocks'], 'public has exactly the three group tables');
+select tables_are(
+  'public',
+  array['groups', 'group_members', 'payment_orders', 'relation_unlocks'],
+  'public has exactly the four product tables'
+);
 select has_type('public', 'unlock_status', 'unlock_status enum exists');
 select enum_has_labels('public', 'unlock_status', array['pending', 'unlocked', 'failed'], 'unlock_status labels are exact');
 select hasnt_type('public', 'animal_group', 'animal_group enum is removed');

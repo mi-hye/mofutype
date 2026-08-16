@@ -7,6 +7,7 @@ import {
   type YinYangCounts,
   type ZodiacId,
 } from "../eto/types";
+import { PAYMENT_METHODS, type PaymentMethod } from "../payment/types";
 
 export type GroupRepositoryErrorCode =
   | "AUTH_FAILED"
@@ -14,6 +15,7 @@ export type GroupRepositoryErrorCode =
   | "JOIN_FAILED"
   | "LOAD_FAILED"
   | "NOT_FOUND"
+  | "PAYMENT_FAILED"
   | "UNLOCK_FAILED"
   | "SUBSCRIPTION_FAILED"
   | "INVALID_DATA";
@@ -57,6 +59,22 @@ export interface RelationUnlock {
   paymentReference: string | null;
   unlockedBy: string;
   unlockedAt: string | null;
+}
+
+export interface PaymentOrder {
+  id: string;
+  groupId: string;
+  memberLowId: string;
+  memberHighId: string;
+  amountJpy: 300;
+  currency: "JPY";
+  method: PaymentMethod;
+  status: "pending" | "paid";
+  provider: string | null;
+  providerReference: string | null;
+  createdBy: string;
+  createdAt: string;
+  paidAt: string | null;
 }
 
 const FIVE_ELEMENTS = ["WOOD", "FIRE", "EARTH", "METAL", "WATER"] as const;
@@ -325,6 +343,64 @@ export function mapRelationUnlock(value: unknown): RelationUnlock {
       paymentReference: nullableStringField(row, "payment_reference"),
       unlockedBy: stringField(row, "unlocked_by"),
       unlockedAt: nullableStringField(row, "unlocked_at"),
+    };
+  });
+}
+
+export function mapPaymentOrder(value: unknown): PaymentOrder {
+  return safelyMap(() => {
+    const row = exactRecord(value, [
+      "id",
+      "group_id",
+      "member_low_id",
+      "member_high_id",
+      "amount_jpy",
+      "currency",
+      "method",
+      "status",
+      "provider",
+      "provider_reference",
+      "created_by",
+      "created_at",
+      "paid_at",
+    ]);
+    const method = row.method;
+    const status = row.status;
+    const provider = nullableStringField(row, "provider");
+    const providerReference = nullableStringField(row, "provider_reference");
+    const paidAt = nullableStringField(row, "paid_at");
+    const memberLowId = stringField(row, "member_low_id");
+    const memberHighId = stringField(row, "member_high_id");
+    const isPendingState = provider === null && providerReference === null && paidAt === null;
+    const isPaidState =
+      provider !== null && provider !== "" &&
+      providerReference !== null && providerReference !== "" &&
+      paidAt !== null && paidAt !== "";
+    if (
+      row.amount_jpy !== 300 ||
+      row.currency !== "JPY" ||
+      !isOneOf(method, PAYMENT_METHODS) ||
+      (status !== "pending" && status !== "paid") ||
+      memberLowId >= memberHighId ||
+      (status === "pending" && !isPendingState) ||
+      (status === "paid" && !isPaidState)
+    ) {
+      throw invalidData();
+    }
+    return {
+      id: stringField(row, "id"),
+      groupId: stringField(row, "group_id"),
+      memberLowId,
+      memberHighId,
+      amountJpy: 300,
+      currency: "JPY",
+      method,
+      status,
+      provider,
+      providerReference,
+      createdBy: stringField(row, "created_by"),
+      createdAt: stringField(row, "created_at"),
+      paidAt,
     };
   });
 }

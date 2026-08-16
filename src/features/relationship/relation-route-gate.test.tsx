@@ -87,6 +87,7 @@ function repository(group: GroupAggregate | null = aggregate()) {
       callbacks = next;
       return cleanup;
     }),
+    createPaymentOrder: vi.fn(async () => ({ id: "order-1", status: "pending" })),
     unlockPair: vi.fn(async () => unlocked()),
   };
   return { api, callbacks: () => callbacks, cleanup };
@@ -271,6 +272,7 @@ describe("RelationRouteGate", () => {
     );
 
     await user.click(await screen.findByRole("button", { name: "モック決済を完了" }));
+    expect(repo.api.createPaymentOrder).toHaveBeenCalledWith("g1", "a", "b", "paypay");
     expect(repo.api.unlockPair).toHaveBeenCalledWith("g1", "a", "b");
     expect(navigate).toHaveBeenCalledWith(`/g/${token}/relation/a%3Ab`);
   });

@@ -14,7 +14,7 @@ import {
   createSupabaseGroupRepositoryAdapter,
   type GroupRepositoryClient,
 } from "./group-repository";
-import { mapGroupMember, mapRelationUnlock } from "./models";
+import { mapGroupMember, mapPaymentOrder, mapRelationUnlock } from "./models";
 import type { DerivedEtoProfile } from "../eto/types";
 
 const profile: DerivedEtoProfile = {
@@ -83,6 +83,22 @@ const unlockRow = {
   payment_reference: null,
   unlocked_by: "user-1",
   unlocked_at: "2026-08-15T00:02:00Z",
+};
+
+const paymentOrderRow = {
+  id: "order-1",
+  group_id: "group-1",
+  member_low_id: "member-1",
+  member_high_id: "member-2",
+  amount_jpy: 300,
+  currency: "JPY",
+  method: "paypay",
+  status: "pending",
+  provider: null,
+  provider_reference: null,
+  created_by: "user-1",
+  created_at: "2026-08-16T00:00:00Z",
+  paid_at: null,
 };
 
 const invalidRpcRowSets: unknown[][] = [
@@ -254,6 +270,10 @@ class FakeSupabaseClient implements GroupRepositoryClient {
 
   unlockRelation(args: Record<string, unknown>): Promise<Result> {
     return this.rpc("unlock_relation_mock", args);
+  }
+
+  createPaymentOrder(args: Record<string, unknown>): Promise<Result> {
+    return this.rpc("create_payment_order", args);
   }
 
   from(table: string): FakeQuery {
@@ -805,6 +825,68 @@ describe("group repository", () => {
     );
   });
 
+  it("maps exact pending and paid payment orders and rejects inconsistent data", () => {
+    expect(mapPaymentOrder(paymentOrderRow)).toEqual({
+      id: "order-1",
+      groupId: "group-1",
+      memberLowId: "member-1",
+      memberHighId: "member-2",
+      amountJpy: 300,
+      currency: "JPY",
+      method: "paypay",
+      status: "pending",
+      provider: null,
+      providerReference: null,
+      createdBy: "user-1",
+      createdAt: "2026-08-16T00:00:00Z",
+      paidAt: null,
+    });
+    expect(mapPaymentOrder({
+      ...paymentOrderRow,
+      status: "paid",
+      provider: "mock",
+      provider_reference: "ref-1",
+      paid_at: "2026-08-16T00:01:00Z",
+    })).toMatchObject({ status: "paid", provider: "mock", providerReference: "ref-1" });
+
+    for (const invalid of [
+      { ...paymentOrderRow, amount_jpy: 301 },
+      { ...paymentOrderRow, currency: "USD" },
+      { ...paymentOrderRow, method: "cash" },
+      { ...paymentOrderRow, provider: "forged" },
+      { ...paymentOrderRow, status: "paid" },
+      { ...paymentOrderRow, private_secret: "must-not-pass" },
+    ]) {
+      expect(() => mapPaymentOrder(invalid)).toThrow(expectRepositoryError("INVALID_DATA"));
+    }
+  });
+
+  it("creates a fixed-price pending order through the canonical server RPC", async () => {
+    const client = new FakeSupabaseClient();
+    client.rpcResults.set("create_payment_order", { data: [paymentOrderRow], error: null });
+
+    await expect(createGroupRepository(client).createPaymentOrder(
+      "group-1", "member-2", "member-1", "paypay",
+    )).resolves.toMatchObject({ id: "order-1", amountJpy: 300, status: "pending" });
+    expect(client.rpcCalls[0]).toEqual({
+      name: "create_payment_order",
+      args: {
+        p_group_id: "group-1",
+        p_member_a: "member-2",
+        p_member_b: "member-1",
+        p_method: "paypay",
+      },
+    });
+
+    client.rpcResults.set("create_payment_order", {
+      data: null,
+      error: new Error("private payment details"),
+    });
+    await expect(createGroupRepository(client).createPaymentOrder(
+      "group-1", "member-1", "member-2", "card",
+    )).rejects.toEqual(expectRepositoryError("PAYMENT_FAILED"));
+  });
+
   it("unlocks a pair through the canonicalizing RPC and maps its only row", async () => {
     const client = new FakeSupabaseClient();
     client.rpcResults.set("unlock_relation_mock", { data: [unlockRow], error: null });
@@ -1112,6 +1194,12 @@ describe("production Supabase adapter", () => {
       p_member_a: "member-1",
       p_member_b: "member-2",
     });
+    await adapter.createPaymentOrder({
+      p_group_id: "group-1",
+      p_member_a: "member-1",
+      p_member_b: "member-2",
+      p_method: "paypay",
+    });
     await adapter.loadGroup("group-1");
     await adapter.loadGroupMembers("group-1");
     await adapter.loadRelationUnlocks("group-1");
@@ -1122,6 +1210,15 @@ describe("production Supabase adapter", () => {
       {
         name: "unlock_relation_mock",
         args: { p_group_id: "group-1", p_member_a: "member-1", p_member_b: "member-2" },
+      },
+      {
+        name: "create_payment_order",
+        args: {
+          p_group_id: "group-1",
+          p_member_a: "member-1",
+          p_member_b: "member-2",
+          p_method: "paypay",
+        },
       },
     ]);
     expect(calls.filter(({ kind }) => kind === "query").map(({ value }) => value)).toEqual([

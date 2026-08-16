@@ -15,7 +15,11 @@ const INVITE_TOKEN_PATTERN = /^[a-f0-9]{64}$/;
 type BrowserRepository = ReturnType<typeof createBrowserGroupRepository>;
 type RelationRepository = Pick<
   BrowserRepository,
-  "findJoinedGroupByInviteToken" | "loadGroup" | "subscribeToGroup" | "unlockPair"
+  | "createPaymentOrder"
+  | "findJoinedGroupByInviteToken"
+  | "loadGroup"
+  | "subscribeToGroup"
+  | "unlockPair"
 >;
 
 interface PairData {

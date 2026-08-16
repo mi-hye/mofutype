@@ -1,16 +1,19 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { DerivedEtoProfile } from "../eto/types";
+import type { PaymentMethod } from "../payment/types";
 import type { AppDatabase } from "./app-database.types";
 import { createSupabaseBrowserClient } from "./browser";
 import {
   GroupRepositoryError,
   mapGroup,
   mapGroupMember,
+  mapPaymentOrder,
   mapRelationUnlock,
   type Group,
   type GroupMember,
   type GroupRepositoryErrorCode,
+  type PaymentOrder,
   type RelationUnlock,
 } from "./models";
 
@@ -23,6 +26,7 @@ type CreateGroupArgs = Functions["create_group_and_join"]["Args"];
 type JoinGroupArgs = Functions["join_group"]["Args"];
 type PreviewGroupInviteArgs = Functions["get_group_invite_preview"]["Args"];
 type UnlockRelationArgs = Functions["unlock_relation_mock"]["Args"];
+type CreatePaymentOrderArgs = Functions["create_payment_order"]["Args"];
 
 interface RealtimeChannel {
   on(
@@ -58,6 +62,7 @@ export interface GroupRepositoryClient {
   joinGroup(args: JoinGroupArgs): Promise<ClientResult>;
   previewGroupInvite(args: PreviewGroupInviteArgs): Promise<ClientResult>;
   unlockRelation(args: UnlockRelationArgs): Promise<ClientResult>;
+  createPaymentOrder(args: CreatePaymentOrderArgs): Promise<ClientResult>;
   loadGroup(groupId: string): Promise<ClientResult>;
   findJoinedGroupId(inviteTokenHash: string): Promise<ClientResult>;
   loadGroupMembers(groupId: string): Promise<ClientResult>;
@@ -114,6 +119,7 @@ const publicMessages: Record<GroupRepositoryErrorCode, string> = {
   JOIN_FAILED: "Unable to join the group.",
   LOAD_FAILED: "Unable to load the group.",
   NOT_FOUND: "The group was not found.",
+  PAYMENT_FAILED: "Unable to create the payment order.",
   UNLOCK_FAILED: "Unable to unlock the relationship.",
   SUBSCRIPTION_FAILED: "The group subscription failed.",
   INVALID_DATA: "Supabase returned invalid group data.",
@@ -208,7 +214,7 @@ export function createGroupRepository(client: GroupRepositoryClient) {
 
   async function callOperation(
     operation: () => Promise<ClientResult>,
-    errorCode: "CREATE_FAILED" | "JOIN_FAILED" | "UNLOCK_FAILED",
+    errorCode: "CREATE_FAILED" | "JOIN_FAILED" | "PAYMENT_FAILED" | "UNLOCK_FAILED",
   ): Promise<ClientResult> {
     try {
       const result = await operation();
@@ -407,6 +413,26 @@ export function createGroupRepository(client: GroupRepositoryClient) {
     return mapRelationUnlock(exactlyOneRow(result.data));
   }
 
+  async function createPaymentOrder(
+    groupId: string,
+    memberA: string,
+    memberB: string,
+    method: PaymentMethod,
+  ): Promise<PaymentOrder> {
+    await ensureAnonymousSession();
+    const args: CreatePaymentOrderArgs = {
+      p_group_id: groupId,
+      p_member_a: memberA,
+      p_member_b: memberB,
+      p_method: method,
+    };
+    const result = await callOperation(
+      () => client.createPaymentOrder(args),
+      "PAYMENT_FAILED",
+    );
+    return mapPaymentOrder(exactlyOneRow(result.data));
+  }
+
   function subscribeToGroup(
     groupId: string,
     callbacks: GroupSubscriptionCallbacks,
@@ -487,6 +513,7 @@ export function createGroupRepository(client: GroupRepositoryClient) {
     previewGroupInvite,
     findJoinedGroupByInviteToken,
     loadGroup,
+    createPaymentOrder,
     unlockPair,
     subscribeToGroup,
   };
@@ -545,6 +572,8 @@ export function createSupabaseGroupRepositoryAdapter(
       await client.rpc("get_group_invite_preview", args),
     unlockRelation: async (args) =>
       await client.rpc("unlock_relation_mock", args),
+    createPaymentOrder: async (args) =>
+      await client.rpc("create_payment_order", args),
     loadGroup: async (groupId) =>
       await client
         .from("groups")
