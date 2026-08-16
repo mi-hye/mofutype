@@ -1,30 +1,43 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { createRelationship } from "@/lib/relationship/local-provider";
+import { createEtoRelationship } from "@/lib/eto/relationship";
+import type { DerivedEtoProfile, ZodiacId } from "@/lib/eto/types";
 import type { GroupMember, RelationUnlock } from "@/lib/supabase/models";
 import {
   buildGraph,
   buildGraphTopology,
   decorateGraph,
+  graphMemberSnapshot,
   type RelationshipGraphMember,
 } from "./build-graph";
 
-function member(id: string, nickname = id): GroupMember {
+function profile(
+  zodiacId: ZodiacId = "dragon",
+  mbti: DerivedEtoProfile["mbti"] = null,
+): DerivedEtoProfile {
+  return {
+    version: 1,
+    zodiacId,
+    mbti,
+    dayMaster: { element: "WOOD", polarity: "YANG" },
+    fiveElements: { WOOD: 2, FIRE: 1, EARTH: 1, METAL: 1, WATER: 1 },
+    yinYang: { YIN: 3, YANG: 3 },
+    calculationMode: "date-only",
+    boundaryState: "exact",
+    engineVersion: "mofu-eto-four-pillars-v1",
+  };
+}
+
+function member(id: string, nickname = id, zodiacId: ZodiacId = "dragon"): GroupMember {
+  const derivedProfile = profile(zodiacId);
   return {
     id,
     groupId: "group-1",
     userId: `user-${id}`,
     nickname,
-    animalId: "fawn",
-    animalGroup: "MOON",
+    zodiacId,
     mbti: null,
-    profile: {
-      version: 1,
-      animalId: "fawn",
-      animalGroup: "MOON",
-      mbti: null,
-      calculationMode: "date-only",
-    },
+    profile: derivedProfile,
     joinedAt: "2026-08-15T00:00:00Z",
   };
 }
@@ -48,20 +61,43 @@ describe("buildGraph", () => {
     const minimalMember = {
       id: "minimal",
       nickname: "みにまる",
-      animalId: "fawn",
-      animalGroup: "MOON",
+      zodiacId: "dragon",
       mbti: null,
-      profile: {
-        version: 1,
-        animalId: "fawn",
-        animalGroup: "MOON",
-        mbti: null,
-        calculationMode: "date-only",
-      },
+      profile: profile(),
     } satisfies RelationshipGraphMember;
 
     expect(buildGraphTopology([minimalMember]).nodes[0].data.member).toEqual(minimalMember);
   });
+
+  it("uses the zodiac React Flow node contract", () => {
+    expect(buildGraphTopology([member("one")]).nodes[0].type).toBe("zodiac");
+  });
+
+  it.each([false, true])(
+    "deep-clones profile count records when counts are null=%s",
+    (countsAreNull) => {
+      const source = member("snapshot");
+      if (countsAreNull) {
+        source.profile = { ...source.profile, fiveElements: null, yinYang: null };
+      }
+
+      const snapshot = graphMemberSnapshot([source])[0];
+
+      expect(snapshot).toEqual({
+        id: source.id,
+        nickname: source.nickname,
+        zodiacId: source.zodiacId,
+        mbti: source.mbti,
+        profile: source.profile,
+      });
+      expect(snapshot.profile).not.toBe(source.profile);
+      expect(snapshot.profile.dayMaster).not.toBe(source.profile.dayMaster);
+      if (!countsAreNull) {
+        expect(snapshot.profile.fiveElements).not.toBe(source.profile.fiveElements);
+        expect(snapshot.profile.yinYang).not.toBe(source.profile.yinYang);
+      }
+    },
+  );
   it.each(Array.from({ length: 30 }, (_, index) => {
     const count = index + 1;
     return [count, count * (count - 1) / 2] as const;
@@ -196,7 +232,7 @@ describe("buildGraph", () => {
 
   it("creates relationships only in topology and never during decoration", () => {
     const members = Array.from({ length: 30 }, (_, index) => member(`m-${String(index).padStart(2, "0")}`));
-    const relationshipFactory = vi.fn(createRelationship);
+    const relationshipFactory = vi.fn(createEtoRelationship);
     const topology = buildGraphTopology(members, relationshipFactory);
 
     expect(relationshipFactory).toHaveBeenCalledTimes(435);

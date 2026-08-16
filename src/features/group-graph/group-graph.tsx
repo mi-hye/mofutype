@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Background,
   ReactFlow,
@@ -9,25 +9,27 @@ import {
   type NodeMouseHandler,
 } from "@xyflow/react";
 
-import { createRelationship } from "@/lib/relationship/local-provider";
-import type { RelationshipResult } from "@/lib/relationship/types";
+import {
+  createEtoRelationship,
+  type EtoRelationshipResult,
+} from "@/lib/eto/relationship";
 import type { RelationUnlock } from "@/lib/supabase/models";
-import { AnimalNode } from "./animal-node";
+import { ZodiacNode } from "./zodiac-node";
 import {
   buildGraphTopology,
   decorateGraph,
   graphMemberSnapshot,
   graphMembersVersion,
-  type AnimalGraphNode,
   type RelationshipFactory,
   type RelationshipGraphMember,
   type RelationshipGraphEdge,
+  type ZodiacGraphNode,
 } from "./build-graph";
 
 export interface PairSelection {
   pairKey: string;
   memberIds: readonly [RelationshipGraphMember["id"], RelationshipGraphMember["id"]];
-  relationship: RelationshipResult;
+  relationship: EtoRelationshipResult;
   unlocked: boolean;
 }
 
@@ -38,7 +40,13 @@ interface GroupGraphProps {
   relationshipFactory?: RelationshipFactory;
 }
 
-const nodeTypes = { animal: AnimalNode };
+const nodeTypes = { zodiac: ZodiacNode };
+
+function removeFromTabOrder(canvas: HTMLDivElement) {
+  for (const element of canvas.querySelectorAll<HTMLElement>("a, button, [tabindex]")) {
+    element.tabIndex = -1;
+  }
+}
 
 function PointerControls() {
   const { fitView, zoomIn, zoomOut } = useReactFlow();
@@ -65,9 +73,10 @@ function GroupGraphComponent({
   members,
   unlocks,
   onPairSelect,
-  relationshipFactory = createRelationship,
+  relationshipFactory = createEtoRelationship,
 }: GroupGraphProps) {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const canvasRef = useRef<HTMLDivElement>(null);
   const membersVersion = graphMembersVersion(members);
   const topology = useMemo(
     () => buildGraphTopology(graphMemberSnapshot(members), relationshipFactory),
@@ -88,7 +97,7 @@ function GroupGraphComponent({
     [graph.edges],
   );
 
-  const handleNodeClick = useCallback<NodeMouseHandler<AnimalGraphNode>>(
+  const handleNodeClick = useCallback<NodeMouseHandler<ZodiacGraphNode>>(
     (_event, node) => setSelectedNodeId(node.id),
     [],
   );
@@ -99,18 +108,21 @@ function GroupGraphComponent({
     },
     [onPairSelect],
   );
-  const hideCanvasFromKeyboard = useCallback((canvas: HTMLDivElement | null) => {
+  useEffect(() => {
+    const canvas = canvasRef.current;
     if (!canvas) return;
-    for (const element of canvas.querySelectorAll<HTMLElement>("a, button, [tabindex]")) {
-      element.tabIndex = -1;
-    }
-  }, []);
+
+    removeFromTabOrder(canvas);
+    const observer = new MutationObserver(() => removeFromTabOrder(canvas));
+    observer.observe(canvas, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [membersVersion]);
 
   return (
     <section className="group-graph" aria-label="メンバー関係性グラフ">
-      <div ref={hideCanvasFromKeyboard} className="group-graph__canvas"
+      <div ref={canvasRef} className="group-graph__canvas"
         data-testid="group-graph-canvas" aria-hidden="true">
-        <ReactFlow<AnimalGraphNode, RelationshipGraphEdge>
+        <ReactFlow<ZodiacGraphNode, RelationshipGraphEdge>
           key={membersVersion}
           nodes={graph.nodes}
           edges={graph.edges}
@@ -154,6 +166,9 @@ function GroupGraphComponent({
                 {node.data.member.nickname}を選択
                 {node.data.discriminator ? `（${node.data.discriminator}）` : ""}
               </button>
+              <span className="group-graph__member-character">
+                {node.data.characterTitleJa}
+              </span>
             </li>
           ))}
         </ul>
@@ -169,7 +184,7 @@ function GroupGraphComponent({
                 <li key={edge.id}>
                   <button type="button" onClick={() => onPairSelect(selection)}>
                     {selectedMember.nickname}と{other.nickname}の関係を見る：
-                    {selection.relationship.freeTitleJa}
+                    {selection.relationship.headlineJa}
                     {selection.unlocked ? "（解放済み）" : ""}
                   </button>
                 </li>

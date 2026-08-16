@@ -1,7 +1,7 @@
 # MofuType 十二支·오행·MBTI 성격 및 관계 분석 설계
 
 작성일: 2026-08-15
-상태: 사용자 대화 설계 승인 완료, 문서 검토 대기
+상태: 사용자 최종 승인 완료, 구현 계획 작성
 
 ## 1. 결정 요약
 
@@ -450,17 +450,22 @@ project ref가 MofuType 대상인지 읽기 전용으로 확인하고 삭제 대
 
 그래프와 멤버 아바타는 새 十二支 얼굴 12종만 사용한다.
 
+현재 별도 UI 컨텍스트가 제공한 512×512 투명 PNG 12종을 초기 에셋으로
+사용한다.
+
 ```text
-rat.svg      ox.svg       tiger.svg    rabbit.svg
-dragon.svg   snake.svg    horse.svg    sheep.svg
-monkey.svg   rooster.svg  dog.svg      boar.svg
+rat.png      ox.png       tiger.png    rabbit.png
+dragon.png   snake.png    horse.png    sheep.png
+monkey.png   rooster.png  dog.png      boar.png
 ```
 
 모든 파일은 정사각형 viewBox, 얼굴 중심 구도, 동일 외곽선 두께, 제한된 공통
 팔레트 및 작은 노드에서도 구분되는 실루엣을 공유한다. MBTI는 별도 동물
 에셋이 아니라 배지, 표정, 패턴 또는 소품으로 표현한다.
 
-상세 화면용 풍부한 일러스트는 후속 작업이다. 초기 구현은 12개 얼굴 SVG와
+접근 가능한 텍스트 fallback을 필수 범위로 한다.
+상세 화면용 풍부한 일러스트와 SVG 재출력은 후속 작업이다. 초기 구현은 현재
+12개 얼굴 PNG와 접근 가능한 텍스트 fallback을 필수 범위로 한다.
 접근 가능한 텍스트 fallback을 필수 범위로 한다.
 
 ## 11. 오류와 복구

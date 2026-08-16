@@ -2,7 +2,10 @@ import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 
-import { findUnsafeProductionSource } from "./test/source-safety.test-utils";
+import {
+  findLegacyProductionSource,
+  findUnsafeProductionSource,
+} from "./test/source-safety.test-utils";
 
 const sourceRoot = path.resolve(import.meta.dirname);
 
@@ -59,9 +62,9 @@ describe("production source safety", () => {
     expect(globalStyles).toContain("--mint-pop:");
     expect(globalStyles).toContain("--shadow-zine:");
     expect(globalStyles).toContain("@media (prefers-reduced-motion: reduce)");
-    expect(globalStyles).toContain('.animal-avatar[data-selected="true"]');
+    expect(globalStyles).toContain('.zodiac-avatar[data-selected="true"]');
     expect(globalStyles).toMatch(
-      /\.animal-avatar\[data-selected="true"\][^{]*\{[^}]*box-shadow:\s*[^;]*var\(--hot-pink\)/,
+      /\.zodiac-avatar\[data-selected="true"\][^{]*\{[^}]*box-shadow:\s*[^;]*var\(--hot-pink\)/,
     );
     for (const variant of ["cream", "pink", "mint", "violet"]) {
       expect(globalStyles).toContain(`.ui-card[data-variant="${variant}"]`);
@@ -116,6 +119,73 @@ describe("production source safety", () => {
       "HTML injection API dangerouslySetInnerHTML",
       "HTML injection API .innerHTML",
     ]);
+  });
+
+  it("detects legacy animal-model vocabulary without rejecting Five Element EARTH", () => {
+    expect(findLegacyProductionSource(
+      "type Old = AnimalId; const group = 'MOON'; const element = 'EARTH';",
+    )).toEqual([
+      "legacy type AnimalId",
+      "legacy group MOON",
+    ]);
+  });
+
+  it("detects every legacy dominance dynamic", () => {
+    expect(findLegacyProductionSource(
+      "MOON_OVER_EARTH EARTH_OVER_SUN SUN_OVER_MOON",
+    )).toEqual([
+      "legacy group MOON",
+      "legacy group SUN",
+      "legacy group EARTH_OVER",
+    ]);
+  });
+
+  it("detects legacy animals that are not part of the zodiac catalog", () => {
+    expect(findLegacyProductionSource(
+      "wolf koala cheetah lion elephant",
+    )).toEqual([
+      "legacy animal wolf",
+      "legacy animal koala",
+      "legacy animal cheetah",
+      "legacy animal lion",
+      "legacy animal elephant",
+    ]);
+  });
+
+  it("detects legacy animal CSS hooks", () => {
+    expect(findLegacyProductionSource(
+      ".animal-graph-node__nickname .animal-avatar",
+    )).toEqual([
+      "legacy CSS hook animal-graph-node",
+      "legacy CSS hook animal-avatar",
+    ]);
+  });
+
+  it("detects legacy Japanese animal presentation copy", () => {
+    expect(findLegacyProductionSource(
+      "動物占い 動物うらない 動物キャラクター",
+    )).toEqual([
+      "legacy copy 動物占い",
+      "legacy copy 動物うらない",
+      "legacy copy 動物キャラクター",
+    ]);
+  });
+
+  it("keeps production source free of the legacy animal relationship model", () => {
+    const violations = productionSourceFiles(sourceRoot).flatMap((filePath) => {
+      const source = readFileSync(filePath, "utf8");
+      const sourceWithoutGeneratedComments = filePath.endsWith("database.types.ts")
+        ? source
+            .replace(/\/\*[\s\S]*?\*\//g, "")
+            .replace(/^\s*\/\/.*$/gm, "")
+        : source;
+
+      return findLegacyProductionSource(sourceWithoutGeneratedComments).map(
+        (violation) => `${path.relative(sourceRoot, filePath)}: ${violation}`,
+      );
+    });
+
+    expect(violations).toEqual([]);
   });
 
   it("keeps production TypeScript free of animal emoji and HTML injection", () => {

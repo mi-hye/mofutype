@@ -9,11 +9,15 @@ import type { PaymentProvider } from "./types";
 const input = { groupId: "g1", memberA: "b", memberB: "a" };
 
 describe("MockPaymentProvider", () => {
-  it("uses the repository unlock boundary and returns only the public payment status", async () => {
+  it("uses the repository unlock boundary only for the explicit test provider", async () => {
+    const createPaymentOrder = vi.fn(async () => ({ id: "order-1" }));
     const unlockPair = vi.fn(async () => ({ id: "private-row" }));
-    const provider = new MockPaymentProvider({ unlockPair });
+    const provider = new MockPaymentProvider({ createPaymentOrder, unlockPair });
 
-    await expect(provider.unlock(input)).resolves.toEqual({ status: "unlocked" });
+    await expect(provider.start({ ...input, method: "paypay" })).resolves.toEqual({
+      status: "confirmed",
+    });
+    expect(createPaymentOrder).toHaveBeenCalledWith("g1", "b", "a", "paypay");
     expect(unlockPair).toHaveBeenCalledWith("g1", "b", "a");
   });
 });
@@ -24,7 +28,7 @@ describe("CheckoutPanel", () => {
       <CheckoutPanel
         pairNames={["あお", "もも"]}
         input={input}
-        provider={{ unlock: vi.fn() }}
+        provider={{ start: vi.fn() }}
         onSuccess={vi.fn()}
       />,
     );
@@ -42,34 +46,102 @@ describe("CheckoutPanel", () => {
 
   it("unlocks once and reports success", async () => {
     const user = userEvent.setup();
-    const unlock = vi.fn(async () => ({ status: "unlocked" as const }));
+    const start = vi.fn(async () => ({ status: "confirmed" as const }));
     const onSuccess = vi.fn();
     render(
       <CheckoutPanel
         pairNames={["あお", "もも"]}
         input={input}
-        provider={{ unlock }}
+        provider={{ start }}
         onSuccess={onSuccess}
       />,
     );
 
     await user.click(screen.getByRole("button", { name: "モック決済を完了" }));
-    expect(unlock).toHaveBeenCalledOnce();
-    expect(unlock).toHaveBeenCalledWith(input);
+    expect(start).toHaveBeenCalledOnce();
+    expect(start).toHaveBeenCalledWith({ ...input, method: "paypay" });
     expect(onSuccess).toHaveBeenCalledOnce();
+  });
+
+  it("passes the selected card method to the payment boundary", async () => {
+    const user = userEvent.setup();
+    const start = vi.fn(async () => ({ status: "confirmed" as const }));
+    render(
+      <CheckoutPanel
+        pairNames={["あお", "もも"]}
+        input={input}
+        provider={{ start }}
+        onSuccess={vi.fn()}
+      />,
+    );
+
+    await user.click(screen.getByRole("radio", { name: "カード（モック）" }));
+    await user.click(screen.getByRole("button", { name: "モック決済を完了" }));
+    expect(start).toHaveBeenCalledWith({ ...input, method: "card" });
+  });
+
+  it("hands an external checkout URL to navigation without unlocking locally", async () => {
+    const user = userEvent.setup();
+    const onSuccess = vi.fn();
+    const onRedirect = vi.fn();
+    render(
+      <CheckoutPanel
+        pairNames={["あお", "もも"]}
+        input={input}
+        provider={{
+          start: vi.fn(async () => ({
+            status: "redirect" as const,
+            checkoutUrl: "https://checkout.example/session-1",
+          })),
+        }}
+        onRedirect={onRedirect}
+        onSuccess={onSuccess}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "モック決済を完了" }));
+    expect(onRedirect).toHaveBeenCalledWith("https://checkout.example/session-1");
+    expect(onSuccess).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: /モック決済を完了.*処理中/ })).toBeDisabled();
+  });
+
+  it("rejects unsafe checkout redirects without exposing provider details", async () => {
+    const user = userEvent.setup();
+    const onRedirect = vi.fn();
+    render(
+      <CheckoutPanel
+        pairNames={["あお", "もも"]}
+        input={input}
+        provider={{
+          start: vi.fn(async () => ({
+            status: "redirect" as const,
+            checkoutUrl: "javascript:private-provider-value",
+          })),
+        }}
+        onRedirect={onRedirect}
+        onSuccess={vi.fn()}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "モック決済を完了" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "解放できませんでした。通信環境を確認して、もう一度お試しください。",
+    );
+    expect(screen.queryByText(/private-provider-value/)).not.toBeInTheDocument();
+    expect(onRedirect).not.toHaveBeenCalled();
   });
 
   it("keeps the report locked on failure and allows a safe retry", async () => {
     const user = userEvent.setup();
-    const unlock = vi.fn()
+    const start = vi.fn()
       .mockRejectedValueOnce(new Error("private provider details"))
-      .mockResolvedValueOnce({ status: "unlocked" as const });
+      .mockResolvedValueOnce({ status: "confirmed" as const });
     const onSuccess = vi.fn();
     render(
       <CheckoutPanel
         pairNames={["あお", "もも"]}
         input={input}
-        provider={{ unlock } as PaymentProvider}
+        provider={{ start } as PaymentProvider}
         onSuccess={onSuccess}
       />,
     );
@@ -83,37 +155,37 @@ describe("CheckoutPanel", () => {
 
     await user.click(screen.getByRole("button", { name: "もう一度試す" }));
     await waitFor(() => expect(onSuccess).toHaveBeenCalledOnce());
-    expect(unlock).toHaveBeenCalledTimes(2);
+    expect(start).toHaveBeenCalledTimes(2);
   });
 
   it("does not notify after unmounting during payment", async () => {
     const user = userEvent.setup();
-    let resolve!: (value: { status: "unlocked" }) => void;
-    const unlock = vi.fn(() => new Promise<{ status: "unlocked" }>((done) => { resolve = done; }));
+    let resolve!: (value: { status: "confirmed" }) => void;
+    const start = vi.fn(() => new Promise<{ status: "confirmed" }>((done) => { resolve = done; }));
     const onSuccess = vi.fn();
     const view = render(
       <CheckoutPanel
         pairNames={["あお", "もも"]}
         input={input}
-        provider={{ unlock }}
+        provider={{ start }}
         onSuccess={onSuccess}
       />,
     );
 
     await user.click(screen.getByRole("button", { name: "モック決済を完了" }));
     view.unmount();
-    await act(async () => resolve({ status: "unlocked" }));
+    await act(async () => resolve({ status: "confirmed" }));
     expect(onSuccess).not.toHaveBeenCalled();
   });
 
   it("does not offer a second payment when returning to the report fails", async () => {
     const user = userEvent.setup();
-    const unlock = vi.fn(async () => ({ status: "unlocked" as const }));
+    const start = vi.fn(async () => ({ status: "confirmed" as const }));
     render(
       <CheckoutPanel
         pairNames={["あお", "もも"]}
         input={input}
-        provider={{ unlock }}
+        provider={{ start }}
         onSuccess={() => { throw new Error("navigation failed"); }}
       />,
     );
@@ -122,7 +194,7 @@ describe("CheckoutPanel", () => {
     expect(await screen.findByRole("status")).toHaveTextContent(
       "解放は完了しました。グループの関係ページを開き直してください。",
     );
-    expect(unlock).toHaveBeenCalledOnce();
+    expect(start).toHaveBeenCalledOnce();
     expect(screen.queryByRole("button", { name: "もう一度試す" })).not.toBeInTheDocument();
   });
 });

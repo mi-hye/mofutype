@@ -1,14 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { flushSync } from "react-dom";
 
 import { Button } from "@/components/ui/button";
-import { localAstrologyProvider } from "@/lib/astrology/local-provider";
-import type { AstrologyProvider } from "@/lib/astrology/types";
+import { localEtoProvider } from "@/lib/eto/provider";
+import type { EtoProvider } from "@/lib/eto/types";
 import { SupabaseConfigurationError } from "@/lib/supabase/browser";
 import { createBrowserGroupRepository, type GroupAggregate, type GroupInvitePreview } from "@/lib/supabase/group-repository";
 import { ProfileForm, emptyProfileDraft, type ProfileDraft, type ProfileErrors } from "./profile-form";
-import { createOnboardingSchema } from "./schema";
+import { createOnboardingSchema, todayIsoInTokyo } from "./schema";
 
 type BrowserRepository = ReturnType<typeof createBrowserGroupRepository>;
 
@@ -16,18 +17,12 @@ export function joinDraftKey(inviteToken: string) {
   return `mofutype:join-group:${inviteToken}:draft`;
 }
 
-function readDraft(storage: Storage | undefined, key: string): ProfileDraft {
+function defaultSessionStorage(): Storage | undefined {
+  if (typeof window === "undefined") return undefined;
   try {
-    if (!storage) return emptyProfileDraft();
-    const value = JSON.parse(storage.getItem(key) ?? "null") as Partial<ProfileDraft> | null;
-    if (!value || typeof value !== "object") return emptyProfileDraft();
-    const initial = emptyProfileDraft();
-    for (const name of Object.keys(initial) as (keyof ProfileDraft)[]) {
-      if (typeof value[name] !== typeof initial[name]) return initial;
-    }
-    return value as ProfileDraft;
+    return window.sessionStorage;
   } catch {
-    return emptyProfileDraft();
+    return undefined;
   }
 }
 
@@ -69,23 +64,28 @@ export interface JoinGroupFormProps {
   onJoined(aggregate: GroupAggregate): void;
   preview?: GroupInvitePreview;
   repositoryFactory?: () => Pick<BrowserRepository, "joinGroup" | "loadGroup">;
-  astrologyProvider?: AstrologyProvider;
+  etoProvider?: EtoProvider;
   storage?: Storage;
   clock?: () => Date;
 }
 
-export function JoinGroupForm({
+export function JoinGroupForm(props: JoinGroupFormProps) {
+  return <JoinGroupFormForInvite key={props.inviteToken} {...props} />;
+}
+
+function JoinGroupFormForInvite({
   inviteToken,
   onJoined,
   preview,
   repositoryFactory = createBrowserGroupRepository,
-  astrologyProvider = localAstrologyProvider,
+  etoProvider = localEtoProvider,
   storage,
   clock = () => new Date(),
 }: JoinGroupFormProps) {
   const key = joinDraftKey(inviteToken);
-  const activeStorage = storage ?? (typeof window === "undefined" ? undefined : window.sessionStorage);
-  const [draft, setDraft] = useState(() => readDraft(activeStorage, key));
+  const activeStorage = storage ?? defaultSessionStorage();
+  const maxBirthDate = todayIsoInTokyo(clock);
+  const [draft, setDraft] = useState(emptyProfileDraft);
   const [errors, setErrors] = useState<ProfileErrors>({});
   const [failure, setFailure] = useState("");
   const [loading, setLoading] = useState(false);
@@ -95,11 +95,16 @@ export function JoinGroupForm({
   useEffect(() => {
     mounted.current = true;
     generation.current += 1;
+    try {
+      activeStorage?.removeItem(key);
+    } catch {
+      // Removing obsolete privacy-sensitive drafts is best-effort.
+    }
     return () => {
       mounted.current = false;
       generation.current += 1;
     };
-  }, [inviteToken]);
+  }, [activeStorage, key]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -121,11 +126,11 @@ export function JoinGroupForm({
     const isCurrent = () => mounted.current && generation.current === submission;
     let profile;
     try {
-      profile = await astrologyProvider.derive({
+      profile = await etoProvider.derive({
         birthDate: result.data.birthDate,
         birthTime: result.data.birthTime,
         mbti: result.data.mbti,
-      });
+      }, maxBirthDate);
     } catch {
       if (!isCurrent()) return;
       setFailure("プロフィールを作成できませんでした。入力内容を確認してください。");
@@ -146,17 +151,12 @@ export function JoinGroupForm({
       if (!isCurrent()) return;
     } catch (error) {
       if (!isCurrent()) return;
-      try { activeStorage?.setItem(key, JSON.stringify(draft)); } catch { /* storage may be unavailable */ }
       setFailure(publicJoinError(error));
       setLoading(false);
       return;
     }
-    try {
-      activeStorage?.removeItem(key);
-    } catch {
-      // Browser storage cleanup is best-effort after a successful mutation.
-    }
     if (!isCurrent()) return;
+    flushSync(() => setDraft(emptyProfileDraft()));
     try {
       onJoined(aggregate);
     } catch {
@@ -178,7 +178,8 @@ export function JoinGroupForm({
       ) : null}
       <p>プロフィールを入力して、グループに参加しましょう。</p>
       <form className="onboarding-form" aria-label="グループ参加フォーム" onSubmit={submit} noValidate>
-        <ProfileForm value={draft} onChange={setDraft} errors={errors} disabled={loading} />
+        <ProfileForm value={draft} onChange={setDraft} errors={errors}
+          maxBirthDate={maxBirthDate} disabled={loading} />
         {failure ? <p className="form-error" role="alert">{failure}</p> : null}
         <Button type="submit" size="lg" loading={loading}>グループに参加</Button>
       </form>

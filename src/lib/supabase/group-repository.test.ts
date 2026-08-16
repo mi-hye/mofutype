@@ -14,15 +14,44 @@ import {
   createSupabaseGroupRepositoryAdapter,
   type GroupRepositoryClient,
 } from "./group-repository";
-import { mapGroupMember, mapRelationUnlock } from "./models";
-import type { DerivedProfile } from "../astrology/types";
+import { mapGroupMember, mapPaymentOrder, mapRelationUnlock } from "./models";
+import type { DerivedEtoProfile } from "../eto/types";
 
-const profile: DerivedProfile = {
+const profile: DerivedEtoProfile = {
   version: 1,
-  animalId: "fawn",
-  animalGroup: "MOON",
-  mbti: null,
+  zodiacId: "dragon",
+  mbti: "INFP",
+  dayMaster: { element: "WOOD", polarity: "YANG" },
+  fiveElements: { WOOD: 2, FIRE: 1, EARTH: 1, METAL: 1, WATER: 1 },
+  yinYang: { YIN: 3, YANG: 3 },
   calculationMode: "date-only",
+  boundaryState: "exact",
+  engineVersion: "mofu-eto-four-pillars-v1",
+};
+
+const dateTimeProfile: DerivedEtoProfile = {
+  ...profile,
+  fiveElements: { WOOD: 2, FIRE: 2, EARTH: 1, METAL: 2, WATER: 1 },
+  yinYang: { YIN: 4, YANG: 4 },
+  calculationMode: "date-time",
+};
+
+const ambiguousProfile: DerivedEtoProfile = {
+  ...profile,
+  fiveElements: null,
+  yinYang: null,
+  boundaryState: "solar-term-ambiguous",
+};
+
+const profileWithoutEngine = {
+  version: profile.version,
+  zodiacId: profile.zodiacId,
+  mbti: profile.mbti,
+  dayMaster: profile.dayMaster,
+  fiveElements: profile.fiveElements,
+  yinYang: profile.yinYang,
+  calculationMode: profile.calculationMode,
+  boundaryState: profile.boundaryState,
 };
 
 const groupRow = {
@@ -37,10 +66,10 @@ const memberRow = {
   group_id: "group-1",
   user_id: "user-1",
   nickname: "Mofu",
-  animal_id: "fawn",
-  animal_group: "MOON",
-  mbti: null,
+  zodiac_id: "dragon",
+  mbti: "INFP",
   profile_payload: profile,
+  profile_version: 1,
   joined_at: "2026-08-15T00:01:00Z",
 };
 
@@ -54,6 +83,22 @@ const unlockRow = {
   payment_reference: null,
   unlocked_by: "user-1",
   unlocked_at: "2026-08-15T00:02:00Z",
+};
+
+const paymentOrderRow = {
+  id: "order-1",
+  group_id: "group-1",
+  member_low_id: "member-1",
+  member_high_id: "member-2",
+  amount_jpy: 300,
+  currency: "JPY",
+  method: "paypay",
+  status: "pending",
+  provider: null,
+  provider_reference: null,
+  created_by: "user-1",
+  created_at: "2026-08-16T00:00:00Z",
+  paid_at: null,
 };
 
 const invalidRpcRowSets: unknown[][] = [
@@ -227,6 +272,10 @@ class FakeSupabaseClient implements GroupRepositoryClient {
     return this.rpc("unlock_relation_mock", args);
   }
 
+  createPaymentOrder(args: Record<string, unknown>): Promise<Result> {
+    return this.rpc("create_payment_order", args);
+  }
+
   from(table: string): FakeQuery {
     const query = new FakeQuery(
       this.tableResults.get(table) ?? { data: null, error: new Error("not configured") },
@@ -253,7 +302,7 @@ class FakeSupabaseClient implements GroupRepositoryClient {
   async loadGroupMembers(groupId: string): Promise<Result> {
     return await this.from("group_members")
       .select(
-        "id,group_id,user_id,nickname,animal_id,animal_group,mbti,profile_payload,joined_at",
+        "id,group_id,user_id,nickname,zodiac_id,mbti,profile_payload,profile_version,joined_at",
       )
       .eq("group_id", groupId);
   }
@@ -444,19 +493,40 @@ describe("group repository", () => {
         args: {
           p_name: "Friends",
           p_nickname: "Mofu",
-          p_animal_id: "fawn",
-          p_animal_group: "MOON",
-          p_mbti: null,
+          p_zodiac_id: "dragon",
+          p_mbti: "INFP",
           p_profile_payload: profile,
         },
       },
     ]);
+    const sentProfile = client.rpcCalls[0].args.p_profile_payload as Record<string, unknown>;
+    expect(sentProfile).not.toBe(profile);
+    expect(sentProfile.dayMaster).not.toBe(profile.dayMaster);
+    expect(sentProfile.fiveElements).not.toBe(profile.fiveElements);
+    expect(sentProfile.yinYang).not.toBe(profile.yinYang);
     expect(JSON.stringify(client.rpcCalls)).not.toMatch(/birthDate|birthTime/);
+  });
+
+  it("preserves null distributions while cloning an ambiguous profile", async () => {
+    const client = new FakeSupabaseClient();
+    client.rpcResults.set("create_group_and_join", {
+      data: [{ group_id: "group-1", member_id: "member-1", invite_token: "token" }],
+      error: null,
+    });
+
+    await createGroupRepository(client).createGroup({
+      name: "Friends",
+      nickname: "Mofu",
+      profile: ambiguousProfile,
+    });
+
+    expect(client.rpcCalls[0].args.p_profile_payload).toEqual(ambiguousProfile);
+    expect(client.rpcCalls[0].args.p_profile_payload).not.toBe(ambiguousProfile);
   });
 
   it("recursively excludes raw birth keys from create payloads", async () => {
     const client = new FakeSupabaseClient();
-    const source = Object.assign({}, profile) as DerivedProfile & {
+    const source = Object.assign({}, profile) as DerivedEtoProfile & {
       raw?: { birthDate: string; nested: { birthTime: string } };
     };
     source.raw = { birthDate: "2000-01-01", nested: { birthTime: "12:00" } };
@@ -475,7 +545,7 @@ describe("group repository", () => {
 
   it("joins a group with the exact safe payload and no nested raw birth keys", async () => {
     const client = new FakeSupabaseClient();
-    const nestedSource = Object.assign({}, profile) as DerivedProfile & {
+    const nestedSource = Object.assign({}, profile) as DerivedEtoProfile & {
       ignored?: { birthDate: string; birthTime: string };
     };
     nestedSource.ignored = { birthDate: "2000-01-01", birthTime: "12:00" };
@@ -496,9 +566,8 @@ describe("group repository", () => {
       args: {
         p_invite_token: "token",
         p_nickname: "Friend",
-        p_animal_id: "fawn",
-        p_animal_group: "MOON",
-        p_mbti: null,
+        p_zodiac_id: "dragon",
+        p_mbti: "INFP",
         p_profile_payload: profile,
       },
     });
@@ -564,9 +633,8 @@ describe("group repository", () => {
           groupId: "group-1",
           userId: "user-1",
           nickname: "Mofu",
-          animalId: "fawn",
-          animalGroup: "MOON",
-          mbti: null,
+          zodiacId: "dragon",
+          mbti: "INFP",
           profile,
           joinedAt: memberRow.joined_at,
         },
@@ -587,7 +655,7 @@ describe("group repository", () => {
     });
     expect(client.queries.get("groups")?.selected).toBe("id,name,max_members,created_at");
     expect(client.queries.get("group_members")?.selected).toBe(
-      "id,group_id,user_id,nickname,animal_id,animal_group,mbti,profile_payload,joined_at",
+      "id,group_id,user_id,nickname,zodiac_id,mbti,profile_payload,profile_version,joined_at",
     );
     expect(client.queries.get("relation_unlocks")?.selected).toBe(
       "id,group_id,member_low_id,member_high_id,status,payment_provider,payment_reference,unlocked_by,unlocked_at",
@@ -662,22 +730,88 @@ describe("group repository", () => {
   });
 
   it.each([
-    [{ ...memberRow, profile_payload: "not-json-object" }],
-    [{ ...memberRow, profile_payload: { ...profile, version: 2 } }],
-    [{ ...memberRow, profile_payload: { ...profile, mbti: "XXXX" } }],
-    [{ ...memberRow, profile_payload: { ...profile, calculationMode: "approximate" } }],
-    [{ ...memberRow, animal_group: "STARS" }],
-    [{ ...memberRow, animal_id: "dragon" }],
-    [{ ...memberRow, profile_payload: { ...profile, animalId: "wolf" } }],
-    [
-      {
+    ["date-only", profile],
+    ["date-time", dateTimeProfile],
+    ["solar-term ambiguity", ambiguousProfile],
+  ])("maps a valid %s Eto profile", (_name, validProfile) => {
+    expect(
+      mapGroupMember({
         ...memberRow,
-        animal_group: "EARTH",
-        profile_payload: { ...profile, animalGroup: "EARTH" },
-      },
-    ],
-  ])("rejects invalid member row data", (row) => {
+        mbti: validProfile.mbti,
+        profile_payload: validProfile,
+      }),
+    ).toEqual({
+      id: "member-1",
+      groupId: "group-1",
+      userId: "user-1",
+      nickname: "Mofu",
+      zodiacId: "dragon",
+      mbti: validProfile.mbti,
+      profile: validProfile,
+      joinedAt: memberRow.joined_at,
+    });
+  });
+
+  it.each([
+    ["non-object profile", { ...memberRow, profile_payload: "not-json-object" }],
+    ["legacy member keys", { ...memberRow, animal_id: "fawn", animal_group: "MOON" }],
+    ["legacy profile keys", { ...memberRow, profile_payload: { ...profile, animalId: "fawn", animalGroup: "MOON" } }],
+    ["extra member key", { ...memberRow, raw_secret: "private-secret" }],
+    ["extra profile key", { ...memberRow, profile_payload: { ...profile, raw: "private-secret" } }],
+    ["missing profile key", { ...memberRow, profile_payload: profileWithoutEngine }],
+    ["wrong day-master keys", { ...memberRow, profile_payload: { ...profile, dayMaster: { element: "WOOD", yin: "YANG" } } }],
+    ["extra element key", { ...memberRow, profile_payload: { ...profile, fiveElements: { ...profile.fiveElements, VOID: 0 } } }],
+    ["missing polarity key", { ...memberRow, profile_payload: { ...profile, yinYang: { YIN: 6 } } }],
+    ["zodiac scalar mismatch", { ...memberRow, zodiac_id: "rat" }],
+    ["MBTI scalar mismatch", { ...memberRow, mbti: null }],
+    ["profile version mismatch", { ...memberRow, profile_version: 2 }],
+    ["invalid scalar profile version", { ...memberRow, profile_version: 1.5 }],
+    ["invalid zodiac", { ...memberRow, zodiac_id: "phoenix", profile_payload: { ...profile, zodiacId: "phoenix" } }],
+    ["invalid MBTI", { ...memberRow, mbti: "XXXX", profile_payload: { ...profile, mbti: "XXXX" } }],
+    ["invalid day-master enum", { ...memberRow, profile_payload: { ...profile, dayMaster: { element: "LIGHT", polarity: "YANG" } } }],
+    ["negative count", { ...memberRow, profile_payload: { ...profile, fiveElements: { ...profile.fiveElements, WOOD: -1, FIRE: 4 } } }],
+    ["fractional count", { ...memberRow, profile_payload: { ...profile, yinYang: { YIN: 2.5, YANG: 3.5 } } }],
+    ["wrong date-only total", { ...memberRow, profile_payload: { ...profile, yinYang: { YIN: 4, YANG: 4 } } }],
+    ["wrong date-time total", { ...memberRow, profile_payload: { ...dateTimeProfile, fiveElements: { ...dateTimeProfile.fiveElements, WOOD: 0 } } }],
+    ["one null distribution", { ...memberRow, profile_payload: { ...profile, fiveElements: null } }],
+    ["exact null distributions", { ...memberRow, profile_payload: { ...profile, fiveElements: null, yinYang: null } }],
+    ["ambiguous counts", { ...memberRow, profile_payload: { ...ambiguousProfile, fiveElements: profile.fiveElements, yinYang: profile.yinYang } }],
+    ["ambiguous date-time", { ...memberRow, profile_payload: { ...ambiguousProfile, calculationMode: "date-time" } }],
+    ["invalid boundary state", { ...memberRow, profile_payload: { ...profile, boundaryState: "close-enough" } }],
+    ["invalid calculation mode", { ...memberRow, profile_payload: { ...profile, calculationMode: "approximate" } }],
+    ["invalid version", { ...memberRow, profile_payload: { ...profile, version: 2 } }],
+    ["invalid engine", { ...memberRow, profile_payload: { ...profile, engineVersion: "private-engine-v2" } }],
+  ])("rejects invalid member row data: %s", (_name, row) => {
     expect(() => mapGroupMember(row)).toThrow(expectRepositoryError("INVALID_DATA"));
+  });
+
+  it("normalizes hostile getters and proxies to a generic safe error", () => {
+    const getterSecret = "raw-private-getter-secret";
+    const hostileProfile = Object.defineProperty({ ...profile }, "zodiacId", {
+      enumerable: true,
+      get() {
+        throw new Error(getterSecret);
+      },
+    });
+    const hostileProxy = new Proxy(memberRow, {
+      ownKeys() {
+        throw new Error("raw-private-proxy-secret");
+      },
+    });
+
+    for (const row of [
+      { ...memberRow, profile_payload: hostileProfile },
+      hostileProxy,
+    ]) {
+      try {
+        mapGroupMember(row);
+        throw new Error("expected invalid data");
+      } catch (error) {
+        expect(error).toEqual(expectRepositoryError("INVALID_DATA"));
+        expect((error as Error).message).toBe("Supabase returned invalid group data.");
+        expect(String(error)).not.toMatch(/raw-private-(getter|proxy)-secret/);
+      }
+    }
   });
 
   it("maps unlock rows and rejects malformed unlock data", () => {
@@ -689,6 +823,68 @@ describe("group repository", () => {
     expect(() => mapRelationUnlock({ ...unlockRow, status: "paid-ish" })).toThrow(
       expectRepositoryError("INVALID_DATA"),
     );
+  });
+
+  it("maps exact pending and paid payment orders and rejects inconsistent data", () => {
+    expect(mapPaymentOrder(paymentOrderRow)).toEqual({
+      id: "order-1",
+      groupId: "group-1",
+      memberLowId: "member-1",
+      memberHighId: "member-2",
+      amountJpy: 300,
+      currency: "JPY",
+      method: "paypay",
+      status: "pending",
+      provider: null,
+      providerReference: null,
+      createdBy: "user-1",
+      createdAt: "2026-08-16T00:00:00Z",
+      paidAt: null,
+    });
+    expect(mapPaymentOrder({
+      ...paymentOrderRow,
+      status: "paid",
+      provider: "mock",
+      provider_reference: "ref-1",
+      paid_at: "2026-08-16T00:01:00Z",
+    })).toMatchObject({ status: "paid", provider: "mock", providerReference: "ref-1" });
+
+    for (const invalid of [
+      { ...paymentOrderRow, amount_jpy: 301 },
+      { ...paymentOrderRow, currency: "USD" },
+      { ...paymentOrderRow, method: "cash" },
+      { ...paymentOrderRow, provider: "forged" },
+      { ...paymentOrderRow, status: "paid" },
+      { ...paymentOrderRow, private_secret: "must-not-pass" },
+    ]) {
+      expect(() => mapPaymentOrder(invalid)).toThrow(expectRepositoryError("INVALID_DATA"));
+    }
+  });
+
+  it("creates a fixed-price pending order through the canonical server RPC", async () => {
+    const client = new FakeSupabaseClient();
+    client.rpcResults.set("create_payment_order", { data: [paymentOrderRow], error: null });
+
+    await expect(createGroupRepository(client).createPaymentOrder(
+      "group-1", "member-2", "member-1", "paypay",
+    )).resolves.toMatchObject({ id: "order-1", amountJpy: 300, status: "pending" });
+    expect(client.rpcCalls[0]).toEqual({
+      name: "create_payment_order",
+      args: {
+        p_group_id: "group-1",
+        p_member_a: "member-2",
+        p_member_b: "member-1",
+        p_method: "paypay",
+      },
+    });
+
+    client.rpcResults.set("create_payment_order", {
+      data: null,
+      error: new Error("private payment details"),
+    });
+    await expect(createGroupRepository(client).createPaymentOrder(
+      "group-1", "member-1", "member-2", "card",
+    )).rejects.toEqual(expectRepositoryError("PAYMENT_FAILED"));
   });
 
   it("unlocks a pair through the canonicalizing RPC and maps its only row", async () => {
@@ -781,7 +977,7 @@ describe("group repository", () => {
     createGroupRepository(client).subscribeToGroup("group-1", { onError: errors });
     const channel = client.channels[0];
 
-    channel.emit("group_members", "INSERT", { ...memberRow, animal_id: "dragon" });
+    channel.emit("group_members", "INSERT", { ...memberRow, zodiac_id: "not-a-zodiac" });
     expect(errors).toHaveBeenCalledWith(expectRepositoryError("INVALID_DATA"));
     channel.statusCallback?.("CHANNEL_ERROR", new Error("private socket detail"));
     expect(errors).toHaveBeenCalledWith(expectRepositoryError("SUBSCRIPTION_FAILED"));
@@ -856,7 +1052,7 @@ describe("group repository", () => {
     expect(() =>
       channel.emitRaw("group_members", "INSERT", {
         eventType: "INSERT",
-        new: { ...memberRow, animal_id: "dragon" },
+        new: { ...memberRow, zodiac_id: "not-a-zodiac" },
         old: {},
       }),
     ).not.toThrow();
@@ -979,17 +1175,15 @@ describe("production Supabase adapter", () => {
     const createArgs = {
       p_name: "Friends",
       p_nickname: "Mofu",
-      p_animal_id: "fawn",
-      p_animal_group: "MOON",
-      p_mbti: null,
+      p_zodiac_id: "dragon",
+      p_mbti: "INFP",
       p_profile_payload: { ...profile },
     };
     const joinArgs = {
       p_invite_token: "token",
       p_nickname: "Mofu",
-      p_animal_id: "fawn",
-      p_animal_group: "MOON",
-      p_mbti: null,
+      p_zodiac_id: "dragon",
+      p_mbti: "INFP",
       p_profile_payload: { ...profile },
     };
 
@@ -999,6 +1193,12 @@ describe("production Supabase adapter", () => {
       p_group_id: "group-1",
       p_member_a: "member-1",
       p_member_b: "member-2",
+    });
+    await adapter.createPaymentOrder({
+      p_group_id: "group-1",
+      p_member_a: "member-1",
+      p_member_b: "member-2",
+      p_method: "paypay",
     });
     await adapter.loadGroup("group-1");
     await adapter.loadGroupMembers("group-1");
@@ -1011,6 +1211,15 @@ describe("production Supabase adapter", () => {
         name: "unlock_relation_mock",
         args: { p_group_id: "group-1", p_member_a: "member-1", p_member_b: "member-2" },
       },
+      {
+        name: "create_payment_order",
+        args: {
+          p_group_id: "group-1",
+          p_member_a: "member-1",
+          p_member_b: "member-2",
+          p_method: "paypay",
+        },
+      },
     ]);
     expect(calls.filter(({ kind }) => kind === "query").map(({ value }) => value)).toEqual([
       {
@@ -1022,7 +1231,7 @@ describe("production Supabase adapter", () => {
       {
         table: "group_members",
         columns:
-          "id,group_id,user_id,nickname,animal_id,animal_group,mbti,profile_payload,joined_at",
+          "id,group_id,user_id,nickname,zodiac_id,mbti,profile_payload,profile_version,joined_at",
         filter: ["group_id", "group-1"],
         single: false,
       },

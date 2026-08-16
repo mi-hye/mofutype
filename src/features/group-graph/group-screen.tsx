@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { StatusBanner, type ConnectionStatus } from "@/components/ui/status-banner";
 import { RelationSheet } from "@/features/relationship/relation-sheet";
 import { GroupShareControls } from "@/features/share/group-share-controls";
+import { createEtoRelationship } from "@/lib/eto/relationship";
 import type {
   GroupAggregate,
   GroupSubscriptionCallbacks,
@@ -95,6 +96,15 @@ function isPairUnlocked(
     unlock.memberLowId === low &&
     unlock.memberHighId === high,
   );
+}
+
+function findSelectedMembers(
+  members: readonly GroupMember[],
+  memberIds: readonly [string, string],
+): readonly [GroupMember, GroupMember] | null {
+  const memberA = members.find((member) => member.id === memberIds[0]);
+  const memberB = members.find((member) => member.id === memberIds[1]);
+  return memberA && memberB ? [memberA, memberB] : null;
 }
 
 export function GroupScreen(props: GroupScreenProps) {
@@ -282,6 +292,16 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken }: Grou
     }
   }, [initialAggregate.group.id, repository]);
 
+  const selectedMembers = selectedPair
+    ? findSelectedMembers(aggregate.members, selectedPair.memberIds)
+    : null;
+  const selectedRelationship = selectedMembers
+    ? createEtoRelationship({
+        memberA: { id: selectedMembers[0].id, profile: selectedMembers[0].profile },
+        memberB: { id: selectedMembers[1].id, profile: selectedMembers[1].profile },
+      })
+    : null;
+
   return (
     <main className="group-member-shell">
       <header className="group-member-header">
@@ -321,12 +341,11 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken }: Grou
       ) : null}
 
       <GroupGraph members={aggregate.members} unlocks={aggregate.unlocks} onPairSelect={setSelectedPair} />
-      {selectedPair ? (
+      {selectedPair && selectedMembers && selectedRelationship ? (
         <RelationSheet
-          relationship={selectedPair.relationship}
-          memberNames={selectedPair.memberIds.map((memberId) =>
-            aggregate.members.find((member) => member.id === memberId)?.nickname ?? "メンバー"
-          ) as [string, string]}
+          relationship={selectedRelationship}
+          memberNames={[selectedMembers[0].nickname, selectedMembers[1].nickname]}
+          memberProfiles={[selectedMembers[0].profile, selectedMembers[1].profile]}
           unlocked={isPairUnlocked(aggregate.unlocks, selectedPair.memberIds)}
           checkoutHref={inviteToken
             ? `/checkout/${encodeURIComponent(selectedPair.pairKey)}?invite=${encodeURIComponent(inviteToken)}`
