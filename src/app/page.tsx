@@ -1,5 +1,6 @@
 import Image from "next/image";
 
+import { Capsule } from "@/components/ui/capsule";
 import { LandingRelationshipPreview } from "@/features/landing/landing-relationship-preview";
 
 export default function Home() {
@@ -25,8 +26,8 @@ export default function Home() {
           わたしたち、<span>こんな感じ。</span>
         </h1>
         <div className="hero__stickers" aria-label="ムード">
-          <span>#MBTI</span>
-          <span>#12干支</span>
+          <Capsule>#MBTI</Capsule>
+          <Capsule>#12干支</Capsule>
         </div>
         <span className="hero__issue-note" aria-hidden="true">
           FRIENDS FILE<br />ISSUE 01

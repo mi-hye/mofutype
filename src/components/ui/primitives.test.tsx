@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { Button } from "./button";
+import { Capsule } from "./capsule";
 import { Card } from "./card";
 import { StatusBanner } from "./status-banner";
 
@@ -47,6 +48,14 @@ describe("Button", () => {
       );
     },
   );
+});
+
+describe("Capsule", () => {
+  it("renders the shared capsule contract", () => {
+    render(<Capsule>#MBTI</Capsule>);
+
+    expect(screen.getByText("#MBTI")).toHaveClass("ui-capsule");
+  });
 });
 
 describe("Card", () => {

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { ZodiacAvatar } from "@/components/zodiac-avatar";
 import { Button } from "@/components/ui/button";
+import { Capsule } from "@/components/ui/capsule";
 import { StatusBanner, type ConnectionStatus } from "@/components/ui/status-banner";
 import { RelationSheet } from "@/features/relationship/relation-sheet";
 import { GroupShareControls } from "@/features/share/group-share-controls";
@@ -402,9 +403,19 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken, curren
               <span id="my-result-title">わたしの四柱推命</span>
               <strong>{currentCharacter.titleJa}</strong>
               <ul aria-label="診断結果の詳細">
-                <li>{currentMember.mbti ?? "MBTI未設定"}</li>
-                <li>{elementLabel}・{polarityLabel}</li>
-                <li>{currentMember.profile.calculationMode === "date-time" ? "出生時刻を反映" : "生年月日で診断"}</li>
+                <li>
+                  <Capsule>{currentMember.mbti ?? "MBTI未設定"}</Capsule>
+                </li>
+                <li>
+                  <Capsule>{elementLabel}・{polarityLabel}</Capsule>
+                </li>
+                <li>
+                  <Capsule>
+                    {currentMember.profile.calculationMode === "date-time"
+                      ? "出生時刻を反映"
+                      : "生年月日で診断"}
+                  </Capsule>
+                </li>
               </ul>
             </div>
           </div>
