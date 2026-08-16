@@ -31,9 +31,6 @@ export default function Home() {
         <span className="hero__issue-note" aria-hidden="true">
           FRIENDS FILE<br />ISSUE 01
         </span>
-        <p className="hero__copy">
-          誕生日と性格タイプで、友だちとの空気感を一枚の関係マップに。
-        </p>
         <div className="hero__actions">
           <a
             className="ui-button hero__cta"
@@ -44,6 +41,62 @@ export default function Home() {
             グループを作る
           </a>
         </div>
+
+        <section className="service-flow" aria-labelledby="service-flow-title">
+          <header className="service-flow__header">
+            <h2 id="service-flow-title">MofuTypeって？</h2>
+            <span aria-hidden="true" />
+          </header>
+
+          <div className="service-flow__steps">
+            <span className="service-flow__line" aria-hidden="true" />
+
+            <article className="service-flow__item" data-accent="butter">
+              <span className="service-flow__number" aria-hidden="true">01</span>
+              <div>
+                <h3>わたしを知る</h3>
+                <p>誕生日とMBTIから、自分らしい動物タイプへ。</p>
+              </div>
+              <Image
+                className="service-flow__animal"
+                src="/zodiac/tiger.png"
+                alt=""
+                width={256}
+                height={256}
+              />
+            </article>
+
+            <article className="service-flow__item" data-accent="blue">
+              <span className="service-flow__number" aria-hidden="true">02</span>
+              <div>
+                <h3>みんなをつなぐ</h3>
+                <p>友だちを招待すると、関係が一枚のマップに。</p>
+              </div>
+              <Image
+                className="service-flow__animal"
+                src="/zodiac/rat.png"
+                alt=""
+                width={256}
+                height={256}
+              />
+            </article>
+
+            <article className="service-flow__item" data-accent="pink">
+              <span className="service-flow__number" aria-hidden="true">03</span>
+              <div>
+                <h3>違いを楽しむ</h3>
+                <p>それぞれの個性を知って、もっと心地よい関係へ。</p>
+              </div>
+              <Image
+                className="service-flow__animal"
+                src="/zodiac/rabbit.png"
+                alt=""
+                width={256}
+                height={256}
+              />
+            </article>
+          </div>
+        </section>
       </section>
 
     </main>

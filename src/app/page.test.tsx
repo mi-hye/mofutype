@@ -49,14 +49,24 @@ describe("Home", () => {
     }
   });
 
-  it("leaves the area after group creation open for future content", () => {
-    render(<Home />);
+  it("places the group CTA before the editorial service explanation", () => {
+    const { container } = render(<Home />);
 
     expect(
-      screen.queryByRole("region", { name: "MofuTypeでできること" }),
+      screen.queryByText("誕生日と性格タイプで、友だちとの空気感を一枚の関係マップに。"),
     ).not.toBeInTheDocument();
-    expect(screen.queryByText("わたしを知る")).not.toBeInTheDocument();
-    expect(screen.queryByText("みんなをつなぐ")).not.toBeInTheDocument();
-    expect(screen.queryByText("違いを楽しむ")).not.toBeInTheDocument();
+
+    const cta = screen.getByRole("link", { name: "グループを作る" });
+    const explainer = screen.getByRole("region", { name: "MofuTypeって？" });
+    expect(cta.compareDocumentPosition(explainer)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+    expect(container.querySelector(".service-flow__line")).toHaveAttribute(
+      "aria-hidden",
+      "true",
+    );
+    expect(screen.getByText("わたしを知る")).toBeInTheDocument();
+    expect(screen.getByText("みんなをつなぐ")).toBeInTheDocument();
+    expect(screen.getByText("違いを楽しむ")).toBeInTheDocument();
   });
 });
