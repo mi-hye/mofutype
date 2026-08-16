@@ -220,6 +220,7 @@ describe("production source safety", () => {
     expect(globalStyles).toMatch(/\.hero\s*\{[^}]*margin:\s*calc\(2\.75rem - 12px\) auto 0/);
     expect(startFormSource).not.toContain("start-group-form__note");
     expect(startFormSource).not.toContain("グループはプロフィール入力のあとに作成されます。");
+    expect(pageSource).not.toContain("まずはグループ名から。次のページであなたのプロフィールを入力します。");
     expect(globalStyles).toContain(".hero__connectors line");
     expect(pageSource).toContain("<LandingRelationshipPreview />");
     expect(previewSource).toContain('className="hero__connectors"');

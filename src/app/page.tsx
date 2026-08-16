@@ -53,7 +53,6 @@ export default function Home() {
           <span className="create-section__tape" aria-hidden="true" />
           <p className="hero__eyebrow">はじめる</p>
           <h2 id="create-title">グループを作る</h2>
-          <p>まずはグループ名から。次のページであなたのプロフィールを入力します。</p>
         </div>
         <Card variant="accent">
           <StartGroupForm />
