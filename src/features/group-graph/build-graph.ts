@@ -67,6 +67,13 @@ const RELATIONSHIP_LINE_COLORS: Readonly<Record<RelationshipCategory, string>> =
   LEARNING_EACH_OTHERS_PACE: "var(--relationship-clear)",
 };
 
+const RELATIONSHIP_LABEL_COLORS: Readonly<Record<RelationshipCategory, string>> = {
+  NATURAL_INTERLOCK: "var(--edge-mint)",
+  EXPANDING_POSSIBILITIES: "var(--edge-unlocked)",
+  POSITIVE_STIMULATION: "var(--coral-deep)",
+  LEARNING_EACH_OTHERS_PACE: "var(--edge-violet)",
+};
+
 function nodeSize(count: number): GraphNodeSize {
   if (count <= 6) return "lg";
   if (count <= 15) return "md";
@@ -216,6 +223,7 @@ export function buildGraphTopology(
       });
       edges.push({
         id: pairKey,
+        type: "straight",
         source: first.id,
         target: second.id,
         interactionWidth: 24,
@@ -279,7 +287,7 @@ export function decorateGraph(
         pointerEvents: "none",
       },
       labelBgStyle: {
-        fill: RELATIONSHIP_LINE_COLORS[category],
+        fill: RELATIONSHIP_LABEL_COLORS[category],
         stroke: "var(--surface-raised)",
         strokeWidth: 1.5,
         pointerEvents: "none",
