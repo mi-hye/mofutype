@@ -60,11 +60,11 @@ export interface BuiltGraph {
   edges: RelationshipGraphEdge[];
 }
 
-const RELATIONSHIP_LABEL_COLORS: Readonly<Record<RelationshipCategory, string>> = {
-  NATURAL_INTERLOCK: "var(--edge-mint)",
-  EXPANDING_POSSIBILITIES: "var(--edge-unlocked)",
-  POSITIVE_STIMULATION: "var(--coral-deep)",
-  LEARNING_EACH_OTHERS_PACE: "var(--edge-violet)",
+const RELATIONSHIP_LINE_COLORS: Readonly<Record<RelationshipCategory, string>> = {
+  NATURAL_INTERLOCK: "var(--relationship-calm)",
+  EXPANDING_POSSIBILITIES: "var(--relationship-clear)",
+  POSITIVE_STIMULATION: "var(--relationship-warm)",
+  LEARNING_EACH_OTHERS_PACE: "var(--relationship-clear)",
 };
 
 function nodeSize(count: number): GraphNodeSize {
@@ -279,7 +279,7 @@ export function decorateGraph(
         pointerEvents: "none",
       },
       labelBgStyle: {
-        fill: RELATIONSHIP_LABEL_COLORS[category],
+        fill: RELATIONSHIP_LINE_COLORS[category],
         stroke: "var(--surface-raised)",
         strokeWidth: 1.5,
         pointerEvents: "none",
@@ -287,9 +287,9 @@ export function decorateGraph(
       labelBgPadding: [9, 5],
       labelBgBorderRadius: 999,
       style: {
+        stroke: RELATIONSHIP_LINE_COLORS[category],
         strokeWidth,
         opacity,
-        strokeDasharray: unlocked ? undefined : incident ? "9 4" : "3 7",
       },
       data: {
         ...edge.data,

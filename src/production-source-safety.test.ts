@@ -108,10 +108,7 @@ describe("production source safety", () => {
       expect(globalStyles).toContain(`.ui-card[data-variant="${variant}"]`);
     }
     expect(globalStyles).toContain(
-      ".relationship-edge--incident.relationship-edge--locked",
-    );
-    expect(globalStyles).toContain(
-      ".relationship-edge--incident.relationship-edge--unlocked",
+      ".relationship-edge--incident .react-flow__edge-path",
     );
   });
 
@@ -179,12 +176,12 @@ describe("production source safety", () => {
 
   it("keeps semantic selected-edge colors visible against cream", () => {
     const globalStyles = designStyles();
+    const graphSource = readFileSync(
+      path.join(sourceRoot, "features/group-graph/build-graph.ts"),
+      "utf8",
+    );
     const cream = colorToken(globalStyles, "--cream");
 
-    expect(contrastRatio(colorToken(globalStyles, "--edge-hot-pink"), cream))
-      .toBeGreaterThanOrEqual(3);
-    expect(contrastRatio(colorToken(globalStyles, "--edge-mint"), cream))
-      .toBeGreaterThanOrEqual(3);
     for (const relationshipColor of [
       "--relationship-warm",
       "--relationship-clear",
@@ -192,9 +189,9 @@ describe("production source safety", () => {
     ]) {
       expect(contrastRatio(colorToken(globalStyles, relationshipColor), cream))
         .toBeGreaterThanOrEqual(3);
+      expect(graphSource).toContain(`var(${relationshipColor})`);
     }
-    expect(globalStyles).toContain("stroke: var(--edge-hot-pink)");
-    expect(globalStyles).toContain("stroke: var(--edge-mint)");
+    expect(graphSource).not.toContain("strokeDasharray");
   });
 
   it("keeps a mobile-first relationship preview without hiding document overflow", () => {
@@ -251,7 +248,7 @@ describe("production source safety", () => {
     expect(previewSource).toContain('aria-pressed={selected}');
     expect(pageSource).toContain("#12干支");
     expect(globalStyles).toMatch(/\.hero__stickers[^}]*align-items:\s*center[^}]*margin:\s*-3px 0 0/);
-    expect(globalStyles).toMatch(/\.hero__stickers span[^}]*display:\s*flex[^}]*min-height:\s*2\.125rem[^}]*align-items:\s*center[^}]*line-height:\s*0\.9/);
+    expect(globalStyles).toMatch(/\.ui-capsule[^}]*display:\s*inline-flex[^}]*min-height:\s*2\.125rem[^}]*align-items:\s*center[^}]*line-height:\s*0\.9/);
     expect(pageSource).not.toContain("#動物うらない");
     expect(pageSource).not.toContain("性格タイプ × 動物キャラクター");
     for (const animalImage of ["tiger.png", "rat.png", "rabbit.png"]) {

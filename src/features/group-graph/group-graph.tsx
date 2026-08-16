@@ -2,7 +2,6 @@
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  Background,
   ReactFlow,
   type EdgeMouseHandler,
   type NodeMouseHandler,
@@ -133,9 +132,7 @@ function GroupGraphComponent({
           edgesFocusable={false}
           elementsSelectable
           proOptions={{ hideAttribution: true }}
-        >
-          <Background gap={28} size={1.5} />
-        </ReactFlow>
+        />
       </div>
 
       {selectedMember ? (
