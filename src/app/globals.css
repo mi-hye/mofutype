@@ -429,6 +429,11 @@ body:has(.group-share-backdrop) { overflow: hidden; }
 .checkout-panel fieldset label { display: flex; min-width: 0; min-height: 50px; align-items: center; gap: 0.7rem; border: var(--border-subtle); border-radius: 0.72rem; padding: 0.65rem 0.75rem; background: var(--surface-raised); font-weight: 650; cursor: pointer; }
 .checkout-panel fieldset label:has(input:checked) { border-color: var(--color-line-soft); background: var(--surface-coral); }
 .checkout-panel input[type="radio"] { flex: 0 0 auto; width: 1.25rem; height: 1.25rem; margin: 0; accent-color: var(--accent-coral); }
+.checkout-panel__total { display: grid; gap: 0.45rem; margin: -0.2rem 0 1.35rem; border-block: 1.5px solid rgb(var(--ink-rgb) / 34%); padding-block: 0.9rem; }
+.checkout-panel__total > div { display: flex; min-width: 0; align-items: baseline; justify-content: space-between; gap: 1rem; }
+.checkout-panel__total span { color: var(--text-muted); font-size: 0.8rem; font-weight: 650; }
+.checkout-panel__total strong { flex: 0 0 auto; color: var(--ink); font-size: 1.05rem; }
+.checkout-panel__total p { margin: 0; color: var(--text-muted); font-size: 0.72rem; line-height: 1.5; }
 .checkout-panel > [role="alert"] { margin-bottom: 1rem; }
 .checkout-panel > [role="status"] { margin: 0 0 1rem; border-left: 3px solid var(--status-success); padding: 0.5rem 0.7rem; background: var(--surface-mint); color: var(--ink); font-weight: 650; }
 .checkout-panel > .ui-button { width: 100%; }

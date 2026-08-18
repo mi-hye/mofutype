@@ -128,6 +128,14 @@ export function CheckoutPanel({
         </label>
       </fieldset>
 
+      <div className="checkout-panel__total">
+        <div>
+          <span>今回のお支払い</span>
+          <strong>合計 300円</strong>
+        </div>
+        <p>定期課金や自動更新はありません</p>
+      </div>
+
       {failure ? (
         <p role="alert">
           解放できませんでした。通信環境を確認して、もう一度お試しください。
