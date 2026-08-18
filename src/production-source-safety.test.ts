@@ -167,6 +167,9 @@ describe("production source safety", () => {
     expect(globalStyles).toMatch(
       /\.group-share-actions__close\s*\{[^}]*width:\s*1px[^}]*clip-path:\s*inset\(50%\)/,
     );
+    expect(globalStyles).toMatch(
+      /\.relation-sheet__details section\s*\{[^}]*border:\s*0[^}]*border-bottom:\s*1px solid[^}]*background:\s*transparent[^}]*box-shadow:\s*none/,
+    );
   });
 
   it("lets mobile pages scroll vertically over the relationship graph", () => {
