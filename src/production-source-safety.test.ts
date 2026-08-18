@@ -157,6 +157,14 @@ describe("production source safety", () => {
     );
   });
 
+  it("lets mobile pages scroll vertically over the relationship graph", () => {
+    const globalStyles = designStyles();
+
+    expect(globalStyles).toMatch(
+      /\.group-graph__canvas \.react-flow__pane\s*\{[^}]*touch-action:\s*pan-y/,
+    );
+  });
+
   it("keeps the profile step compact without replacing native controls", () => {
     const globalStyles = designStyles();
 
