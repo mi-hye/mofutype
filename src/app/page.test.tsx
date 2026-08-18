@@ -73,4 +73,32 @@ describe("Home", () => {
       "生年月日からわかる十二支に、出生時刻とMBTIを重ねて、自分らしいタイプへ。",
     )).toBeInTheDocument();
   });
+
+  it("explains the free experience and the optional 300 yen report before a second CTA", () => {
+    render(<Home />);
+
+    expect(
+      screen.getByRole("heading", { name: "まずは無料で、みんなの輪郭まで。" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("0円")).toBeInTheDocument();
+    expect(screen.getByText("1組 300円")).toBeInTheDocument();
+    expect(screen.getByText("みんなの関係マップ")).toBeInTheDocument();
+    expect(screen.getByText("ふたりでいるときのヒント")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "無料でグループを作る" })).toHaveAttribute(
+      "href",
+      "/create/profile",
+    );
+  });
+
+  it("answers purchase questions without hiding essential information in decorative UI", () => {
+    render(<Home />);
+
+    expect(screen.getByRole("heading", { name: "始める前に、気になること。" })).toBeInTheDocument();
+    expect(screen.getByText("何人まで使える？")).toBeInTheDocument();
+    expect(screen.getByText("出生時刻やMBTIがわからなくても大丈夫？")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "特定商取引法に基づく表記" })).toHaveAttribute(
+      "href",
+      "/tokushoho",
+    );
+  });
 });

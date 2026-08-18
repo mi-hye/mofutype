@@ -35,6 +35,10 @@ describe("CheckoutPanel", () => {
 
     expect(screen.getByRole("heading", { name: "関係レポートを解放" })).toBeInTheDocument();
     expect(screen.getByText("300円")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "解放される内容" })).toBeInTheDocument();
+    expect(screen.getByText("十二支・五行・陰陽・MBTIの読み解き")).toBeInTheDocument();
+    expect(screen.getByText("ふたりでいるときのヒント")).toBeInTheDocument();
+    expect(screen.getByText("このふたり1組分を解放します")).toBeInTheDocument();
     expect(screen.getByText("これはモック決済です。実際の請求は発生しません。")).toBeInTheDocument();
     expect(screen.getByRole("radio", { name: "PayPay（モック）" })).toBeChecked();
     expect(screen.getByRole("radio", { name: "カード（モック）" })).toBeInTheDocument();

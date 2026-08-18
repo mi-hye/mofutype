@@ -123,6 +123,18 @@ export function RelationSheet({
         </div>
       ) : (
         <div className="relation-sheet__locked">
+          <section className="relation-sheet__offer" aria-labelledby="relation-offer-title">
+            <div>
+              <p>PAIR REPORT</p>
+              <h3 id="relation-offer-title">解放するとわかること</h3>
+            </div>
+            <ul>
+              <li>十二支・五行・陰陽・MBTIの読み解き</li>
+              <li>ふたりでいるときのヒント</li>
+              <li>それぞれに向けた関わり方</li>
+            </ul>
+            <p className="relation-sheet__offer-price">1組 300円</p>
+          </section>
           <div
             className="relation-sheet__skeletons"
             role="region"

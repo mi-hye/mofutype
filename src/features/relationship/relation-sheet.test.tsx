@@ -76,6 +76,10 @@ describe("RelationSheet", () => {
       "/checkout/a%3Ab?invite=token",
     );
     expect(screen.getByLabelText("ロック中の詳細")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "解放するとわかること" })).toBeInTheDocument();
+    expect(screen.getByText("十二支・五行・陰陽・MBTIの読み解き")).toBeInTheDocument();
+    expect(screen.getByText("ふたりでいるときのヒント")).toBeInTheDocument();
+    expect(screen.getByText("1組 300円")).toBeInTheDocument();
     expect(screen.getByText(disclaimer)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "この関係の共有ページ" })).toHaveAttribute(
       "href",

@@ -98,7 +98,76 @@ export default function Home() {
             </article>
           </div>
         </section>
+
+        <section className="value-ledger" aria-labelledby="value-ledger-title">
+          <header className="value-ledger__header">
+            <p>FREE → PAIR REPORT</p>
+            <h2 id="value-ledger-title" aria-label="まずは無料で、みんなの輪郭まで。">
+              まずは無料で、<br />みんなの輪郭まで。
+            </h2>
+          </header>
+
+          <div className="value-ledger__tiers">
+            <article className="value-ledger__tier" data-tier="free">
+              <div className="value-ledger__tier-heading">
+                <span>0円</span>
+                <h3>グループで楽しめること</h3>
+              </div>
+              <ul>
+                <li>自分の十二支タイプ</li>
+                <li>みんなの関係マップ</li>
+                <li>関係のひとことラベル</li>
+              </ul>
+            </article>
+
+            <article className="value-ledger__tier" data-tier="paid">
+              <div className="value-ledger__tier-heading">
+                <span>1組 300円</span>
+                <h3>気になるふたりを、もう少し深く</h3>
+              </div>
+              <ul>
+                <li>十二支・五行・陰陽・MBTIの読み解き</li>
+                <li>ふたりでいるときのヒント</li>
+                <li>それぞれに向けた関わり方</li>
+              </ul>
+            </article>
+          </div>
+
+          <p className="value-ledger__note">
+            自分の結果とグループ参加は無料。必要な関係だけ、あとから解放できます。
+          </p>
+          <ButtonLink className="value-ledger__cta" size="lg" href="/create/profile">
+            無料でグループを作る
+          </ButtonLink>
+        </section>
+
+        <section className="trust-notes" aria-labelledby="trust-notes-title">
+          <header>
+            <p>BEFORE YOU START</p>
+            <h2 id="trust-notes-title">始める前に、気になること。</h2>
+          </header>
+          <div className="trust-notes__list">
+            <details>
+              <summary>何人まで使える？</summary>
+              <p>1グループ30人まで。友だち同士でも、サークルやチームでも使えます。</p>
+            </details>
+            <details>
+              <summary>出生時刻やMBTIがわからなくても大丈夫？</summary>
+              <p>どちらも「わからない」を選べます。入力できる情報だけで結果を表示します。</p>
+            </details>
+            <details>
+              <summary>結果はどんなもの？</summary>
+              <p>自己理解と会話を楽しむための読みものです。科学的・医学的な判定ではありません。</p>
+            </details>
+          </div>
+        </section>
       </section>
+
+      <footer className="landing-footer">
+        <a href="#top">MofuType</a>
+        <a href="/tokushoho">特定商取引法に基づく表記</a>
+        <small>© MofuType</small>
+      </footer>
     </main>
   );
 }

@@ -96,6 +96,16 @@ export function CheckoutPanel({
       <p>{pairNames[0]} × {pairNames[1]}</p>
       <p className="checkout-panel__price">300円</p>
 
+      <section className="checkout-panel__summary" aria-labelledby="checkout-summary-title">
+        <h2 id="checkout-summary-title">解放される内容</h2>
+        <ul>
+          <li>十二支・五行・陰陽・MBTIの読み解き</li>
+          <li>ふたりでいるときのヒント</li>
+          <li>それぞれに向けた関わり方</li>
+        </ul>
+        <p>このふたり1組分を解放します</p>
+      </section>
+
       <fieldset disabled={loading}>
         <legend>支払い方法</legend>
         <label>
