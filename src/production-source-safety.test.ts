@@ -168,10 +168,12 @@ describe("production source safety", () => {
     expect(globalStyles).toContain(
       ".profile-step .unknown-toggle input { width: 1rem; height: 1rem; }",
     );
-    expect(globalStyles).toMatch(
-      /\.profile-step \.form-field input:is\(\[type="date"\], \[type="time"\]\)[^}]*max-width:\s*100%[^}]*height:\s*46px/,
+    expect(globalStyles).toContain(
+      ".profile-step .form-field { min-width: 0; max-width: 100%; }",
     );
-    expect(globalStyles).toContain("::-webkit-date-and-time-value");
+    expect(globalStyles).toMatch(
+      /\.profile-step \.form-field input:is\(\[type="date"\], \[type="time"\]\)[^}]*inline-size:\s*100%[^}]*min-inline-size:\s*0[^}]*max-inline-size:\s*100%/,
+    );
     expect(globalStyles).toContain(
       ".profile-step .field-error { max-width: 100%; font-size: 0.75rem;",
     );

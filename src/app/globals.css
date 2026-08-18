@@ -173,9 +173,9 @@ button, input, textarea, select { font: inherit; }
 .profile-step__intro > a { display: inline-flex; min-height: 44px; align-items: center; color: var(--accent-coral); font-size: 0.86rem; font-weight: 700; text-underline-offset: 0.22rem; }
 .profile-step .ui-card { width: min(100%, 38rem); max-width: 38rem; justify-self: center; border-radius: var(--radius-18); background: var(--surface-elevated); }
 .profile-step .onboarding-form, .profile-step .profile-fields { gap: 1rem; }
+.profile-step .form-field { min-width: 0; max-width: 100%; }
 .profile-step .form-field input, .profile-step .form-field select { min-height: 46px; padding-block: 0.55rem; }
-.profile-step .form-field input:is([type="date"], [type="time"]) { display: block; width: 100%; min-width: 0; max-width: 100%; height: 46px; min-height: 46px; line-height: 1.2; }
-.profile-step .form-field input:is([type="date"], [type="time"])::-webkit-date-and-time-value { min-width: 0; text-align: left; }
+.profile-step .form-field input:is([type="date"], [type="time"]) { width: 100%; min-width: 0; max-width: 100%; inline-size: 100%; min-inline-size: 0; max-inline-size: 100%; }
 .profile-step .unknown-toggle { min-height: 34px; gap: 0.42rem; margin-top: -13px; border: 0; border-radius: 0; padding: 0.12rem 0; background: transparent; box-shadow: none; font-size: 0.78rem; }
 .profile-step .unknown-toggle:has(input:checked) { border: 0; background: transparent; box-shadow: none; color: var(--accent-vermilion); }
 .profile-step .unknown-toggle input { width: 1rem; height: 1rem; }
