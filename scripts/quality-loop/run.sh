@@ -55,6 +55,12 @@ while :; do
     npm test >> "$QUALITY_LOG_FILE" 2>&1 || QUALITY_CHECKS_PASSED=false
     npm run typecheck >> "$QUALITY_LOG_FILE" 2>&1 || QUALITY_CHECKS_PASSED=false
     npm run lint >> "$QUALITY_LOG_FILE" 2>&1 || QUALITY_CHECKS_PASSED=false
+    if curl --silent --fail "http://127.0.0.1:54321/auth/v1/health" >/dev/null 2>&1; then
+      npm run test:e2e >> "$QUALITY_LOG_FILE" 2>&1 || QUALITY_CHECKS_PASSED=false
+    else
+      printf '%s\n' "SKIP: local Supabase is unavailable; dynamic purchase-flow E2E was not run." \
+        >> "$QUALITY_LOG_FILE"
+    fi
     npm run build >> "$QUALITY_LOG_FILE" 2>&1 || QUALITY_CHECKS_PASSED=false
 
     if [ "$QUALITY_CHECKS_PASSED" = true ]; then

@@ -4,6 +4,8 @@ This loop is the deterministic checkpoint used by the active Codex Goal. It does
 
 Each checkpoint runs the unit suite, typecheck, lint, production build, and a Playwright audit at 320px, 390px, and 1280px. Reports and screenshots are written under `.quality-loop/runs/`.
 
+When local Supabase is available on port 54321, the checkpoint also runs the full multi-member Playwright flow and captures the locked relationship and checkout screens. It never creates quality-loop fixtures in the configured remote project.
+
 Start in the isolated design worktree:
 
 ```sh
