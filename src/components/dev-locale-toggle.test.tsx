@@ -20,6 +20,9 @@ describe("DevLocaleToggle", () => {
       </>,
     );
 
+    expect(
+      screen.getByLabelText("개발용 언어 보기").querySelectorAll("button"),
+    ).toHaveLength(1);
     await user.click(await screen.findByRole("button", { name: "한국어로 보기" }));
 
     expect(screen.getByText("그룹 만들기")).toBeInTheDocument();

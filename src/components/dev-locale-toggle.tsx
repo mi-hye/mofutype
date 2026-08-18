@@ -321,12 +321,14 @@ export function DevLocaleToggle() {
   return (
     <aside className="dev-locale-toggle" data-dev-locale-toggle aria-label="개발용 언어 보기">
       <span>DEV</span>
-      <div role="group" aria-label="표시 언어">
-        <button type="button" aria-pressed={locale === "ko"} aria-label="한국어로 보기"
-          onClick={() => setLocale("ko")}>KO</button>
-        <button type="button" aria-pressed={locale === "ja"} aria-label="日本語で見る"
-          onClick={() => setLocale("ja")}>JP</button>
-      </div>
+      <button
+        type="button"
+        aria-pressed={locale === "ko"}
+        aria-label={locale === "ja" ? "한국어로 보기" : "日本語で見る"}
+        onClick={() => setLocale((current) => current === "ja" ? "ko" : "ja")}
+      >
+        {locale === "ja" ? "KO" : "JP"}
+      </button>
     </aside>
   );
 }

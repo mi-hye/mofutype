@@ -245,10 +245,10 @@ button, input, textarea, select { font: inherit; }
   z-index: 1000;
   display: flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.25rem;
   border: 1px solid rgb(var(--shadow-rgb) / 24%);
   border-radius: 999px;
-  padding: 0.25rem 0.3rem 0.25rem 0.55rem;
+  padding: 0.2rem 0.25rem 0.2rem 0.5rem;
   background: rgb(255 255 255 / 88%);
   box-shadow: 0 8px 24px rgb(var(--shadow-rgb) / 16%);
   color: var(--ink);
@@ -256,10 +256,9 @@ button, input, textarea, select { font: inherit; }
   backdrop-filter: blur(12px);
 }
 .dev-locale-toggle > span { color: var(--text-muted); font-size: 0.58rem; font-weight: 800; letter-spacing: 0.1em; }
-.dev-locale-toggle > div { display: flex; gap: 0.15rem; }
 .dev-locale-toggle button {
-  min-width: 2.25rem;
-  min-height: 2.25rem;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
   border: 0;
   border-radius: 999px;
   padding: 0.35rem;
