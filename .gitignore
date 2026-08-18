@@ -12,3 +12,6 @@ test-results/
 .DS_Store
 .superpowers/
 .worktrees/
+.quality-loop/
+scripts/quality-loop/STOP
+scripts/quality-loop/READY
