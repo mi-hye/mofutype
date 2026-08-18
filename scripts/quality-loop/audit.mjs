@@ -4,6 +4,7 @@ import path from "node:path";
 import { chromium } from "@playwright/test";
 
 const baseUrl = process.env.QUALITY_BASE_URL ?? "http://127.0.0.1:3110";
+const groupUrl = process.env.QUALITY_GROUP_URL?.trim() || null;
 const outputDirectory = path.resolve(
   process.env.QUALITY_OUTPUT_DIR ?? ".quality-loop/current",
 );
@@ -199,8 +200,72 @@ try {
         fullPage: true,
       });
 
+      let groupLayout = null;
+      let groupChecks = null;
+      if (groupUrl) {
+        const groupPath = new URL(groupUrl).pathname;
+        await page.goto(new URL(groupPath, baseUrl).toString(), {
+          waitUntil: "networkidle",
+        });
+        await page.locator("main").waitFor({ state: "visible" });
+        const graphCanvasCount = await page.locator(".group-graph__canvas").count();
+        const groupMode = graphCanvasCount > 0 ? "member" : "invite";
+        groupLayout = await page.evaluate(() => {
+          const root = document.documentElement;
+          const canvas = document.querySelector(".group-graph__canvas");
+          const bounds = canvas?.getBoundingClientRect() ?? null;
+          return {
+            clientWidth: root.clientWidth,
+            scrollWidth: root.scrollWidth,
+            canvas: bounds ? {
+              left: bounds.left,
+              right: bounds.right,
+              width: bounds.width,
+              height: bounds.height,
+            } : null,
+          };
+        });
+        const sharedGroupChecks = {
+          noHorizontalOverflow: groupLayout.scrollWidth <= groupLayout.clientWidth,
+        };
+        groupChecks = groupMode === "member" ? {
+          ...sharedGroupChecks,
+          mode: groupMode,
+          canvasWithinViewport: Boolean(
+            groupLayout.canvas &&
+            groupLayout.canvas.left >= -0.5 &&
+            groupLayout.canvas.right <= groupLayout.clientWidth + 0.5,
+          ),
+          canvasHiddenFromAssistiveTech: await page.locator(
+            '.group-graph__canvas[aria-hidden="true"]',
+          ).count() === 1,
+          keyboardRelationshipListPresent: await page.getByRole("region", {
+            name: "関係性グラフの操作リスト",
+          }).count() === 1,
+          graphNodesPresent: await page.locator(".react-flow__node").count() > 0,
+        } : {
+          ...sharedGroupChecks,
+          mode: groupMode,
+          invitationHeadingVisible: await page.getByRole("heading", {
+            name: "グループに招待されています",
+          }).isVisible(),
+          nativeDatePresent: await page.locator('input[type="date"]').count() === 1,
+          nativeTimePresent: await page.locator('input[type="time"]').count() === 1,
+          realUnknownCheckboxesPresent: await page.locator(
+            'input[type="checkbox"]',
+          ).count() === 2,
+        };
+        await page.screenshot({
+          path: path.join(outputDirectory, `${viewport.name}-group.png`),
+          fullPage: true,
+        });
+      }
+
       checks.profilePagePassed = Object.values(profileChecks).every(Boolean);
       checks.legalPagePassed = Object.values(legalChecks).every(Boolean);
+      checks.groupPagePassed = groupChecks === null || Object.entries(groupChecks)
+        .filter(([key]) => key !== "mode")
+        .every(([, value]) => Boolean(value));
       checks.noConsoleErrors = consoleErrors.length === 0;
       checks.noPageErrors = pageErrors.length === 0;
       checks.noResponseErrors = responseErrors.length === 0;
@@ -215,6 +280,8 @@ try {
         profileChecks,
         legalLayout,
         legalChecks,
+        groupLayout,
+        groupChecks,
         consoleErrors,
         pageErrors,
         responseErrors,

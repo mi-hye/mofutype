@@ -10,6 +10,12 @@ Start in the isolated design worktree:
 nohup scripts/quality-loop/run.sh > .quality-loop/nohup.log 2>&1 &
 ```
 
+To include a read-only existing group in every responsive audit, provide its URL when starting the loop:
+
+```sh
+QUALITY_GROUP_URL="http://127.0.0.1:3100/g/<invite-token>" scripts/quality-loop/run.sh
+```
+
 Stop safely:
 
 ```sh
