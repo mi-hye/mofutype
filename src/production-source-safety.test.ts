@@ -249,6 +249,7 @@ describe("production source safety", () => {
     expect(pageSource).toContain("#12干支");
     expect(globalStyles).toMatch(/\.hero__stickers[^}]*align-items:\s*center[^}]*margin:\s*-3px 0 0/);
     expect(globalStyles).toMatch(/\.ui-capsule[^}]*display:\s*inline-flex[^}]*min-height:\s*2\.125rem[^}]*align-items:\s*center[^}]*line-height:\s*0\.9/);
+    expect(globalStyles).toMatch(/\.hero__cta::before[^}]*border-width:\s*2\.5px/);
     expect(pageSource).not.toContain("#動物うらない");
     expect(pageSource).not.toContain("性格タイプ × 動物キャラクター");
     for (const animalImage of ["tiger.png", "rat.png", "rabbit.png"]) {
