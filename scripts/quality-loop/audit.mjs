@@ -139,12 +139,82 @@ try {
         fullPage: true,
       });
 
+      await page.goto(new URL("/create/profile", baseUrl).toString(), {
+        waitUntil: "networkidle",
+      });
+      const profileLayout = await page.evaluate(() => {
+        const root = document.documentElement;
+        const controlBounds = [...document.querySelectorAll(
+          'input[type="text"], input[type="date"], input[type="time"], select',
+        )].map((control) => {
+          const bounds = control.getBoundingClientRect();
+          return {
+            type: control.getAttribute("type") ?? control.tagName.toLowerCase(),
+            left: bounds.left,
+            right: bounds.right,
+            width: bounds.width,
+          };
+        });
+        return {
+          clientWidth: root.clientWidth,
+          scrollWidth: root.scrollWidth,
+          controlBounds,
+        };
+      });
+      const controlsWithinViewport = profileLayout.controlBounds.length >= 5 &&
+        profileLayout.controlBounds.every((bounds) =>
+          bounds.left >= -0.5 && bounds.right <= profileLayout.clientWidth + 0.5
+        );
+      const profileChecks = {
+        noHorizontalOverflow: profileLayout.scrollWidth <= profileLayout.clientWidth,
+        controlsWithinViewport,
+        nativeDatePresent: await page.locator('input[type="date"]').count() === 1,
+        nativeTimePresent: await page.locator('input[type="time"]').count() === 1,
+        realUnknownCheckboxesPresent: await page.locator('input[type="checkbox"]').count() === 2,
+      };
+      await page.screenshot({
+        path: path.join(outputDirectory, `${viewport.name}-profile.png`),
+        fullPage: true,
+      });
+
+      await page.goto(new URL("/tokushoho", baseUrl).toString(), {
+        waitUntil: "networkidle",
+      });
+      const legalLayout = await page.evaluate(() => ({
+        clientWidth: document.documentElement.clientWidth,
+        scrollWidth: document.documentElement.scrollWidth,
+      }));
+      const legalChecks = {
+        noHorizontalOverflow: legalLayout.scrollWidth <= legalLayout.clientWidth,
+        developmentDisclosureVisible: await page.getByText(
+          "このページは開発用の仮表示です。実際の決済を開始する前に、正式な事業者情報へ必ず更新してください。",
+          { exact: true },
+        ).isVisible(),
+        paymentDisclosureVisible: await page.getByText(
+          /現在はモック決済のみで、実際の請求は発生しません/,
+        ).isVisible(),
+      };
+      await page.screenshot({
+        path: path.join(outputDirectory, `${viewport.name}-legal.png`),
+        fullPage: true,
+      });
+
+      checks.profilePagePassed = Object.values(profileChecks).every(Boolean);
+      checks.legalPagePassed = Object.values(legalChecks).every(Boolean);
+      checks.noConsoleErrors = consoleErrors.length === 0;
+      checks.noPageErrors = pageErrors.length === 0;
+      checks.noResponseErrors = responseErrors.length === 0;
+
       results.push({
         viewport,
         passed: Object.values(checks).every(Boolean),
         checks,
         copyChecks,
         layout,
+        profileLayout,
+        profileChecks,
+        legalLayout,
+        legalChecks,
         consoleErrors,
         pageErrors,
         responseErrors,
