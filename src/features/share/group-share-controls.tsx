@@ -77,8 +77,8 @@ export function GroupShareControls({
   }, [groupName, inviteToken, memberCount, resolvedOrigin]);
 
   if (!payload) {
-    if (!resolvedOrigin) return <p role="status">共有リンクを準備しています</p>;
-    return <p role="alert">共有リンクを作成できません。</p>;
+    if (!resolvedOrigin) return <p className="group-share-feedback" role="status">共有リンクを準備しています</p>;
+    return <p className="group-share-feedback" role="alert">共有リンクを作成できません。</p>;
   }
 
   const browserShare: ShareApi | null = shareApi === undefined
@@ -170,10 +170,10 @@ export function GroupShareControls({
         </div>,
         document.body,
       ) : null}
-      {message === "shared" ? <p role="status">共有しました</p> : null}
-      {message === "copied" ? <p role="status">招待リンクをコピーしました</p> : null}
+      {message === "shared" ? <p className="group-share-feedback" role="status">共有しました</p> : null}
+      {message === "copied" ? <p className="group-share-feedback" role="status">招待リンクをコピーしました</p> : null}
       {message === "error" ? (
-        <p role="alert">共有できませんでした。もう一度お試しください。</p>
+        <p className="group-share-feedback" role="alert">共有できませんでした。もう一度お試しください。</p>
       ) : null}
     </div>
   );

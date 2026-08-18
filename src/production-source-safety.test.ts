@@ -131,6 +131,15 @@ describe("production source safety", () => {
     expect(globalStyles).toContain(
       ".group-member-header:not(:has(.status-banner)) .group-member-actions",
     );
+    expect(globalStyles).toMatch(
+      /\.group-member-header:has\(\.group-share-feedback\)[^{]*\{[^}]*padding-bottom:/,
+    );
+    expect(globalStyles).toMatch(
+      /\.group-share-backdrop\s*\{[^}]*height:\s*100dvh[^}]*env\(safe-area-inset-bottom\)/,
+    );
+    expect(globalStyles).toMatch(
+      /\.group-share-actions\s*\{[^}]*max-height:\s*calc\(100dvh/,
+    );
   });
 
   it("defines warm Mofu contracts for relationship and checkout surfaces", () => {
@@ -162,6 +171,9 @@ describe("production source safety", () => {
 
     expect(globalStyles).toMatch(
       /\.group-graph__canvas \.react-flow__pane\s*\{[^}]*touch-action:\s*pan-y/,
+    );
+    expect(globalStyles).toMatch(
+      /\.group-graph__canvas\[data-member-count="1"\]\s*\{[^}]*height:\s*clamp\(20rem,\s*46svh,\s*26rem\)[^}]*min-height:\s*20rem/,
     );
   });
 

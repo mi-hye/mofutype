@@ -99,7 +99,9 @@ describe("GroupShareControls", () => {
 
     await user.click(screen.getByRole("button", { name: "招待リンクを共有" }));
     await user.click(screen.getByRole("button", { name: "アプリで共有" }));
-    expect(await screen.findByRole("alert")).toHaveTextContent(
+    const feedback = await screen.findByRole("alert");
+    expect(feedback).toHaveClass("group-share-feedback");
+    expect(feedback).toHaveTextContent(
       "共有できませんでした。もう一度お試しください。",
     );
     expect(screen.queryByText(/private platform details/)).not.toBeInTheDocument();

@@ -108,7 +108,7 @@ function GroupGraphComponent({
   return (
     <section className="group-graph" aria-label="メンバー関係性グラフ">
       <div ref={canvasRef} className="group-graph__canvas"
-        data-testid="group-graph-canvas" aria-hidden="true">
+        data-testid="group-graph-canvas" data-member-count={members.length} aria-hidden="true">
         <ReactFlow<ZodiacGraphNode, RelationshipGraphEdge>
           key={membersVersion}
           nodes={graph.nodes}

@@ -198,6 +198,7 @@ describe("GroupGraph", () => {
       proOptions: { hideAttribution: true },
     }));
     const canvas = screen.getByTestId("group-graph-canvas");
+    expect(canvas).toHaveAttribute("data-member-count", "1");
     expect(canvas.querySelector("img"))
       .toHaveAttribute("src", "/zodiac/dragon.png");
     expect(screen.queryByText("React Flow")).not.toBeInTheDocument();
