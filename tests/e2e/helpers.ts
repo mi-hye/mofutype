@@ -25,7 +25,7 @@ export async function createGroup(
   groupName: string,
   nickname: string,
 ) {
-  await page.goto("/");
+  await page.goto("/create/profile");
   await page.waitForLoadState("networkidle");
   await page.getByLabel("グループ名").fill(groupName);
   await fillProfile(page, nickname, "1995-05-15", "ENFP");
