@@ -24,7 +24,8 @@ cleanup_quality_loop() {
   rm -f "$QUALITY_PID_FILE"
 }
 
-trap cleanup_quality_loop EXIT INT TERM
+trap cleanup_quality_loop EXIT
+trap 'exit 0' INT TERM HUP
 
 while :; do
   if [ -f "$QUALITY_STOP_FILE" ]; then
