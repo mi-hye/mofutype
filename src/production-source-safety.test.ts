@@ -168,6 +168,10 @@ describe("production source safety", () => {
     expect(globalStyles).toContain(
       ".profile-step .unknown-toggle input { width: 1rem; height: 1rem; }",
     );
+    expect(globalStyles).toMatch(
+      /\.profile-step \.form-field input:is\(\[type="date"\], \[type="time"\]\)[^}]*max-width:\s*100%[^}]*height:\s*46px/,
+    );
+    expect(globalStyles).toContain("::-webkit-date-and-time-value");
     expect(globalStyles).toContain(
       ".profile-step .field-error { max-width: 100%; font-size: 0.75rem;",
     );
