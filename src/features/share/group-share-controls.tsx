@@ -17,6 +17,50 @@ const subscribeToNoopStore = () => () => undefined;
 const browserOriginSnapshot = () => window.location.origin;
 const serverOriginSnapshot = () => "";
 
+function copyWithSelection(text: string) {
+  const textarea = document.createElement("textarea");
+  const activeElement = document.activeElement instanceof HTMLElement
+    ? document.activeElement
+    : null;
+  textarea.value = text;
+  textarea.readOnly = true;
+  textarea.tabIndex = -1;
+  textarea.setAttribute("aria-hidden", "true");
+  Object.assign(textarea.style, {
+    position: "fixed",
+    inset: "0 auto auto 0",
+    width: "1px",
+    height: "1px",
+    opacity: "0",
+    fontSize: "16px",
+    pointerEvents: "none",
+  });
+  document.body.append(textarea);
+  textarea.focus({ preventScroll: true });
+  textarea.select();
+  textarea.setSelectionRange(0, text.length);
+  const copied = document.execCommand("copy");
+  textarea.remove();
+  activeElement?.focus({ preventScroll: true });
+  if (!copied) throw new Error("copy unavailable");
+}
+
+async function writeBrowserClipboard(text: string) {
+  try {
+    if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+  } catch {
+    // Safari on a LAN HTTP origin rejects the secure Clipboard API.
+  }
+
+  if (typeof document === "undefined" || typeof document.execCommand !== "function") {
+    throw new Error("copy unavailable");
+  }
+  copyWithSelection(text);
+}
+
 interface GroupShareControlsProps {
   groupName: string;
   memberCount: number;
@@ -87,9 +131,7 @@ export function GroupShareControls({
       : null)
     : shareApi;
   const browserClipboard: ClipboardApi | null = writeClipboard === undefined
-    ? (typeof navigator !== "undefined" && navigator.clipboard
-      ? (text) => navigator.clipboard.writeText(text)
-      : null)
+    ? (typeof document !== "undefined" ? writeBrowserClipboard : null)
     : writeClipboard;
 
   async function runAction(action: "share" | "copy") {

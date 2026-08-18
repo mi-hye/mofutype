@@ -81,6 +81,52 @@ describe("GroupShareControls", () => {
     expect(screen.getByTestId("share-icon")).toHaveAttribute("aria-hidden", "true");
   });
 
+  it("falls back to a user-gesture copy when the secure Clipboard API is unavailable", async () => {
+    const user = userEvent.setup();
+    const clipboardDescriptor = Object.getOwnPropertyDescriptor(navigator, "clipboard");
+    const execCommandDescriptor = Object.getOwnPropertyDescriptor(document, "execCommand");
+    const nativeWrite = vi.fn(async () => { throw new Error("insecure context"); });
+    const execCommand = vi.fn(() => true);
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText: nativeWrite },
+    });
+    Object.defineProperty(document, "execCommand", {
+      configurable: true,
+      value: execCommand,
+    });
+
+    try {
+      render(
+        <GroupShareControls
+          groupName="なかよし"
+          memberCount={3}
+          inviteToken={token}
+          origin="http://192.168.1.118:3100"
+          shareApi={null}
+        />,
+      );
+
+      await user.click(screen.getByRole("button", { name: "招待リンクを共有" }));
+      await user.click(screen.getByRole("button", { name: "リンクをコピー" }));
+
+      expect(nativeWrite).toHaveBeenCalledOnce();
+      expect(execCommand).toHaveBeenCalledWith("copy");
+      expect(screen.getByRole("status")).toHaveTextContent("招待リンクをコピーしました");
+    } finally {
+      if (clipboardDescriptor) {
+        Object.defineProperty(navigator, "clipboard", clipboardDescriptor);
+      } else {
+        Reflect.deleteProperty(navigator, "clipboard");
+      }
+      if (execCommandDescriptor) {
+        Object.defineProperty(document, "execCommand", execCommandDescriptor);
+      } else {
+        Reflect.deleteProperty(document, "execCommand");
+      }
+    }
+  });
+
   it("shows only a public failure and can retry after a rejected share", async () => {
     const user = userEvent.setup();
     const shareApi = vi.fn()
