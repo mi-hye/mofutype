@@ -2,7 +2,13 @@ import { ButtonLink } from "@/components/ui/button";
 import type { EtoRelationshipResult } from "@/lib/eto/relationship";
 import type { DerivedEtoProfile } from "@/lib/eto/types";
 
-const LOCKED_LAYER_IDS = ["zodiac", "elements", "mbti", "together", "directions"] as const;
+const LOCKED_CHAPTERS = [
+  ["zodiac", "十二支の関係"],
+  ["elements", "五行と陰陽"],
+  ["mbti", "MBTIの4つの軸"],
+  ["together", "ふたりでいるとき"],
+  ["directions", "それぞれへのヒント"],
+] as const;
 const MBTI_AXES = [
   ["E / I", "energyJa"],
   ["S / N", "informationJa"],
@@ -140,13 +146,16 @@ export function RelationSheet({
             role="region"
             aria-label="ロック中の詳細"
           >
-            {LOCKED_LAYER_IDS.map((key, index) => (
+            {LOCKED_CHAPTERS.map(([key, title], index) => (
               <span
                 aria-hidden="true"
                 className="relation-sheet__skeleton"
                 data-length={index % 2 === 0 ? "long" : "short"}
                 key={key}
-              />
+              >
+                <strong>{title}</strong>
+                <small>LOCKED</small>
+              </span>
             ))}
           </div>
           <ButtonLink size="lg" href={checkoutHref}>

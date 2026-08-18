@@ -57,7 +57,7 @@ const disclaimer =
   "この分析は自己理解とコミュニケーションを楽しむためのもので、科学的・医学的な判定ではありません。";
 
 describe("RelationSheet", () => {
-  it("shows the representative category and headline with meaningless skeletons while locked", () => {
+  it("shows the representative category and a private chapter outline while locked", () => {
     render(
       <RelationSheet
         relationship={relationship}
@@ -80,6 +80,15 @@ describe("RelationSheet", () => {
     expect(screen.getByText("十二支・五行・陰陽・MBTIの読み解き")).toBeInTheDocument();
     expect(screen.getByText("ふたりでいるときのヒント")).toBeInTheDocument();
     expect(screen.getByText("1組 300円")).toBeInTheDocument();
+    for (const chapter of [
+      "十二支の関係",
+      "五行と陰陽",
+      "MBTIの4つの軸",
+      "ふたりでいるとき",
+      "それぞれへのヒント",
+    ]) {
+      expect(screen.getByText(chapter)).toBeInTheDocument();
+    }
     expect(screen.getByText(disclaimer)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "この関係の共有ページ" })).toHaveAttribute(
       "href",
