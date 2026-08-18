@@ -274,6 +274,9 @@ button, input, textarea, select { font: inherit; }
 .join-panel { width: min(100%, 40rem); border: var(--border-panel); border-radius: var(--radius-18); padding: clamp(1.1rem, 5vw, 2.25rem); background: var(--surface-raised); box-shadow: var(--shadow-soft); }
 .join-panel > h1 { margin: 0; color: var(--accent-navy); font-family: var(--font-display); font-size: clamp(2rem, 7vw, 3.2rem); font-weight: 700; letter-spacing: -0.025em; line-height: 1.15; }
 .join-panel > p { color: var(--text-muted); }
+.join-panel .unknown-toggle { min-height: 34px; gap: 0.42rem; margin-top: -13px; border: 0; border-radius: 0; padding: 0.12rem 0; background: transparent; box-shadow: none; font-size: 0.78rem; }
+.join-panel .unknown-toggle:has(input:checked) { border: 0; background: transparent; box-shadow: none; color: var(--accent-vermilion); }
+.join-panel .unknown-toggle input { width: 1rem; height: 1rem; }
 .invite-preview { display: grid; gap: 0.2rem; margin: 1.25rem 0; border: var(--border-subtle); border-radius: var(--radius-12); padding: 0.85rem 1rem; background: var(--surface-mint); }
 .invite-preview strong { font-size: 1.1rem; }
 .group-gate-shell, .group-gate-message, .group-member-shell { width: min(calc(100% - 2rem), var(--content-wide)); margin-inline: auto; padding: 3rem 0; }
@@ -493,7 +496,7 @@ body:has(.group-share-backdrop) { overflow: hidden; }
   .hero__stripe { right: 8%; bottom: 10%; width: 4.2rem; height: auto; opacity: 1; }
   .hero h1 { font-size: clamp(2.65rem, 14vw, 2.95rem); }
   .ui-card { padding: 1rem; }
-  .join-panel .unknown-toggle { width: 100%; }
+  .join-panel .unknown-toggle { width: fit-content; }
   .profile-step { padding-top: 2.8rem; }
   .profile-step__intro h1 { font-size: 2rem; overflow-wrap: anywhere; }
   .profile-step .ui-card { padding: 1rem; }
@@ -515,6 +518,11 @@ body:has(.group-share-backdrop) { overflow: hidden; }
   .relation-sheet__skeletons, .checkout-panel fieldset { padding: 0.75rem; }
   .checkout-panel__notice { max-width: 100%; }
   .checkout-panel fieldset label { overflow-wrap: anywhere; }
+}
+
+@media (max-width: 30rem) {
+  .dev-locale-toggle { padding-left: 0.25rem; }
+  .dev-locale-toggle > span { display: none; }
 }
 
 @media (min-width: 36rem) {

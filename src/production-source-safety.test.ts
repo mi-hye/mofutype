@@ -204,6 +204,12 @@ describe("production source safety", () => {
       ".profile-step .field-error { max-width: 100%; font-size: 0.75rem;",
     );
     expect(globalStyles).toContain("@media (min-width: 36rem)");
+    expect(globalStyles).toMatch(
+      /\.join-panel \.unknown-toggle\s*\{[^}]*min-height:\s*34px[^}]*margin-top:\s*-13px[^}]*border:\s*0[^}]*background:\s*transparent/,
+    );
+    expect(globalStyles).toMatch(
+      /@media \(max-width:\s*30rem\)[\s\S]*\.dev-locale-toggle > span\s*\{[^}]*display:\s*none/,
+    );
   });
 
   it("keeps semantic selected-edge colors visible against cream", () => {
