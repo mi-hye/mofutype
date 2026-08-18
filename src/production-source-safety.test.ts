@@ -172,7 +172,7 @@ describe("production source safety", () => {
       ".profile-step .form-field { min-width: 0; max-width: 100%; }",
     );
     expect(globalStyles).toMatch(
-      /\.profile-step \.form-field input:is\(\[type="date"\], \[type="time"\]\)[^}]*inline-size:\s*100%[^}]*min-inline-size:\s*0[^}]*max-inline-size:\s*100%/,
+      /\.profile-step \.form-field input\[type="date"\], \.profile-step \.form-field input\[type="time"\][^}]*inline-size:\s*100%[^}]*min-inline-size:\s*0[^}]*max-inline-size:\s*100%[^}]*overflow:\s*hidden[^}]*-webkit-appearance:\s*none/,
     );
     expect(globalStyles).toContain(
       ".profile-step .field-error { max-width: 100%; font-size: 0.75rem;",

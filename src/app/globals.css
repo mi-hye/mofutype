@@ -166,16 +166,16 @@ button, input, textarea, select { font: inherit; }
 .start-group-form .field-error { border: 0; border-radius: 0; padding: 0; background: transparent; box-shadow: none; }
 
 .profile-step-shell { width: min(calc(100% - 1.5rem), var(--content-wide)); margin-inline: auto; padding: 0.9rem 0 5rem; }
-.profile-step { display: grid; max-width: 68rem; gap: 2rem; margin-inline: auto; padding-top: clamp(2rem, 6vw, 4.5rem); }
+.profile-step { display: grid; min-width: 0; max-width: 68rem; gap: 2rem; margin-inline: auto; padding-top: clamp(2rem, 6vw, 4.5rem); }
 .profile-step__intro { max-width: 27rem; }
 .profile-step__intro h1 { margin: 0.6rem 0 0; color: var(--accent-navy); font-family: var(--font-display); font-size: clamp(2.5rem, 7vw, 4.1rem); font-weight: 700; letter-spacing: -0.03em; line-height: 1.1; text-wrap: balance; }
 .profile-step__intro > p:last-of-type { color: var(--text-muted); }
 .profile-step__intro > a { display: inline-flex; min-height: 44px; align-items: center; color: var(--accent-coral); font-size: 0.86rem; font-weight: 700; text-underline-offset: 0.22rem; }
-.profile-step .ui-card { width: min(100%, 38rem); max-width: 38rem; justify-self: center; border-radius: var(--radius-18); background: var(--surface-elevated); }
+.profile-step .ui-card { width: min(100%, 38rem); min-width: 0; max-width: 38rem; justify-self: center; border-radius: var(--radius-18); background: var(--surface-elevated); }
 .profile-step .onboarding-form, .profile-step .profile-fields { gap: 1rem; }
 .profile-step .form-field { min-width: 0; max-width: 100%; }
 .profile-step .form-field input, .profile-step .form-field select { min-height: 46px; padding-block: 0.55rem; }
-.profile-step .form-field input:is([type="date"], [type="time"]) { width: 100%; min-width: 0; max-width: 100%; inline-size: 100%; min-inline-size: 0; max-inline-size: 100%; }
+.profile-step .form-field input[type="date"], .profile-step .form-field input[type="time"] { display: block; width: 100%; min-width: 0; max-width: 100%; inline-size: 100%; min-inline-size: 0; max-inline-size: 100%; overflow: hidden; -webkit-appearance: none; appearance: none; }
 .profile-step .unknown-toggle { min-height: 34px; gap: 0.42rem; margin-top: -13px; border: 0; border-radius: 0; padding: 0.12rem 0; background: transparent; box-shadow: none; font-size: 0.78rem; }
 .profile-step .unknown-toggle:has(input:checked) { border: 0; background: transparent; box-shadow: none; color: var(--accent-vermilion); }
 .profile-step .unknown-toggle input { width: 1rem; height: 1rem; }
