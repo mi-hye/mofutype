@@ -138,6 +138,9 @@ describe("production source safety", () => {
       /\.group-share-backdrop\s*\{[^}]*height:\s*100dvh[^}]*env\(safe-area-inset-bottom\)/,
     );
     expect(globalStyles).toMatch(
+      /\.group-share-backdrop\s*\{[^}]*background:\s*transparent[^}]*backdrop-filter:\s*none/,
+    );
+    expect(globalStyles).toMatch(
       /\.group-share-actions\s*\{[^}]*max-height:\s*calc\(100dvh/,
     );
   });
