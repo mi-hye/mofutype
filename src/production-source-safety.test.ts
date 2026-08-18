@@ -232,7 +232,7 @@ describe("production source safety", () => {
     expect(globalStyles).toMatch(/\.hero\s*\{[^}]*box-shadow:\s*none/);
     expect(globalStyles).toMatch(/\.landing-nav[^}]*justify-content:\s*center/);
     expect(globalStyles).toMatch(/\.start-group-form > \.ui-button[^}]*min-width:\s*5\.75rem[^}]*min-height:\s*44px[^}]*justify-self:\s*start/);
-    expect(globalStyles).toMatch(/\.start-group-form > \.ui-button::before[^}]*border-width:\s*2px/);
+    expect(globalStyles).not.toContain(".start-group-form > .ui-button::before");
     expect(globalStyles).toMatch(/\.start-group-form \.field-error[^}]*border:\s*0[^}]*padding:\s*0[^}]*background:\s*transparent/);
     expect(globalStyles).toMatch(/\.field-error, \.form-error, p\[role="alert"\][^}]*border:\s*0[^}]*padding:\s*0[^}]*background:\s*transparent[^}]*color:\s*var\(--text-error\)/);
     expect(globalStyles).toMatch(/\.profile-step \.unknown-toggle[^}]*margin-top:\s*-13px/);
@@ -255,7 +255,8 @@ describe("production source safety", () => {
     expect(pageSource).toContain("#12干支");
     expect(globalStyles).toMatch(/\.hero__stickers[^}]*align-items:\s*center[^}]*margin:\s*-3px 0 0/);
     expect(globalStyles).toMatch(/\.ui-capsule[^}]*display:\s*inline-flex[^}]*min-height:\s*2\.125rem[^}]*align-items:\s*center[^}]*line-height:\s*0\.9/);
-    expect(globalStyles).toMatch(/\.hero__cta::before[^}]*border-width:\s*2\.5px/);
+    expect(globalStyles).toMatch(/\.ui-button::before[^}]*border:\s*2\.5px solid var\(--button-border-color\)/);
+    expect(globalStyles).not.toContain(".hero__cta::before");
     expect(pageSource).not.toContain("#動物うらない");
     expect(pageSource).not.toContain("性格タイプ × 動物キャラクター");
     for (const animalImage of ["tiger.png", "rat.png", "rabbit.png"]) {

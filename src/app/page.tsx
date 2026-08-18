@@ -1,5 +1,6 @@
 import Image from "next/image";
 
+import { ButtonLink } from "@/components/ui/button";
 import { Capsule } from "@/components/ui/capsule";
 import { LandingRelationshipPreview } from "@/features/landing/landing-relationship-preview";
 
@@ -33,14 +34,13 @@ export default function Home() {
           FRIENDS FILE<br />ISSUE 01
         </span>
         <div className="hero__actions">
-          <a
-            className="ui-button hero__cta"
-            data-size="lg"
-            data-variant="primary"
+          <ButtonLink
+            className="hero__cta"
+            size="lg"
             href="/create/profile"
           >
             グループを作る
-          </a>
+          </ButtonLink>
         </div>
 
         <section className="service-flow" aria-labelledby="service-flow-title">

@@ -1,3 +1,4 @@
+import { ButtonLink } from "@/components/ui/button";
 import type { EtoRelationshipResult } from "@/lib/eto/relationship";
 import type { DerivedEtoProfile } from "@/lib/eto/types";
 
@@ -136,14 +137,9 @@ export function RelationSheet({
               />
             ))}
           </div>
-          <a
-            className="ui-button"
-            data-size="lg"
-            data-variant="primary"
-            href={checkoutHref}
-          >
+          <ButtonLink size="lg" href={checkoutHref}>
             このふたりを300円で解放
-          </a>
+          </ButtonLink>
         </div>
       )}
       <p className="relation-sheet__disclaimer">

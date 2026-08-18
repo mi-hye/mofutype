@@ -52,7 +52,7 @@ button, input, textarea, select { font: inherit; }
   cursor: pointer;
   transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-.ui-button::before { position: absolute; inset: 0; z-index: -1; border: 3.5px solid var(--button-border-color); border-radius: 999px; background: var(--button-background); box-shadow: 0 5px 0 var(--button-shadow-base), 0 10px 22px rgb(var(--ink-rgb) / 10%); content: ""; animation: none; filter: none; transition: background 0.2s ease, box-shadow 0.2s ease; }
+.ui-button::before { position: absolute; inset: 0; z-index: -1; border: 2.5px solid var(--button-border-color); border-radius: 999px; background: var(--button-background); box-shadow: 0 5px 0 var(--button-shadow-base), 0 10px 22px rgb(var(--ink-rgb) / 10%); content: ""; animation: none; filter: none; transition: background 0.2s ease, box-shadow 0.2s ease; }
 .ui-button::after { display: none; }
 .ui-button > span { position: relative; z-index: 1; }
 .ui-button[data-variant="primary"], .ui-button[data-variant="secondary"], .ui-button[data-variant="ghost"] { border-color: transparent; background: transparent; color: var(--button-border-color); }
@@ -124,7 +124,6 @@ button, input, textarea, select { font: inherit; }
 .ui-capsule { display: inline-flex; min-height: 2.125rem; align-items: center; justify-content: center; border: 1.5px solid rgb(var(--ink-rgb) / 55%); border-radius: 999px; padding: 0 0.82rem; background: rgb(var(--paper-rgb) / 84%); color: var(--ink); font-size: 0.78rem; font-weight: 700; line-height: 0.9; box-shadow: 0 5px 12px rgb(var(--shadow-rgb) / 7%); }
 .hero__actions { order: 5; display: flex; flex-direction: column; align-items: stretch; gap: 0.8rem; }
 .hero__cta { width: 100%; text-decoration: none; }
-.hero__cta::before { border-width: 2.5px; }
 .service-flow { order: 6; width: min(100%, 42rem); margin: clamp(2.5rem, 8vw, 4.75rem) auto 0; }
 .service-flow__header { display: grid; justify-items: center; gap: 0.45rem; margin-bottom: clamp(1.6rem, 5vw, 2.4rem); text-align: center; }
 .service-flow__header h2 { margin: 0; color: var(--ink); font-family: var(--font-display); font-size: clamp(1.75rem, 7vw, 2.45rem); font-weight: 750; letter-spacing: -0.035em; line-height: 1.1; }
@@ -159,7 +158,6 @@ button, input, textarea, select { font: inherit; }
 .field-error, .form-error, p[role="alert"] { width: fit-content; max-width: 100%; margin: 0; border: 0; border-radius: 0; padding: 0; background: transparent; color: var(--text-error); font-size: 0.82rem; font-weight: 700; line-height: 1.45; overflow-wrap: anywhere; animation: nudge-in 220ms ease-out both; }
 .start-group-form { align-content: start; gap: 0.9rem; }
 .start-group-form > .ui-button { width: fit-content; min-width: 5.75rem; min-height: 44px; justify-self: start; padding-inline: 1rem; }
-.start-group-form > .ui-button::before { border-width: 2px; }
 .start-group-form > .ui-button::after { display: none; }
 .start-group-form .form-field { width: min(100%, 28rem); }
 .start-group-form .form-field input { min-height: 44px; padding-block: 0.45rem; font-size: 0.96rem; font-weight: 600; }

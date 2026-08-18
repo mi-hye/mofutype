@@ -2,7 +2,7 @@ import { createRef } from "react";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import { Button } from "./button";
+import { Button, ButtonLink } from "./button";
 import { Capsule } from "./capsule";
 import { Card } from "./card";
 import { StatusBanner } from "./status-banner";
@@ -48,6 +48,17 @@ describe("Button", () => {
       );
     },
   );
+});
+
+describe("ButtonLink", () => {
+  it("uses the shared button contract for navigation", () => {
+    render(<ButtonLink href="/next" size="lg">次へ</ButtonLink>);
+
+    const link = screen.getByRole("link", { name: "次へ" });
+    expect(link).toHaveClass("ui-button");
+    expect(link).toHaveAttribute("data-size", "lg");
+    expect(link).toHaveAttribute("data-variant", "primary");
+  });
 });
 
 describe("Capsule", () => {
