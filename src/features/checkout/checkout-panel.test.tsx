@@ -30,6 +30,7 @@ describe("CheckoutPanel", () => {
         input={input}
         provider={{ start: vi.fn() }}
         onSuccess={vi.fn()}
+        returnHref="/g/token/relation/a%3Ab"
       />,
     );
 
@@ -42,7 +43,12 @@ describe("CheckoutPanel", () => {
     expect(screen.getByText("今回のお支払い")).toBeInTheDocument();
     expect(screen.getByText("合計 300円")).toBeInTheDocument();
     expect(screen.getByText("定期課金や自動更新はありません")).toBeInTheDocument();
+    expect(screen.getByText("決済完了後、このふたりの関係レポートをすぐに表示します")).toBeInTheDocument();
     expect(screen.getByText("これはモック決済です。実際の請求は発生しません。")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "関係ページに戻る" })).toHaveAttribute(
+      "href",
+      "/g/token/relation/a%3Ab",
+    );
     expect(screen.getByRole("radio", { name: "PayPay（モック）" })).toBeChecked();
     expect(screen.getByRole("radio", { name: "カード（モック）" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "特定商取引法に基づく表記" })).toHaveAttribute(

@@ -17,6 +17,7 @@ interface CheckoutPanelProps {
   provider: PaymentProvider;
   onSuccess(): void;
   onRedirect?(checkoutUrl: string): void;
+  returnHref?: string;
 }
 
 function safeCheckoutUrl(result: PaymentStartResult): string | null {
@@ -36,6 +37,7 @@ export function CheckoutPanel({
   provider,
   onSuccess,
   onRedirect = (checkoutUrl) => window.location.assign(checkoutUrl),
+  returnHref,
 }: CheckoutPanelProps) {
   const [method, setMethod] = useState<PaymentMethod>("paypay");
   const [loading, setLoading] = useState(false);
@@ -89,6 +91,11 @@ export function CheckoutPanel({
 
   return (
     <section className="checkout-panel" aria-labelledby="checkout-title">
+      {returnHref ? (
+        <Link className="checkout-panel__back" href={returnHref}>
+          関係ページに戻る
+        </Link>
+      ) : null}
       <p className="checkout-panel__notice">
         これはモック決済です。実際の請求は発生しません。
       </p>
@@ -135,6 +142,10 @@ export function CheckoutPanel({
         </div>
         <p>定期課金や自動更新はありません</p>
       </div>
+
+      <p className="checkout-panel__aftercare">
+        決済完了後、このふたりの関係レポートをすぐに表示します
+      </p>
 
       {failure ? (
         <p role="alert">

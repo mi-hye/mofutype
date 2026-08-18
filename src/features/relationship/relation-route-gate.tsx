@@ -243,6 +243,7 @@ function RelationRouteGateForPair({
           input={{ groupId: pair.groupId, memberA: memberA.id, memberB: memberB.id }}
           provider={new MockPaymentProvider(repository)}
           onSuccess={() => navigate(detailHref)}
+          returnHref={detailHref}
         />
       </main>
     );
