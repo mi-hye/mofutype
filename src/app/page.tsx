@@ -133,6 +133,51 @@ export default function Home() {
             </article>
           </div>
 
+          <section className="report-preview" aria-labelledby="report-preview-title">
+            <header className="report-preview__header">
+              <span className="report-preview__sample-label">SAMPLE</span>
+              <div>
+                <p>PAIR REPORT / 01</p>
+                <h3 id="report-preview-title">関係レポートの表示イメージ</h3>
+              </div>
+            </header>
+
+            <div className="report-preview__paper">
+              <div className="report-preview__pair" aria-label="AさんとBさんのサンプル">
+                <span>Aさん</span>
+                <i aria-hidden="true" />
+                <span>Bさん</span>
+              </div>
+
+              <div className="report-preview__lead">
+                <span>ふたりでいるとき</span>
+                <strong>違うペースが、いいリズムになる。</strong>
+                <p>
+                  感じ方と動き方の違いを、十二支・五行・陰陽・MBTIの4つの視点から読み解きます。
+                </p>
+              </div>
+
+              <dl className="report-preview__contents">
+                <div>
+                  <dt>わかること</dt>
+                  <dd>ふたりの空気感と、すれ違いやすい場面</dd>
+                </div>
+                <div>
+                  <dt>Aさんへ</dt>
+                  <dd>Bさんと心地よく関わるためのヒント</dd>
+                </div>
+                <div>
+                  <dt>Bさんへ</dt>
+                  <dd>Aさんに伝わりやすい距離の取り方</dd>
+                </div>
+              </dl>
+            </div>
+
+            <p className="report-preview__disclaimer">
+              このサンプルは表示イメージです。内容はふたりの組み合わせによって変わります。
+            </p>
+          </section>
+
           <p className="value-ledger__note">
             自分の結果とグループ参加は無料。必要な関係だけ、あとから解放できます。
           </p>

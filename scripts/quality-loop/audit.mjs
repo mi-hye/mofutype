@@ -20,6 +20,8 @@ const requiredCopy = [
   "まずは無料で、みんなの輪郭まで。",
   "0円",
   "1組 300円",
+  "関係レポートの表示イメージ",
+  "このサンプルは表示イメージです。内容はふたりの組み合わせによって変わります。",
   "無料でグループを作る",
   "始める前に、気になること。",
 ];
@@ -87,6 +89,7 @@ try {
         const cta = document.querySelector(".hero__cta");
         const secondaryCta = document.querySelector(".value-ledger__cta");
         const ledger = document.querySelector(".value-ledger");
+        const reportPreview = document.querySelector(".report-preview__paper");
         const rect = (element) => element?.getBoundingClientRect() ?? null;
         const rectData = (element) => {
           const bounds = rect(element);
@@ -104,6 +107,7 @@ try {
           primaryCta: rectData(cta),
           secondaryCta: rectData(secondaryCta),
           ledger: rectData(ledger),
+          reportPreview: rectData(reportPreview),
         };
       });
 
@@ -123,6 +127,7 @@ try {
         primaryCtaWithinViewport: withinViewport(layout.primaryCta),
         secondaryCtaWithinViewport: withinViewport(layout.secondaryCta),
         pricingWithinViewport: withinViewport(layout.ledger),
+        reportPreviewWithinViewport: withinViewport(layout.reportPreview),
         faqAnswerVisible,
         noConsoleErrors: consoleErrors.length === 0,
         noPageErrors: pageErrors.length === 0,

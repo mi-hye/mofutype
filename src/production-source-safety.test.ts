@@ -309,6 +309,22 @@ describe("production source safety", () => {
     expect(globalStyles).toContain("@keyframes rise-in");
   });
 
+  it("shows a truthful paid-report preview before the conversion CTA", () => {
+    const globalStyles = designStyles();
+    const pageSource = readFileSync(path.join(sourceRoot, "app/page.tsx"), "utf8");
+
+    expect(pageSource).toContain('className="report-preview"');
+    expect(pageSource).toContain("関係レポートの表示イメージ");
+    expect(pageSource).toContain("SAMPLE");
+    expect(pageSource).toContain("このサンプルは表示イメージです。");
+    expect(pageSource).not.toMatch(/お客様の声|満足度|診断精度|当たる/);
+    expect(globalStyles).toContain(".report-preview__paper {");
+    expect(globalStyles).toContain(".report-preview__sample-label {");
+    expect(globalStyles).toMatch(
+      /\.report-preview__paper\s*\{[^}]*border:\s*var\(--border-panel\)[^}]*background:\s*var\(--surface-elevated\)/,
+    );
+  });
+
   it("detects a forbidden animal symbol in supplied source", () => {
     expect(findUnsafeProductionSource("const avatar = '🐯';")).toEqual([
       "animal emoji 🐯",
