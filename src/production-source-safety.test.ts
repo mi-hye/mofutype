@@ -128,6 +128,9 @@ describe("production source safety", () => {
     expect(globalStyles).toContain("@media (max-width: 23rem)");
     expect(globalStyles).toContain("@media (min-width: 64rem)");
     expect(globalStyles).toContain("@media (forced-colors: active)");
+    expect(globalStyles).toMatch(
+      /html\s*\{[^}]*-webkit-text-size-adjust:\s*100%[^}]*text-size-adjust:\s*100%/,
+    );
     expect(globalStyles).toContain(
       ".group-member-header:not(:has(.status-banner)) .group-member-actions",
     );
