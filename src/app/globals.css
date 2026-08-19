@@ -127,6 +127,7 @@ button, input, textarea, select { font: inherit; }
 .value-ledger { order: 7; display: grid; width: min(100%, 46rem); gap: 1.4rem; margin: clamp(4.5rem, 12vw, 7rem) auto 0; border-block: 1.5px solid rgb(var(--ink-rgb) / 44%); padding-block: clamp(1.8rem, 6vw, 3rem); }
 .trust-notes > header p { width: fit-content; margin: 0; color: var(--accent-vermilion); font-size: 0.68rem; font-weight: 800; letter-spacing: 0.14em; line-height: 1.2; }
 .trust-notes > header h2 { max-width: 18ch; margin: 0; color: var(--ink); font-family: var(--font-display); font-size: clamp(1.8rem, 7vw, 2.7rem); font-weight: 750; letter-spacing: -0.04em; line-height: 1.18; text-wrap: balance; }
+.trust-notes > header h2 span { display: block; }
 .relation-sheet__offer ul, .checkout-panel__summary ul { display: grid; gap: 0.48rem; margin: 0; padding: 0; list-style: none; }
 .relation-sheet__offer li, .checkout-panel__summary li { position: relative; padding-left: 1.1rem; color: var(--text-muted); font-size: 0.88rem; line-height: 1.6; overflow-wrap: anywhere; }
 .relation-sheet__offer li::before, .checkout-panel__summary li::before { position: absolute; top: 0.7em; left: 0; width: 0.38rem; height: 0.38rem; border-radius: 50%; background: var(--list-accent, var(--color-line-soft)); content: ""; }

@@ -110,6 +110,8 @@ describe("Home", () => {
     render(<Home />);
 
     expect(screen.getByRole("heading", { name: "始める前に、気になること。" })).toBeInTheDocument();
+    expect(screen.getByText("始める前に、")).toBeInTheDocument();
+    expect(screen.getByText("気になること。")).toBeInTheDocument();
     expect(screen.getByText("何人まで使える？")).toBeInTheDocument();
     expect(screen.getByText("出生時刻やMBTIがわからなくても大丈夫？")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "特定商取引法に基づく表記" })).toHaveAttribute(

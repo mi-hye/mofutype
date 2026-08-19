@@ -178,7 +178,10 @@ export default function Home() {
         <section className="trust-notes" aria-labelledby="trust-notes-title">
           <header>
             <p>BEFORE YOU START</p>
-            <h2 id="trust-notes-title">始める前に、気になること。</h2>
+            <h2 id="trust-notes-title" aria-label="始める前に、気になること。">
+              <span>始める前に、</span>
+              <span>気になること。</span>
+            </h2>
           </header>
           <div className="trust-notes__list">
             <details>
