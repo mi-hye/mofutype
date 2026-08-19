@@ -117,7 +117,7 @@ describe("GroupGraph", () => {
 
     await user.click(screen.getByTestId("canvas-node-b"));
     expect((flowProps.current?.edges as MockEdge[]).filter((edge) => edge.label))
-      .toHaveLength(2);
+      .toHaveLength(0);
     expect(within(screen.getByTestId("canvas-node-b")).getByLabelText("べにの関係性ノード"))
       .toHaveAttribute("data-selected", "true");
     expect(screen.getByRole("status", { name: "選択中のメンバー" })).toHaveTextContent("べに");
@@ -358,7 +358,7 @@ describe("GroupGraph", () => {
 
     await user.click(screen.getByTestId("canvas-node-m-12"));
     expect((flowProps.current?.edges as MockEdge[]).filter((edge) => edge.label))
-      .toHaveLength(29);
+      .toHaveLength(0);
     await user.click(screen.getByTestId("canvas-pane"));
     expect((flowProps.current?.edges as MockEdge[]).filter((edge) => edge.label))
       .toHaveLength(0);

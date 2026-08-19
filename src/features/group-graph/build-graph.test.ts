@@ -182,6 +182,14 @@ describe("buildGraph", () => {
     expect(highlighted.every((edge) => edge.style?.strokeWidth === 4 && !edge.animated)).toBe(true);
     expect(highlighted.every((edge) => edge.className?.includes("relationship-edge--incident"))).toBe(true);
     expect(unrelated.every((edge) => edge.className?.includes("relationship-edge--faint"))).toBe(true);
+    expect(graph.edges.filter((edge) =>
+      edge.className?.includes("relationship-edge--perimeter") &&
+      edge.className?.includes("relationship-edge--faint")
+    ).every((edge) => edge.style?.opacity === 0.22)).toBe(true);
+    expect(graph.edges.filter((edge) =>
+      edge.className?.includes("relationship-edge--chord") &&
+      edge.className?.includes("relationship-edge--faint")
+    ).every((edge) => edge.style?.opacity === 0)).toBe(true);
     expect(graph.edges.every((edge) => edge.style?.strokeDasharray === undefined)).toBe(true);
     expect(graph.edges.every((edge) => String(edge.style?.stroke).startsWith("var(--relationship-"))).toBe(true);
     expect(graph.edges.every((edge) => edge.type === "straight")).toBe(true);
@@ -250,9 +258,10 @@ describe("buildGraph", () => {
 
     expect(visibleEdges).toHaveLength(4);
     expect(selectedEdges.every((edge) => edge.style?.opacity === 1)).toBe(true);
-    expect(unselectedEdges.every((edge) => edge.style?.opacity === 0.72)).toBe(true);
-    expect(visibleEdges.every((edge) => edge.labelBgStyle?.fill === edge.style?.stroke))
-      .toBe(true);
+    expect(unselectedEdges.every((edge) => edge.style?.opacity === 0.22)).toBe(true);
+    expect(filtered.edges.every((edge) =>
+      edge.label === undefined && edge.labelShowBg === false
+    )).toBe(true);
     expect(filtered.edges.filter((edge) => Number(edge.style?.opacity) === 0)
       .every((edge) => edge.style?.pointerEvents === "none"))
       .toBe(true);

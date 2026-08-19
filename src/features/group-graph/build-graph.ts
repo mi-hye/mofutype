@@ -3,7 +3,6 @@ import type { Edge, Node } from "@xyflow/react";
 import { createCharacterCopy } from "@/lib/eto/character";
 import {
   createEtoRelationship,
-  RELATIONSHIP_SHORT_LABELS,
   type CreateEtoRelationshipInput,
   type EtoRelationshipResult,
   type RelationshipCategory,
@@ -78,14 +77,6 @@ const RELATIONSHIP_LINE_COLOR_GROUPS: Readonly<
   POSITIVE_STIMULATION: "warm",
   LEARNING_EACH_OTHERS_PACE: "neutral",
   CAREFUL_COORDINATION: "careful",
-};
-
-const RELATIONSHIP_LABEL_TEXT_COLORS: Readonly<Record<RelationshipCategory, string>> = {
-  NATURAL_INTERLOCK: "var(--surface-raised)",
-  EXPANDING_POSSIBILITIES: "var(--surface-raised)",
-  POSITIVE_STIMULATION: "var(--relationship-warm-label-text)",
-  LEARNING_EACH_OTHERS_PACE: "var(--surface-raised)",
-  CAREFUL_COORDINATION: "var(--surface-raised)",
 };
 
 function nodeSize(count: number): GraphNodeSize {
@@ -286,16 +277,21 @@ export function decorateGraph(
     const perimeter = perimeterPairs.has(edge.id);
     const lineColor = RELATIONSHIP_LINE_COLOR_GROUPS[edge.data.relationship.category];
     const matchesColor = selectedLineColor === null || lineColor === selectedLineColor;
-    const visible = selectedNodeId === null ? perimeter : incident;
+    const visible = perimeter || incident;
     const emphasis: EdgeEmphasis = selectedNodeId === null
       ? visible ? "default" : "faint"
-      : visible ? "incident" : "faint";
+      : incident ? "incident" : "faint";
     const unlocked = unlockedPairs.has(edge.id);
-    const showLabel = selectedNodeId !== null && incident;
     const category = edge.data.relationship.category;
     const strokeWidth = incident ? (unlocked ? 5 : 4) : unlocked ? 4 : 3;
     const emphasized = selectedLineColor !== null ? matchesColor : incident;
-    const opacity = visible ? emphasized ? 1 : 0.72 : 0;
+    const opacity = !visible
+      ? 0
+      : selectedNodeId !== null
+        ? incident && emphasized ? 1 : 0.22
+        : selectedLineColor !== null
+          ? matchesColor ? 1 : 0.22
+          : 0.72;
     return {
       ...edge,
       animated: false,
@@ -305,22 +301,8 @@ export function decorateGraph(
         `relationship-edge--${emphasis}`,
         `relationship-edge--${perimeter ? "perimeter" : "chord"}`,
       ].join(" "),
-      label: showLabel ? RELATIONSHIP_SHORT_LABELS[category] : undefined,
-      labelShowBg: showLabel,
-      labelStyle: {
-        fill: RELATIONSHIP_LABEL_TEXT_COLORS[category],
-        fontSize: 11,
-        fontWeight: 950,
-        pointerEvents: "none",
-      },
-      labelBgStyle: {
-        fill: RELATIONSHIP_LINE_COLORS[category],
-        stroke: "var(--surface-raised)",
-        strokeWidth: 1.5,
-        pointerEvents: "none",
-      },
-      labelBgPadding: [9, 5],
-      labelBgBorderRadius: 999,
+      label: undefined,
+      labelShowBg: false,
       style: {
         stroke: RELATIONSHIP_LINE_COLORS[category],
         strokeWidth,
