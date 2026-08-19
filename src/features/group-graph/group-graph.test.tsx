@@ -183,6 +183,7 @@ describe("GroupGraph", () => {
     render(<GroupGraph members={[member("a")]} unlocks={[]} onPairSelect={vi.fn()} />);
     expect(flowProps.current).toEqual(expect.objectContaining({
       fitView: true,
+      fitViewOptions: { padding: 0.34 },
       maxZoom: 1,
       panOnDrag: false,
       panOnScroll: false,
@@ -262,6 +263,7 @@ describe("GroupGraph", () => {
         relationshipFactory={relationshipFactory} />,
     );
     expect(relationshipFactory).toHaveBeenCalledTimes(435);
+    expect(flowProps.current?.fitViewOptions).toEqual({ padding: 0.22 });
     expect((flowProps.current?.edges as MockEdge[]).filter((edge) => edge.label))
       .toHaveLength(0);
 

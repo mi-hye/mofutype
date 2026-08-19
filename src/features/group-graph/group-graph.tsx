@@ -83,6 +83,7 @@ function GroupGraphComponent({
     () => graph.edges.filter((edge) => edge.data?.emphasis === "incident"),
     [graph.edges],
   );
+  const fitViewPadding = members.length <= 6 ? 0.34 : 0.22;
 
   const handleNodeClick = useCallback<NodeMouseHandler<ZodiacGraphNode>>(
     (_event, node) => setSelectedNodeId(node.id),
@@ -118,7 +119,7 @@ function GroupGraphComponent({
           onEdgeClick={handleEdgeClick}
           onPaneClick={() => setSelectedNodeId(null)}
           fitView
-          fitViewOptions={{ padding: 0.22 }}
+          fitViewOptions={{ padding: fitViewPadding }}
           maxZoom={1}
           panOnDrag={false}
           panOnScroll={false}

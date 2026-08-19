@@ -27,6 +27,10 @@ test("three independent members share one unlocked relationship", async ({ brows
     await expect(pageA.locator(".zodiac-graph-node__character-title", {
       hasText: "さるタイプ",
     })).toBeVisible();
+    await pageA.screenshot({
+      path: testInfo.outputPath("group-graph.png"),
+      fullPage: true,
+    });
 
     await pageA.getByRole("button", { name: "Aさんを選択" }).focus();
     await pageA.keyboard.press("Enter");
