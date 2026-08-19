@@ -294,7 +294,9 @@ body:has(.group-share-backdrop) { overflow: hidden; }
 .group-share-actions__close { position: absolute; width: 1px; height: 1px; overflow: hidden; margin: -1px; border: 0; padding: 0; clip-path: inset(50%); white-space: nowrap; }
 
 .group-graph { display: grid; gap: 1rem; }
-.group-graph__canvas { width: 100%; height: clamp(30rem, 68svh, 52rem); min-height: 30rem; overflow: hidden; border: var(--border-panel); border-radius: 2.5rem 2.15rem 2.65rem 2.05rem / 2.2rem 2.55rem 2.1rem 2.45rem; outline: 1px solid rgb(var(--ink-rgb) / 12%); outline-offset: -5px; background: var(--surface-elevated); box-shadow: 3px 4px 0 rgb(var(--ink-rgb) / 6%), var(--shadow-pop), inset 0 0 0 4px rgb(255 255 255 / 46%); touch-action: pan-y; }
+.group-graph__canvas { position: relative; width: 100%; height: clamp(30rem, 68svh, 52rem); min-height: 30rem; overflow: hidden; border: var(--border-panel); border-radius: 2.5rem 2.15rem 2.65rem 2.05rem / 2.2rem 2.55rem 2.1rem 2.45rem; outline: 1px solid rgb(var(--ink-rgb) / 12%); outline-offset: -5px; background: var(--surface-elevated); box-shadow: 3px 4px 0 rgb(var(--ink-rgb) / 6%), var(--shadow-pop), inset 0 0 0 4px rgb(255 255 255 / 46%); touch-action: pan-y; }
+.group-graph__tap-hint { position: absolute; top: 1rem; right: 1.2rem; z-index: 4; margin: 0; color: var(--text-muted); font-family: var(--font-display); font-size: 0.6rem; font-weight: 700; letter-spacing: 0.04em; line-height: 1; opacity: 0.62; pointer-events: none; transform: rotate(-3deg); transition: opacity 160ms ease, visibility 160ms ease; }
+.group-graph[data-has-selection="true"] .group-graph__tap-hint { visibility: hidden; opacity: 0; }
 .group-graph__canvas[data-member-count="1"] { height: clamp(20rem, 46svh, 26rem); min-height: 20rem; }
 .group-graph__canvas .react-flow__pane { touch-action: pan-y; }
 .group-graph__canvas .react-flow__edge-path { stroke-linecap: round; }

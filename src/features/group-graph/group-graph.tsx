@@ -170,6 +170,9 @@ function GroupGraphComponent({
           elementsSelectable
           proOptions={{ hideAttribution: true }}
         />
+        {variant === "default" && members.length > 1 ? (
+          <p className="group-graph__tap-hint">おしてな！</p>
+        ) : null}
       </div>
 
       {availableLineFilters.length > 0 ? (
