@@ -46,8 +46,10 @@ const lineColorFilters: readonly {
   label: string;
 }[] = [
   { value: "calm", label: "息ぴったり" },
-  { value: "clear", label: "可能性・ペース" },
-  { value: "warm", label: "いい刺激" },
+  { value: "clear", label: "いいテンポ" },
+  { value: "neutral", label: "ペース発見" },
+  { value: "warm", label: "刺激つよめ" },
+  { value: "careful", label: "すれ違い注意" },
 ];
 
 function removeFromTabOrder(canvas: HTMLDivElement) {

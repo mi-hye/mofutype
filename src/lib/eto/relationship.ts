@@ -14,7 +14,8 @@ export type RelationshipCategory =
   | "NATURAL_INTERLOCK"
   | "EXPANDING_POSSIBILITIES"
   | "POSITIVE_STIMULATION"
-  | "LEARNING_EACH_OTHERS_PACE";
+  | "LEARNING_EACH_OTHERS_PACE"
+  | "CAREFUL_COORDINATION";
 
 export type EtoRelationshipCategory = RelationshipCategory;
 
@@ -22,9 +23,10 @@ export const RELATIONSHIP_SHORT_LABELS: Readonly<
   Record<RelationshipCategory, string>
 > = Object.freeze({
   NATURAL_INTERLOCK: "息ぴったり",
-  EXPANDING_POSSIBILITIES: "可能性ひろがる",
-  POSITIVE_STIMULATION: "いい刺激",
+  EXPANDING_POSSIBILITIES: "いいテンポ",
   LEARNING_EACH_OTHERS_PACE: "ペース発見",
+  POSITIVE_STIMULATION: "刺激つよめ",
+  CAREFUL_COORDINATION: "すれ違い注意",
 });
 
 export type ZodiacRelationship =
@@ -105,6 +107,7 @@ const CATEGORY_LABELS: Readonly<Record<RelationshipCategory, string>> = {
   EXPANDING_POSSIBILITIES: "一緒に可能性を広げる関係",
   POSITIVE_STIMULATION: "違いがよい刺激になる関係",
   LEARNING_EACH_OTHERS_PACE: "お互いのペースを学ぶ関係",
+  CAREFUL_COORDINATION: "すれ違いに気をつけたい関係",
 };
 
 const ELEMENTS = ["WOOD", "FIRE", "EARTH", "METAL", "WATER"] as const;
@@ -539,13 +542,24 @@ function mbtiInsight(
 }
 
 function balancedCategory(
-  zodiac: RelationshipCategory,
-  element: RelationshipCategory,
-  mbti: RelationshipCategory | null,
+  zodiac: ZodiacRelationshipInsight,
+  element: FiveElementRelationshipInsight,
+  mbti: MbtiRelationshipInsight | null,
 ) {
-  if (zodiac === element) return zodiac;
-  if (mbti !== null && (mbti === zodiac || mbti === element)) return mbti;
-  return zodiac;
+  const frictionSignals = [
+    zodiac.relation === "LIUCHONG",
+    element.relation === "CONTROLLING",
+    mbti?.category === "LEARNING_EACH_OTHERS_PACE",
+  ].filter(Boolean).length;
+  if (frictionSignals >= 2) return "CAREFUL_COORDINATION";
+  if (zodiac.category === element.category) return zodiac.category;
+  if (
+    mbti !== null &&
+    (mbti.category === zodiac.category || mbti.category === element.category)
+  ) {
+    return mbti.category;
+  }
+  return zodiac.category;
 }
 
 function directionalElementTip(
@@ -594,9 +608,9 @@ export function createEtoRelationship(
     safeInput.memberB.profile.mbti,
   );
   const category = balancedCategory(
-    zodiac.category,
-    element.category,
-    mbti?.category ?? null,
+    zodiac,
+    element,
+    mbti,
   );
   const zodiacNames = [
     ZODIAC_NAMES.get(safeInput.memberA.profile.zodiacId) ?? "十二支",

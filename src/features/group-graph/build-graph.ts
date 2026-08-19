@@ -13,7 +13,7 @@ import type { GroupMember, RelationUnlock } from "@/lib/supabase/models";
 
 export type GraphNodeSize = "sm" | "md" | "lg";
 export type EdgeEmphasis = "default" | "incident" | "faint";
-export type RelationshipLineColor = "calm" | "clear" | "warm";
+export type RelationshipLineColor = "calm" | "clear" | "neutral" | "warm" | "careful";
 export type RelationshipFactory = (
   input: CreateEtoRelationshipInput,
 ) => EtoRelationshipResult;
@@ -66,7 +66,8 @@ const RELATIONSHIP_LINE_COLORS: Readonly<Record<RelationshipCategory, string>> =
   NATURAL_INTERLOCK: "var(--relationship-calm)",
   EXPANDING_POSSIBILITIES: "var(--relationship-clear)",
   POSITIVE_STIMULATION: "var(--relationship-warm)",
-  LEARNING_EACH_OTHERS_PACE: "var(--relationship-clear)",
+  LEARNING_EACH_OTHERS_PACE: "var(--relationship-neutral)",
+  CAREFUL_COORDINATION: "var(--relationship-careful)",
 };
 
 const RELATIONSHIP_LINE_COLOR_GROUPS: Readonly<
@@ -75,7 +76,8 @@ const RELATIONSHIP_LINE_COLOR_GROUPS: Readonly<
   NATURAL_INTERLOCK: "calm",
   EXPANDING_POSSIBILITIES: "clear",
   POSITIVE_STIMULATION: "warm",
-  LEARNING_EACH_OTHERS_PACE: "clear",
+  LEARNING_EACH_OTHERS_PACE: "neutral",
+  CAREFUL_COORDINATION: "careful",
 };
 
 const RELATIONSHIP_LABEL_TEXT_COLORS: Readonly<Record<RelationshipCategory, string>> = {
@@ -83,6 +85,7 @@ const RELATIONSHIP_LABEL_TEXT_COLORS: Readonly<Record<RelationshipCategory, stri
   EXPANDING_POSSIBILITIES: "var(--surface-raised)",
   POSITIVE_STIMULATION: "var(--relationship-warm-label-text)",
   LEARNING_EACH_OTHERS_PACE: "var(--surface-raised)",
+  CAREFUL_COORDINATION: "var(--surface-raised)",
 };
 
 function nodeSize(count: number): GraphNodeSize {

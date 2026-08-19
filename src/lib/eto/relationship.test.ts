@@ -65,14 +65,57 @@ function collectKeys(value: unknown, result: string[] = []): string[] {
 }
 
 describe("relationship short labels", () => {
-  it("provides exactly four concise Japanese graph labels", () => {
+  it("provides five concise Japanese graph labels from easy to careful", () => {
     expect(RELATIONSHIP_SHORT_LABELS).toEqual({
       NATURAL_INTERLOCK: "息ぴったり",
-      EXPANDING_POSSIBILITIES: "可能性ひろがる",
-      POSITIVE_STIMULATION: "いい刺激",
+      EXPANDING_POSSIBILITIES: "いいテンポ",
       LEARNING_EACH_OTHERS_PACE: "ペース発見",
+      POSITIVE_STIMULATION: "刺激つよめ",
+      CAREFUL_COORDINATION: "すれ違い注意",
     });
     expect(Object.isFrozen(RELATIONSHIP_SHORT_LABELS)).toBe(true);
+  });
+});
+
+describe("overall relationship bands", () => {
+  it("uses the middle band when no easy or friction signal dominates", () => {
+    const result = relationship(
+      profile({ zodiacId: "rat", dayMaster: { element: "WOOD", polarity: "YANG" } }),
+      profile({ zodiacId: "rabbit", dayMaster: { element: "WOOD", polarity: "YIN" } }),
+    );
+
+    expect(result.category).toBe("LEARNING_EACH_OTHERS_PACE");
+    expect(result.categoryLabelJa).toBe("お互いのペースを学ぶ関係");
+  });
+
+  it("uses the careful band only when multiple friction signals overlap", () => {
+    const result = relationship(
+      profile({
+        zodiacId: "rat",
+        mbti: "INTJ",
+        dayMaster: { element: "WOOD", polarity: "YANG" },
+      }),
+      profile({
+        zodiacId: "horse",
+        mbti: "ESFP",
+        dayMaster: { element: "EARTH", polarity: "YIN" },
+      }),
+    );
+
+    expect(result.zodiacInsight.relation).toBe("LIUCHONG");
+    expect(result.fiveElementInsight.relation).toBe("CONTROLLING");
+    expect(result.category).toBe("CAREFUL_COORDINATION");
+    expect(result.categoryLabelJa).toBe("すれ違いに気をつけたい関係");
+  });
+
+  it("keeps a single friction signal in the stimulating band", () => {
+    const result = relationship(
+      profile({ zodiacId: "rat", dayMaster: { element: "WOOD", polarity: "YANG" } }),
+      profile({ zodiacId: "horse", dayMaster: { element: "WOOD", polarity: "YIN" } }),
+    );
+
+    expect(result.zodiacInsight.relation).toBe("LIUCHONG");
+    expect(result.category).toBe("POSITIVE_STIMULATION");
   });
 });
 
