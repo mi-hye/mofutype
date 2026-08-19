@@ -11,6 +11,10 @@ import { JoinGroupForm } from "./join-group-form";
 
 type BrowserRepository = ReturnType<typeof createBrowserGroupRepository>;
 
+function canHashInviteToken() {
+  return typeof globalThis.crypto?.subtle?.digest === "function";
+}
+
 interface GroupGateProps {
   inviteToken: string;
   repositoryFactory?: () => BrowserRepository;
@@ -49,7 +53,9 @@ function GroupGateForInvite({
           setStatus("missing");
           return;
         }
-        const match = await activeRepository.findJoinedGroupByInviteToken(inviteToken);
+        const match = canHashInviteToken()
+          ? await activeRepository.findJoinedGroupByInviteToken(inviteToken)
+          : null;
         if (!current) return;
         if (match) {
           setAggregate(match);

@@ -79,6 +79,20 @@ describe("GroupGate", () => {
     expect(screen.getByLabelText("生年月日")).toBeInTheDocument();
   });
 
+  it("shows the join preview on an insecure LAN origin without Web Crypto", async () => {
+    vi.stubGlobal("crypto", undefined);
+    const previewGroupInvite = vi.fn(async () => preview);
+    const findJoinedGroupByInviteToken = vi.fn(async () => aggregate);
+    try {
+      render(<GroupGate inviteToken={token} repositoryFactory={() => ({ previewGroupInvite, findJoinedGroupByInviteToken } as never)} />);
+
+      expect(await screen.findByRole("heading", { name: "グループに招待されています" })).toBeInTheDocument();
+      expect(findJoinedGroupByInviteToken).not.toHaveBeenCalled();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it("shows invalid/deleted before profile fields when a well-formed token has no preview", async () => {
     const previewGroupInvite = vi.fn(async () => null);
     const findJoinedGroupByInviteToken = vi.fn();
