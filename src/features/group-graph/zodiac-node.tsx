@@ -22,12 +22,12 @@ export function ZodiacNode({ data }: { data: ZodiacNodeData }) {
         style={{ left: "50%", top: frameCenter, transform: "translate(-50%, -50%)" }}
       />
       <span
-        className="hero__node-frame zodiac-graph-node__frame"
+        className="zodiac-graph-node__frame"
         data-size={data.size}
         data-zodiac={data.member.zodiacId}
         aria-hidden="true"
       >
-        <span className="hero__node-type">{data.member.mbti ?? "—"}</span>
+        <span className="zodiac-graph-node__type">{data.member.mbti ?? "—"}</span>
         {/* The catalog owns trusted local PNG paths. */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={zodiac.assetPath} alt="" />

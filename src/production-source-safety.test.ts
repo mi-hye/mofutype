@@ -248,6 +248,10 @@ describe("production source safety", () => {
       path.join(sourceRoot, "features/landing/landing-relationship-preview.tsx"),
       "utf8",
     );
+    const commonGraphSource = readFileSync(
+      path.join(sourceRoot, "features/group-graph/group-graph.tsx"),
+      "utf8",
+    );
     const startFormSource = readFileSync(
       path.join(sourceRoot, "features/onboarding/start-group-form.tsx"),
       "utf8",
@@ -263,13 +267,8 @@ describe("production source safety", () => {
 
     expect(globalStyles).not.toContain("min-width: 320px");
     expect(globalStyles).not.toContain("overflow-x: hidden");
-    for (const selector of [
-      ".hero__tape {",
-      ".hero__dots {",
-      ".hero__stripe {",
-    ]) expect(globalStyles).toContain(selector);
     expect(globalStyles).toMatch(/\.hero__decor\s*\{[^}]*order:\s*3/);
-    expect(globalStyles).toMatch(/\.hero__decor\s*\{[^}]*background-image:\s*none/);
+    expect(globalStyles).toMatch(/\.hero__decor \.group-graph__canvas\s*\{[^}]*height:\s*clamp\(20rem,\s*62vw,\s*30rem\)/);
     expect(globalStyles).toMatch(/\.hero\s*\{[^}]*box-shadow:\s*none/);
     expect(globalStyles).toMatch(/\.landing-nav[^}]*justify-content:\s*center/);
     expect(globalStyles).toMatch(/\.start-group-form > \.ui-button[^}]*min-width:\s*5\.75rem[^}]*min-height:\s*44px[^}]*justify-self:\s*start/);
@@ -288,11 +287,12 @@ describe("production source safety", () => {
     expect(createProfileSource).not.toContain("profileOnly");
     expect(joinFormSource).toContain("<ProfileForm");
     expect(joinFormSource).not.toContain('htmlFor="create-group-name"');
-    expect(globalStyles).toContain(".hero__connectors line");
     expect(pageSource).toContain("<LandingRelationshipPreview />");
-    expect(previewSource).toContain('className="hero__connectors"');
-    expect(previewSource.match(/className: "hero__connector--/g)).toHaveLength(3);
-    expect(previewSource).toContain('aria-pressed={selected}');
+    expect(previewSource).toContain("<GroupGraph");
+    expect(previewSource).toContain('from "@/features/group-graph/group-graph"');
+    expect(commonGraphSource).toContain('className="group-graph__canvas"');
+    expect(commonGraphSource).toContain("onNodeClick={handleNodeClick}");
+    expect(globalStyles).not.toContain(".hero__connectors");
     expect(pageSource).toContain("#12干支");
     expect(globalStyles).toMatch(/\.hero__stickers[^}]*align-items:\s*center[^}]*margin:\s*-3px 0 0/);
     expect(globalStyles).toMatch(/\.ui-capsule[^}]*display:\s*inline-flex[^}]*min-height:\s*2\.125rem[^}]*align-items:\s*center[^}]*line-height:\s*0\.9/);
@@ -300,8 +300,8 @@ describe("production source safety", () => {
     expect(globalStyles).not.toContain(".hero__cta::before");
     expect(pageSource).not.toContain("#動物うらない");
     expect(pageSource).not.toContain("性格タイプ × 動物キャラクター");
-    for (const animalImage of ["tiger.png", "rat.png", "rabbit.png"]) {
-      expect(previewSource).toContain(`/zodiac/${animalImage}`);
+    for (const zodiacId of ['"tiger"', '"rat"', '"rabbit"']) {
+      expect(previewSource).toContain(zodiacId);
     }
     for (const token of [
       "--animal-tiger-pastel",
@@ -312,15 +312,13 @@ describe("production source safety", () => {
       "--animal-rabbit-border",
     ]) expect(globalStyles).toContain(token);
     expect(globalStyles).toContain("--relationship-warm: #b87716");
-    expect(globalStyles).toMatch(/\.hero__node-frame::before[^}]*border:\s*2px solid var\(--surface-elevated\)[^}]*filter:\s*none/);
-    expect(globalStyles).toMatch(/\.hero__node-type[^}]*top:\s*calc\(0\.68rem \+ 1px\)/);
-    expect(globalStyles).toMatch(/\.hero__tape \.hero__node-frame::before[^}]*background:\s*var\(--animal-tiger-pastel\)/);
-    expect(globalStyles).toContain("border-color: var(--animal-tiger-border)");
-    expect(globalStyles).toContain("border-color: var(--animal-rat-border)");
-    expect(globalStyles).toContain("border-color: var(--animal-rabbit-border)");
-    expect(globalStyles).toMatch(/\.hero__node\[aria-pressed="true"\] \.hero__node-frame::before[^}]*box-shadow:\s*0 12px 24px/);
-    expect(globalStyles).not.toMatch(/\.hero__node\[aria-pressed="true"\] \.hero__node-frame::before[^}]*0 0 0 4px/);
-    expect(globalStyles).toMatch(/\.hero__connectors line[^}]*stroke-width:\s*1\.25[^}]*stroke-opacity:\s*0\.72/);
+    expect(globalStyles).toMatch(/\.zodiac-graph-node__frame::before[^}]*border:\s*2px solid var\(--node-border\)[^}]*filter:\s*none/);
+    expect(globalStyles).toMatch(/\.zodiac-graph-node__type[^}]*top:\s*0\.72rem/);
+    expect(globalStyles).toMatch(/\.zodiac-graph-node__frame\[data-zodiac="tiger"\][^}]*--node-pastel:\s*var\(--animal-tiger-pastel\)/);
+    expect(globalStyles).toContain("--node-border: var(--animal-tiger-border)");
+    expect(globalStyles).toContain("--node-border: var(--animal-rat-border)");
+    expect(globalStyles).toContain("--node-border: var(--animal-rabbit-border)");
+    expect(globalStyles).toMatch(/\.zodiac-graph-node\[data-selected="true"\] \.zodiac-graph-node__frame::before[^}]*var\(--node-pastel\)/);
     expect(globalStyles).toMatch(/\.ui-button::before[^}]*animation:\s*none/);
     expect(globalStyles).toContain(".ui-button > span { position: relative; z-index: 1; }");
     expect(globalStyles).toContain("@keyframes float-orbit");
@@ -332,8 +330,8 @@ describe("production source safety", () => {
     const pageSource = readFileSync(path.join(sourceRoot, "app/page.tsx"), "utf8");
 
     expect(pageSource).toContain('className="report-preview"');
-    expect(pageSource).toContain("関係レポートの表示イメージ");
-    expect(pageSource).toContain("SAMPLE");
+    expect(pageSource).toContain("1組300円で、こんな関係レポートが読めます。");
+    expect(pageSource).toContain("ONE PAIR / ONE TIME");
     expect(pageSource).toContain("このサンプルは表示イメージです。");
     expect(pageSource).not.toMatch(/お客様の声|満足度|診断精度|当たる/);
     expect(globalStyles).toContain(".report-preview__paper {");
