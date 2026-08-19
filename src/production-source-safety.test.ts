@@ -330,6 +330,13 @@ describe("production source safety", () => {
       "--relationship-warm: #009b63",
       "--relationship-careful: #1677ff",
     ]) expect(globalStyles).toContain(token);
+    expect(globalStyles).toContain("@keyframes relationship-sonar-ping");
+    expect(globalStyles).toMatch(
+      /\.group-graph__filters button::after\s*\{[^}]*animation:\s*relationship-sonar-ping 4\.5s/,
+    );
+    expect(globalStyles).toMatch(
+      /\.group-graph__filters button:nth-child\(5\)::after\s*\{[^}]*animation-delay:\s*2\.2s/,
+    );
     expect(globalStyles).toMatch(/\.zodiac-graph-node__frame::before[^}]*border:\s*2px solid var\(--node-border\)[^}]*filter:\s*none/);
     expect(globalStyles).toMatch(/\.zodiac-graph-node__type[^}]*top:\s*0\.72rem/);
     expect(globalStyles).toMatch(/\.zodiac-graph-node__frame\[data-zodiac="tiger"\][^}]*--node-pastel:\s*var\(--animal-tiger-pastel\)/);
