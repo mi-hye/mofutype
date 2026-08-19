@@ -290,8 +290,10 @@ describe("production source safety", () => {
     expect(pageSource).toContain("<LandingRelationshipPreview />");
     expect(previewSource).toContain("<GroupGraph");
     expect(previewSource).toContain('from "@/features/group-graph/group-graph"');
+    expect(previewSource).toContain('variant="minimal"');
     expect(commonGraphSource).toContain('className="group-graph__canvas"');
     expect(commonGraphSource).toContain("onNodeClick={handleNodeClick}");
+    expect(commonGraphSource).toContain('if (variant === "minimal") return []');
     expect(globalStyles).not.toContain(".hero__connectors");
     expect(pageSource).toContain("#12干支");
     expect(globalStyles).toMatch(/\.hero__stickers[^}]*align-items:\s*center[^}]*margin:\s*-3px 0 0/);

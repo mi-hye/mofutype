@@ -34,5 +34,6 @@ describe("LandingRelationshipPreview", () => {
       member.zodiacId === member.profile.zodiacId && member.mbti === member.profile.mbti
     )).toBe(true);
     expect(graphProps.current?.unlocks).toEqual([]);
+    expect(graphProps.current?.variant).toBe("minimal");
   });
 });

@@ -120,6 +120,31 @@ describe("GroupGraph", () => {
     expect(screen.queryByRole("status", { name: "選択中のメンバー" })).not.toBeInTheDocument();
   });
 
+  it("keeps the minimal preview to two original-color lines without filters or labels", () => {
+    render(
+      <GroupGraph
+        members={[member("a"), member("b"), member("c")]}
+        unlocks={[]}
+        onPairSelect={vi.fn()}
+        variant="minimal"
+      />,
+    );
+
+    const edges = flowProps.current?.edges as Array<MockEdge & {
+      source: string;
+      target: string;
+      style?: React.CSSProperties;
+    }>;
+    expect(edges).toHaveLength(2);
+    expect(edges.every((edge) => edge.source === "a" || edge.target === "a"))
+      .toBe(true);
+    expect(edges.every((edge) => edge.label === undefined)).toBe(true);
+    expect(edges.every((edge) => String(edge.style?.stroke).startsWith("var(--relationship-")))
+      .toBe(true);
+    expect(screen.queryByRole("group", { name: "関係線を色で絞り込む" }))
+      .not.toBeInTheDocument();
+  });
+
   it("lets people filter relationship lines by their shared color", async () => {
     const user = userEvent.setup();
     render(<GroupGraph members={[member("a"), member("b"), member("c"), member("d")]} unlocks={[]} onPairSelect={vi.fn()} />);

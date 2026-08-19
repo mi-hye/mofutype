@@ -37,6 +37,7 @@ interface GroupGraphProps {
   unlocks: readonly RelationUnlock[];
   onPairSelect: (selection: PairSelection) => void;
   relationshipFactory?: RelationshipFactory;
+  variant?: "default" | "minimal";
 }
 
 const nodeTypes = { zodiac: ZodiacNode };
@@ -70,6 +71,7 @@ function GroupGraphComponent({
   unlocks,
   onPairSelect,
   relationshipFactory = createEtoRelationship,
+  variant = "default",
 }: GroupGraphProps) {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [selectedLineColor, setSelectedLineColor] = useState<RelationshipLineColor | null>(null);
@@ -85,6 +87,18 @@ function GroupGraphComponent({
     () => decorateGraph(topology, selectedNodeId, unlocks, selectedLineColor),
     [topology, selectedNodeId, unlocks, selectedLineColor],
   );
+  const renderedEdges = useMemo(() => {
+    if (variant === "default") return graph.edges;
+    const anchorNodeId = topology.nodes[0]?.id;
+    if (!anchorNodeId) return [];
+    return graph.edges
+      .filter((edge) => edge.source === anchorNodeId || edge.target === anchorNodeId)
+      .map((edge) => ({
+        ...edge,
+        label: undefined,
+        labelShowBg: false,
+      }));
+  }, [graph.edges, topology.nodes, variant]);
   const selectedMember = useMemo(
     () => members.find((member) => member.id === selectedNodeId) ?? null,
     [members, selectedNodeId],
@@ -92,17 +106,18 @@ function GroupGraphComponent({
   const incidentEdges = useMemo(
     () => selectedNodeId === null
       ? []
-      : graph.edges.filter((edge) => edge.data.memberIds.includes(selectedNodeId)),
-    [graph.edges, selectedNodeId],
+      : renderedEdges.filter((edge) => edge.data.memberIds.includes(selectedNodeId)),
+    [renderedEdges, selectedNodeId],
   );
   const availableLineFilters = useMemo(() => {
+    if (variant === "minimal") return [];
     const colors = new Set(
-      graph.edges
+      renderedEdges
         .filter((edge) => edge.className?.includes("relationship-edge--perimeter"))
         .map((edge) => edge.data.lineColor),
     );
     return lineColorFilters.filter((filter) => colors.has(filter.value));
-  }, [graph.edges]);
+  }, [renderedEdges, variant]);
   const fitViewPadding = members.length <= 6 ? 0.34 : 0.22;
 
   const handleNodeClick = useCallback<NodeMouseHandler<ZodiacGraphNode>>(
@@ -127,13 +142,13 @@ function GroupGraphComponent({
   }, [membersVersion]);
 
   return (
-    <section className="group-graph" aria-label="メンバー関係性グラフ">
+    <section className="group-graph" data-variant={variant} aria-label="メンバー関係性グラフ">
       <div ref={canvasRef} className="group-graph__canvas"
         data-testid="group-graph-canvas" data-member-count={members.length} aria-hidden="true">
         <ReactFlow<ZodiacGraphNode, RelationshipGraphEdge>
           key={membersVersion}
           nodes={graph.nodes}
-          edges={graph.edges}
+          edges={renderedEdges}
           nodeTypes={nodeTypes}
           onNodeClick={handleNodeClick}
           onEdgeClick={handleEdgeClick}

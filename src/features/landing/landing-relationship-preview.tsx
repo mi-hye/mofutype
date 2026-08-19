@@ -48,6 +48,7 @@ export function LandingRelationshipPreview() {
         members={PREVIEW_MEMBERS}
         unlocks={[]}
         onPairSelect={ignorePreviewPairSelection}
+        variant="minimal"
       />
     </div>
   );
