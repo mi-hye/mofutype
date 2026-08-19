@@ -157,20 +157,46 @@ export default function Home() {
                 </p>
               </div>
 
+              <div className="report-preview__layers" aria-label="レポートに含まれる3つの分析">
+                <section>
+                  <span>01</span>
+                  <h4>十二支の関係</h4>
+                  <strong>違いが刺激になる関係</strong>
+                  <p>慎重に確かめたいAさんと、まず動いてみたいBさん。違う速さが、新しい選択肢を生みます。</p>
+                </section>
+                <section>
+                  <span>02</span>
+                  <h4>五行と陰陽</h4>
+                  <strong>整える力と、動かす力</strong>
+                  <p>考えを形にする力と、場を前へ進める力。役割が自然に分かれると、ふたりの強みが重なります。</p>
+                </section>
+                <section>
+                  <span>03</span>
+                  <h4>MBTIの4つの軸</h4>
+                  <strong>答えの見つけ方が違うふたり</strong>
+                  <p>ひとりで深める時間と、話しながら広げる時間。結論までの道筋を共有すると伝わりやすくなります。</p>
+                </section>
+              </div>
+
               <dl className="report-preview__contents">
                 <div>
-                  <dt>わかること</dt>
-                  <dd>ふたりの空気感と、すれ違いやすい場面</dd>
+                  <dt>すれ違うとき</dt>
+                  <dd>急いで答えを出したいときほど、考える時間の差がすれ違いに見えやすくなります。</dd>
                 </div>
                 <div>
                   <dt>Aさんへ</dt>
-                  <dd>Bさんと心地よく関わるためのヒント</dd>
+                  <dd>Bさんのアイデアが広がる時間を少し待つと、あなたの整理力がもっと伝わります。</dd>
                 </div>
                 <div>
                   <dt>Bさんへ</dt>
-                  <dd>Aさんに伝わりやすい距離の取り方</dd>
+                  <dd>思いつきを先に共有したら、Aさんが考えをまとめる余白も一緒に渡してみてください。</dd>
                 </div>
               </dl>
+
+              <p className="report-preview__purchase-note">
+                <strong>1組 300円・買い切り</strong>
+                4つの視点と、ふたりそれぞれへのヒントをまとめて読めます。追加料金や自動更新はありません。
+              </p>
             </div>
 
             <p className="report-preview__disclaimer">
@@ -181,9 +207,6 @@ export default function Home() {
           <p className="value-ledger__note">
             自分の結果とグループ参加は無料。必要な関係だけ、あとから解放できます。
           </p>
-          <ButtonLink className="value-ledger__cta" size="lg" href="/create/profile">
-            無料でグループを作る
-          </ButtonLink>
         </section>
 
         <section className="trust-notes" aria-labelledby="trust-notes-title">

@@ -74,7 +74,7 @@ describe("Home", () => {
     )).toBeInTheDocument();
   });
 
-  it("explains the free experience and the optional 300 yen report before a second CTA", () => {
+  it("shows a detailed paid report sample without repeating the group CTA", () => {
     render(<Home />);
 
     expect(
@@ -84,10 +84,12 @@ describe("Home", () => {
     expect(screen.getByText("1組 300円")).toBeInTheDocument();
     expect(screen.getByText("みんなの関係マップ")).toBeInTheDocument();
     expect(screen.getByText("ふたりでいるときのヒント")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "無料でグループを作る" })).toHaveAttribute(
-      "href",
-      "/create/profile",
-    );
+    expect(screen.getByRole("heading", { name: "十二支の関係" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "五行と陰陽" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "MBTIの4つの軸" })).toBeInTheDocument();
+    expect(screen.getByText("違いが刺激になる関係")).toBeInTheDocument();
+    expect(screen.getByText(/追加料金や自動更新はありません/)).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "無料でグループを作る" })).not.toBeInTheDocument();
   });
 
   it("answers purchase questions without hiding essential information in decorative UI", () => {
