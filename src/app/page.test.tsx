@@ -9,6 +9,10 @@ vi.mock("@/features/landing/report-sample-graph", () => ({
   ),
 }));
 
+vi.mock("@/features/landing/landing-relationship-preview", () => ({
+  LandingRelationshipPreview: () => <div aria-hidden="true" />,
+}));
+
 import Home from "./page";
 
 describe("Home", () => {
@@ -86,12 +90,12 @@ describe("Home", () => {
     render(<Home />);
 
     expect(
-      screen.getByRole("heading", { name: "まずは無料で、みんなの輪郭まで。" }),
+      screen.queryByRole("heading", { name: "まずは無料で、みんなの輪郭まで。" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText("0円")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "1組300円で、こんな関係レポートが読めます。" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("0円")).toBeInTheDocument();
-    expect(screen.getByText("1組 300円")).toBeInTheDocument();
-    expect(screen.getByText("みんなの関係マップ")).toBeInTheDocument();
-    expect(screen.getByText("ふたりでいるときのヒント")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "十二支の関係" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "五行と陰陽" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "MBTIの4つの軸" })).toBeInTheDocument();

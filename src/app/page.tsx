@@ -100,46 +100,13 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="value-ledger" aria-labelledby="value-ledger-title">
-          <header className="value-ledger__header">
-            <p>FREE → PAIR REPORT</p>
-            <h2 id="value-ledger-title" aria-label="まずは無料で、みんなの輪郭まで。">
-              まずは無料で、<br />みんなの輪郭まで。
-            </h2>
-          </header>
-
-          <div className="value-ledger__tiers">
-            <article className="value-ledger__tier" data-tier="free">
-              <div className="value-ledger__tier-heading">
-                <span>0円</span>
-                <h3>グループで楽しめること</h3>
-              </div>
-              <ul>
-                <li>自分の十二支タイプ</li>
-                <li>みんなの関係マップ</li>
-                <li>関係のひとことラベル</li>
-              </ul>
-            </article>
-
-            <article className="value-ledger__tier" data-tier="paid">
-              <div className="value-ledger__tier-heading">
-                <span>1組 300円</span>
-                <h3>気になるふたりを、もう少し深く</h3>
-              </div>
-              <ul>
-                <li>十二支・五行・陰陽・MBTIの読み解き</li>
-                <li>ふたりでいるときのヒント</li>
-                <li>それぞれに向けた関わり方</li>
-              </ul>
-            </article>
-          </div>
-
+        <section className="value-ledger" aria-labelledby="report-preview-title">
           <section className="report-preview" aria-labelledby="report-preview-title">
             <header className="report-preview__header">
-              <span className="report-preview__sample-label">SAMPLE</span>
+              <span className="report-preview__sample-label">300円</span>
               <div>
-                <p>PAIR REPORT / 01</p>
-                <h3 id="report-preview-title">関係レポートの表示イメージ</h3>
+                <p>ONE PAIR / ONE TIME</p>
+                <h2 id="report-preview-title">1組300円で、こんな関係レポートが読めます。</h2>
               </div>
             </header>
 
@@ -206,10 +173,6 @@ export default function Home() {
               このサンプルは表示イメージです。内容はふたりの組み合わせによって変わります。
             </p>
           </section>
-
-          <p className="value-ledger__note">
-            自分の結果とグループ参加は無料。必要な関係だけ、あとから解放できます。
-          </p>
         </section>
 
         <section className="trust-notes" aria-labelledby="trust-notes-title">
