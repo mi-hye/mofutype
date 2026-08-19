@@ -499,7 +499,6 @@ body:has(.group-share-backdrop) { overflow: hidden; }
   .form-field input:hover, .form-field select:hover { border-color: var(--accent-blue); }
   .unknown-toggle:hover { transform: translateY(-1px); }
   .zodiac-avatar:hover { box-shadow: 0 0 0 1px var(--accent-navy), 0 13px 28px rgb(var(--ink-rgb) / 18%); transform: translateY(-2px); }
-  .zodiac-graph-node:hover { transform: translateY(-2px); }
   .group-graph__accessible button:hover { background: var(--surface-mint); }
 }
 
