@@ -108,6 +108,12 @@ export function GroupShareControls({
     return () => document.removeEventListener("keydown", closeOnEscape);
   }, [open]);
 
+  useEffect(() => {
+    if (!message) return;
+    const timer = window.setTimeout(() => setMessage(null), 2400);
+    return () => window.clearTimeout(timer);
+  }, [message]);
+
   const payload = useMemo(() => {
     try {
       if (!resolvedOrigin) return null;
@@ -133,6 +139,13 @@ export function GroupShareControls({
   const browserClipboard: ClipboardApi | null = writeClipboard === undefined
     ? (typeof document !== "undefined" ? writeBrowserClipboard : null)
     : writeClipboard;
+  const toastCopy = message === "shared"
+    ? "共有しました"
+    : message === "copied"
+      ? "招待リンクをコピーしました"
+      : message === "error"
+        ? "共有できませんでした。もう一度お試しください。"
+        : null;
 
   async function runAction(action: "share" | "copy") {
     if (loading) return;
@@ -212,10 +225,15 @@ export function GroupShareControls({
         </div>,
         document.body,
       ) : null}
-      {message === "shared" ? <p className="group-share-feedback" role="status">共有しました</p> : null}
-      {message === "copied" ? <p className="group-share-feedback" role="status">招待リンクをコピーしました</p> : null}
-      {message === "error" ? (
-        <p className="group-share-feedback" role="alert">共有できませんでした。もう一度お試しください。</p>
+      {toastCopy && typeof document !== "undefined" ? createPortal(
+        <p
+          className="group-share-toast"
+          data-tone={message === "error" ? "danger" : "success"}
+          role={message === "error" ? "alert" : "status"}
+        >
+          {toastCopy}
+        </p>,
+        document.body,
       ) : null}
     </div>
   );

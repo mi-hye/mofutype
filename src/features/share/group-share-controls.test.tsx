@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
@@ -81,6 +81,36 @@ describe("GroupShareControls", () => {
     expect(screen.getByTestId("share-icon")).toHaveAttribute("aria-hidden", "true");
   });
 
+  it("shows copy feedback as a temporary body-level toast", async () => {
+    vi.useFakeTimers();
+    try {
+      render(
+        <GroupShareControls
+          groupName="なかよし"
+          memberCount={3}
+          inviteToken={token}
+          origin="https://mofu.example"
+          shareApi={null}
+          writeClipboard={vi.fn(async () => undefined)}
+        />,
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: "招待リンクを共有" }));
+      await act(async () => {
+        fireEvent.click(screen.getByRole("button", { name: "リンクをコピー" }));
+        await Promise.resolve();
+      });
+      const toast = screen.getByRole("status");
+      expect(toast).toHaveClass("group-share-toast");
+      expect(toast.parentElement).toBe(document.body);
+
+      await act(async () => vi.advanceTimersByTimeAsync(2400));
+      expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("falls back to a user-gesture copy when the secure Clipboard API is unavailable", async () => {
     const user = userEvent.setup();
     const clipboardDescriptor = Object.getOwnPropertyDescriptor(navigator, "clipboard");
@@ -146,7 +176,7 @@ describe("GroupShareControls", () => {
     await user.click(screen.getByRole("button", { name: "招待リンクを共有" }));
     await user.click(screen.getByRole("button", { name: "アプリで共有" }));
     const feedback = await screen.findByRole("alert");
-    expect(feedback).toHaveClass("group-share-feedback");
+    expect(feedback).toHaveClass("group-share-toast");
     expect(feedback).toHaveTextContent(
       "共有できませんでした。もう一度お試しください。",
     );

@@ -265,7 +265,6 @@ button, input, textarea, select { font: inherit; }
 .group-member-shell { width: min(calc(100% - 1.5rem), 82rem); padding-top: 1.25rem; }
 .group-member-shell h1 { max-width: 16ch; margin: 0.45rem 0 0; color: var(--accent-navy); font-family: var(--font-display); font-size: clamp(2.35rem, 8vw, 4.8rem); font-weight: 700; letter-spacing: -0.03em; line-height: 1.08; overflow-wrap: anywhere; }
 .group-member-header { position: relative; isolation: isolate; display: grid; gap: var(--space-18); overflow: hidden; margin-bottom: 1.4rem; border: var(--border-panel); border-radius: 2.35rem 2.15rem 2.5rem 2rem / 2.15rem 2.45rem 2.05rem 2.35rem; outline: 1px solid rgb(var(--ink-rgb) / 12%); outline-offset: -5px; padding: clamp(1rem, 4vw, 1.8rem); background: var(--surface-elevated); box-shadow: 3px 4px 0 rgb(var(--ink-rgb) / 6%), var(--shadow-pop), inset 0 0 0 4px rgb(255 255 255 / 46%); animation: rise-in 420ms ease-out both; }
-.group-member-header:has(.group-share-feedback) { padding-bottom: calc(clamp(1rem, 4vw, 1.8rem) + 2.5rem); }
 .group-member-header::after { display: none; }
 .group-member-header p { margin-block: 0.45rem 0; color: var(--text-muted); }
 .group-member-header__topbar { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 0.75rem; }
@@ -276,8 +275,8 @@ button, input, textarea, select { font: inherit; }
 .group-member-connection { display: grid; justify-items: start; gap: 0.7rem; }
 .group-share-controls { display: grid; min-width: 0; justify-items: end; gap: 0.55rem; }
 .group-share-controls p { margin: 0; color: var(--text-muted); font-size: 0.75rem; font-weight: 650; }
-.group-share-feedback { position: absolute; right: clamp(1rem, 4vw, 1.8rem); bottom: clamp(1rem, 4vw, 1.8rem); left: clamp(1rem, 4vw, 1.8rem); margin: 0; color: var(--status-success); font-size: 0.8rem; font-weight: 700; line-height: 1.35; overflow-wrap: anywhere; }
-.group-share-feedback[role="alert"] { color: var(--status-danger); }
+.group-share-toast { position: fixed; right: max(1rem, env(safe-area-inset-right)); bottom: max(1rem, env(safe-area-inset-bottom)); left: max(1rem, env(safe-area-inset-left)); z-index: 120; width: fit-content; max-width: min(28rem, calc(100% - 2rem)); margin-inline: auto; border-radius: 999px; padding: 0.68rem 1rem; background: var(--ink); color: var(--paper-warm); box-shadow: 0 12px 30px rgb(var(--shadow-rgb) / 24%); font-size: 0.8rem; font-weight: 750; line-height: 1.35; text-align: center; overflow-wrap: anywhere; pointer-events: none; animation: sheet-up 180ms ease-out both; }
+.group-share-toast[data-tone="danger"] { background: var(--status-danger); color: #fff; }
 .group-share-button { width: 46px; min-width: 46px; min-height: 46px; padding: 0 !important; border: 0 !important; border-radius: 0.8rem; background: transparent !important; box-shadow: none !important; }
 .group-share-button, .group-refresh-button { animation: none; filter: none; }
 .group-share-button::before, .group-refresh-button::before { display: none; }

@@ -137,8 +137,9 @@ describe("production source safety", () => {
     expect(globalStyles).toMatch(
       /\.group-member-actions\s*\{[^}]*flex-wrap:\s*nowrap[^}]*justify-content:\s*flex-end/,
     );
+    expect(globalStyles).not.toContain(".group-member-header:has(.group-share-feedback)");
     expect(globalStyles).toMatch(
-      /\.group-member-header:has\(\.group-share-feedback\)[^{]*\{[^}]*padding-bottom:/,
+      /\.group-share-toast\s*\{[^}]*position:\s*fixed[^}]*env\(safe-area-inset-bottom\)/,
     );
     expect(globalStyles).toMatch(
       /\.group-share-backdrop\s*\{[^}]*height:\s*100dvh[^}]*env\(safe-area-inset-bottom\)/,
