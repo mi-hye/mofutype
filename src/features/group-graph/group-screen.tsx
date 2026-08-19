@@ -343,23 +343,38 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken, curren
   return (
     <main className="group-member-shell">
       <header className="group-member-header">
-        <div>
+        <div className="group-member-header__topbar">
           <p className="hero__eyebrow">MofuType グループ</p>
+          <div className="group-member-actions">
+            {inviteToken ? (
+              <GroupShareControls
+                groupName={aggregate.group.name}
+                inviteToken={inviteToken}
+                memberCount={aggregate.members.length}
+              />
+            ) : null}
+            <Button
+              type="button"
+              className="group-refresh-button"
+              variant="ghost"
+              aria-label="最新の情報に更新"
+              title="最新の情報に更新"
+              disabled={!repository}
+              onClick={() => void refresh()}
+            >
+              <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24">
+                <path d="M20 11a8 8 0 1 0-2.34 5.66M20 4v7h-7" />
+              </svg>
+            </Button>
+          </div>
+        </div>
+        <div className="group-member-header__identity">
           <h1>{aggregate.group.name}</h1>
           <p>メンバー {aggregate.members.length}人</p>
         </div>
-        <div className="group-member-actions">
-          {status === "offline" || status === "error"
-            ? <StatusBanner status={status} />
-            : null}
-          {inviteToken ? (
-            <GroupShareControls
-              groupName={aggregate.group.name}
-              inviteToken={inviteToken}
-              memberCount={aggregate.members.length}
-            />
-          ) : null}
-          {status === "offline" || status === "error" ? (
+        {status === "offline" || status === "error" ? (
+          <div className="group-member-connection">
+            <StatusBanner status={status} />
             <Button type="button" variant="secondary" onClick={() => {
               setStatus("connecting");
               setLoadError(false);
@@ -367,21 +382,8 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken, curren
             }}>
               接続を再試行
             </Button>
-          ) : null}
-          <Button
-            type="button"
-            className="group-refresh-button"
-            variant="ghost"
-            aria-label="最新の情報に更新"
-            title="最新の情報に更新"
-            disabled={!repository}
-            onClick={() => void refresh()}
-          >
-            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24">
-              <path d="M20 11a8 8 0 1 0-2.34 5.66M20 4v7h-7" />
-            </svg>
-          </Button>
-        </div>
+          </div>
+        ) : null}
       </header>
 
       {loadError ? (

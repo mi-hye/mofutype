@@ -268,9 +268,12 @@ button, input, textarea, select { font: inherit; }
 .group-member-header:has(.group-share-feedback) { padding-bottom: calc(clamp(1rem, 4vw, 1.8rem) + 2.5rem); }
 .group-member-header::after { display: none; }
 .group-member-header p { margin-block: 0.45rem 0; color: var(--text-muted); }
-.group-member-header:not(:has(.status-banner)) .group-member-actions { position: static; display: flex; flex-wrap: nowrap; align-items: center; justify-self: end; gap: 0.25rem; }
-.group-member-actions { display: flex; min-width: 0; flex-wrap: wrap; align-items: flex-start; gap: 0.7rem; }
+.group-member-header__topbar { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 0.75rem; }
+.group-member-header__topbar > .hero__eyebrow { order: 0; flex: 0 1 auto; margin: 0; }
+.group-member-header__identity { min-width: 0; }
+.group-member-actions { order: 1; display: flex; min-width: 0; flex: 0 0 auto; flex-wrap: nowrap; align-items: center; justify-content: flex-end; gap: 0.25rem; }
 .group-member-actions > * { max-width: 100%; }
+.group-member-connection { display: grid; justify-items: start; gap: 0.7rem; }
 .group-share-controls { display: grid; min-width: 0; justify-items: end; gap: 0.55rem; }
 .group-share-controls p { margin: 0; color: var(--text-muted); font-size: 0.75rem; font-weight: 650; }
 .group-share-feedback { position: absolute; right: clamp(1rem, 4vw, 1.8rem); bottom: clamp(1rem, 4vw, 1.8rem); left: clamp(1rem, 4vw, 1.8rem); margin: 0; color: var(--status-success); font-size: 0.8rem; font-weight: 700; line-height: 1.35; overflow-wrap: anywhere; }
@@ -486,11 +489,10 @@ body:has(.group-share-backdrop) { overflow: hidden; }
   .profile-step__intro h1 { font-size: 2rem; overflow-wrap: anywhere; }
   .profile-step .ui-card { padding: 1rem; }
   .group-member-shell { width: calc(100% - 0.75rem); }
-  .group-member-actions { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; }
-  .group-member-actions > .status-banner { grid-column: 1 / -1; }
-  .group-member-actions .ui-button { width: 100%; }
-  .group-member-actions .group-share-button { width: 44px; justify-self: start; }
-  .group-member-actions .group-refresh-button { width: 44px; justify-self: start; }
+  .group-member-header__topbar { gap: 0.35rem; }
+  .group-member-actions .group-share-button { width: 44px; }
+  .group-member-actions .group-refresh-button { width: 44px; }
+  .group-member-connection .ui-button { width: 100%; }
   .group-graph__canvas { min-height: 27rem; height: 68svh; }
   .group-graph__accessible:focus-within { padding: 0.85rem; }
   .group-graph__member-list, .group-graph__relationship-list { display: grid; }
@@ -521,8 +523,6 @@ body:has(.group-share-backdrop) { overflow: hidden; }
   .hero__actions { flex-direction: row; }
   .report-preview__layers { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .group-member-shell { width: min(calc(100% - 2rem), 82rem); padding-top: 2rem; }
-  .group-member-header { grid-template-columns: minmax(0, 1fr) auto; align-items: end; }
-  .group-member-actions { justify-content: flex-end; }
   .group-share-backdrop { align-items: center; }
   .relation-sheet__details { grid-template-columns: minmax(0, 1fr); }
   .relation-sheet__status { grid-column: 1 / -1; }

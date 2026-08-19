@@ -131,14 +131,11 @@ describe("production source safety", () => {
     expect(globalStyles).toMatch(
       /html\s*\{[^}]*-webkit-text-size-adjust:\s*100%[^}]*text-size-adjust:\s*100%/,
     );
-    expect(globalStyles).toContain(
-      ".group-member-header:not(:has(.status-banner)) .group-member-actions",
+    expect(globalStyles).toMatch(
+      /\.group-member-header__topbar\s*\{[^}]*display:\s*flex[^}]*align-items:\s*center[^}]*justify-content:\s*space-between/,
     );
     expect(globalStyles).toMatch(
-      /\.group-member-header:not\(:has\(\.status-banner\)\) \.group-member-actions\s*\{[^}]*position:\s*static/,
-    );
-    expect(globalStyles).not.toContain(
-      ".group-member-header:not(:has(.status-banner)) > div:first-child { padding-right:",
+      /\.group-member-actions\s*\{[^}]*flex-wrap:\s*nowrap[^}]*justify-content:\s*flex-end/,
     );
     expect(globalStyles).toMatch(
       /\.group-member-header:has\(\.group-share-feedback\)[^{]*\{[^}]*padding-bottom:/,

@@ -121,6 +121,18 @@ function repository(initial: GroupAggregate) {
 }
 
 describe("GroupScreen", () => {
+  it("keeps the group capsule and share actions in one aligned top row", () => {
+    const initial = aggregate();
+    const repo = repository(initial);
+
+    render(<GroupScreen initialAggregate={initial} repository={repo.api} inviteToken="token-a" />);
+
+    const topbar = screen.getByText("MofuType グループ").closest(".group-member-header__topbar");
+    expect(topbar).not.toBeNull();
+    expect(topbar?.querySelector(".group-member-actions")).not.toBeNull();
+    expect(topbar).toContainElement(screen.getByRole("button", { name: "最新の情報に更新" }));
+  });
+
   it("shows the signed-in member's derived astrology result below the graph", () => {
     const initial = aggregate("g1", [
       member("a", "わたし"),
