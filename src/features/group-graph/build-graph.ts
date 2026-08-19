@@ -295,7 +295,7 @@ export function decorateGraph(
     const category = edge.data.relationship.category;
     const strokeWidth = incident ? (unlocked ? 5 : 4) : unlocked ? 4 : 3;
     const emphasized = selectedLineColor !== null ? matchesColor : incident;
-    const opacity = visible ? emphasized ? 1 : 0.4 : 0;
+    const opacity = visible ? emphasized ? 1 : 0.72 : 0;
     return {
       ...edge,
       animated: false,

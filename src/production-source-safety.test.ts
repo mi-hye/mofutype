@@ -323,7 +323,13 @@ describe("production source safety", () => {
       "--animal-rat-border",
       "--animal-rabbit-border",
     ]) expect(globalStyles).toContain(token);
-    expect(globalStyles).toContain("--relationship-warm: #b87716");
+    for (const token of [
+      "--relationship-calm: #009b63",
+      "--relationship-clear: #1677ff",
+      "--relationship-neutral: #8a3ffc",
+      "--relationship-warm: #e75a00",
+      "--relationship-careful: #e12d63",
+    ]) expect(globalStyles).toContain(token);
     expect(globalStyles).toMatch(/\.zodiac-graph-node__frame::before[^}]*border:\s*2px solid var\(--node-border\)[^}]*filter:\s*none/);
     expect(globalStyles).toMatch(/\.zodiac-graph-node__type[^}]*top:\s*0\.72rem/);
     expect(globalStyles).toMatch(/\.zodiac-graph-node__frame\[data-zodiac="tiger"\][^}]*--node-pastel:\s*var\(--animal-tiger-pastel\)/);

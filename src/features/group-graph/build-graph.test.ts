@@ -193,7 +193,7 @@ describe("buildGraph", () => {
 
     expect(graph.edges.every((edge) => !edge.animated)).toBe(true);
     expect(graph.edges.every((edge) => edge.style?.strokeWidth === 3)).toBe(true);
-    expect(graph.edges.every((edge) => edge.style?.opacity === 0.4)).toBe(true);
+    expect(graph.edges.every((edge) => edge.style?.opacity === 0.72)).toBe(true);
     expect(graph.edges.every((edge) => edge.label === undefined)).toBe(true);
     expect(graph.edges.every((edge) => edge.style?.strokeDasharray === undefined)).toBe(true);
   });
@@ -250,7 +250,7 @@ describe("buildGraph", () => {
 
     expect(visibleEdges).toHaveLength(4);
     expect(selectedEdges.every((edge) => edge.style?.opacity === 1)).toBe(true);
-    expect(unselectedEdges.every((edge) => edge.style?.opacity === 0.4)).toBe(true);
+    expect(unselectedEdges.every((edge) => edge.style?.opacity === 0.72)).toBe(true);
     expect(visibleEdges.every((edge) => edge.labelBgStyle?.fill === edge.style?.stroke))
       .toBe(true);
     expect(filtered.edges.filter((edge) => Number(edge.style?.opacity) === 0)
@@ -270,7 +270,7 @@ describe("buildGraph", () => {
     expect(graph.edges.find((edge) => edge.id === "a:c")?.data?.unlocked).toBe(false);
     expect(graph.edges.find((edge) => edge.id === "a:b")?.className).toContain("unlocked");
     expect(graph.edges.find((edge) => edge.id === "a:c")?.className).toContain("locked");
-    expect(graph.edges.find((edge) => edge.id === "a:c")?.style?.opacity).toBe(0.4);
+    expect(graph.edges.find((edge) => edge.id === "a:c")?.style?.opacity).toBe(0.72);
     expect(Number(graph.edges.find((edge) => edge.id === "a:b")?.style?.strokeWidth))
       .toBeGreaterThan(Number(graph.edges.find((edge) => edge.id === "a:c")?.style?.strokeWidth));
     expect(graph.edges[0].data?.relationship.pairKey).toBe(graph.edges[0].id);

@@ -44,11 +44,11 @@
   --status-danger: var(--color-error-text);
   --edge-strong: #934b43;
   --edge-soft: #55725f;
-  --relationship-warm: #b87716;
-  --relationship-clear: #2f72bd;
-  --relationship-calm: #2f7b55;
-  --relationship-neutral: #765a96;
-  --relationship-careful: #a34d59;
+  --relationship-warm: #e75a00;
+  --relationship-clear: #1677ff;
+  --relationship-calm: #009b63;
+  --relationship-neutral: #8a3ffc;
+  --relationship-careful: #e12d63;
   --relationship-warm-label-text: #2b1814;
   --animal-tiger-pastel: #fff0b8;
   --animal-rat-pastel: #e4e8ef;
