@@ -139,8 +139,8 @@ button, input, textarea, select { font: inherit; }
 .report-preview__header h2 { max-width: 28rem; margin: 0; color: var(--ink); font-size: clamp(1.05rem, 4.4vw, 1.45rem); line-height: 1.35; text-wrap: balance; }
 .report-preview__paper { position: relative; display: grid; min-width: 0; gap: 1.15rem; overflow: hidden; border: var(--border-panel); border-radius: 1.35rem 1.15rem 1.5rem 1.05rem / 1.1rem 1.45rem 1.08rem 1.4rem; padding: clamp(1rem, 4.5vw, 1.45rem); background: var(--surface-elevated); box-shadow: 3px 4px 0 rgb(var(--ink-rgb) / 6%); }
 .report-preview__paper::after { position: absolute; right: -2.25rem; bottom: -2.7rem; width: 7rem; aspect-ratio: 1; border: 1px solid rgb(var(--ink-rgb) / 10%); border-radius: 50%; background: var(--animal-rabbit-pastel); content: ""; opacity: 0.5; }
-.report-sample-graph { display: grid; z-index: 1; min-width: 0; gap: calc(0.55rem - 2px); }
-.report-sample-graph__eyebrow { margin: 0; color: var(--accent-vermilion); font-size: 0.62rem; font-weight: 850; letter-spacing: 0.12em; }
+.report-sample-graph { display: grid; z-index: 1; min-width: 0; gap: 0; }
+.report-sample-graph__eyebrow { margin: 0 0 calc(0.55rem - 2px); color: var(--accent-vermilion); font-size: 0.62rem; font-weight: 850; letter-spacing: 0.12em; }
 .report-sample-graph .group-graph__canvas { height: 12rem; min-height: 12rem; }
 .report-sample-graph .group-graph { gap: calc(1rem - 2px); }
 .report-sample-graph__note { margin: 0; color: var(--text-muted); font-size: 0.7rem; line-height: 1.55; }
