@@ -103,10 +103,10 @@ export default function Home() {
         <section className="value-ledger" aria-labelledby="report-preview-title">
           <section className="report-preview" aria-labelledby="report-preview-title">
             <header className="report-preview__header">
-              <span className="report-preview__sample-label">300円</span>
+              <span className="report-preview__sample-label">買い切り</span>
               <div>
                 <p>ONE PAIR / ONE TIME</p>
-                <h2 id="report-preview-title">1組300円で、こんな関係レポートが読めます。</h2>
+                <h2 id="report-preview-title">気になるふたりを、300円で深掘り。</h2>
               </div>
             </header>
 
@@ -120,52 +120,32 @@ export default function Home() {
               <ReportSampleGraph />
 
               <div className="report-preview__lead">
-                <span>ふたりでいるとき</span>
+                <span>FREE PREVIEW</span>
                 <strong>違うペースが、いいリズムになる。</strong>
-                <p>
-                  感じ方と動き方の違いを、十二支・五行・陰陽・MBTIの4つの視点から読み解きます。
-                </p>
+                <p>この先に、すれ違う理由と仲よくなるコツ。</p>
               </div>
 
-              <div className="report-preview__layers" aria-label="レポートに含まれる3つの分析">
+              <div className="report-preview__layers" aria-label="300円でわかる3つのポイント">
                 <section>
                   <span>01</span>
-                  <h4>十二支の関係</h4>
-                  <strong>違いが刺激になる関係</strong>
-                  <p>慎重に確かめたいAさんと、まず動いてみたいBさん。違う速さが、新しい選択肢を生みます。</p>
+                  <h4>十二支・五行・陰陽</h4>
+                  <strong>惹かれ合う理由</strong>
                 </section>
                 <section>
                   <span>02</span>
-                  <h4>五行と陰陽</h4>
-                  <strong>整える力と、動かす力</strong>
-                  <p>考えを形にする力と、場を前へ進める力。役割が自然に分かれると、ふたりの強みが重なります。</p>
+                  <h4>MBTIの4つの軸</h4>
+                  <strong>すれ違いのクセ</strong>
                 </section>
                 <section>
                   <span>03</span>
-                  <h4>MBTIの4つの軸</h4>
-                  <strong>答えの見つけ方が違うふたり</strong>
-                  <p>ひとりで深める時間と、話しながら広げる時間。結論までの道筋を共有すると伝わりやすくなります。</p>
+                  <h4>Aさんへ・Bさんへ</h4>
+                  <strong>もっと合うヒント</strong>
                 </section>
               </div>
 
-              <dl className="report-preview__contents">
-                <div>
-                  <dt>すれ違うとき</dt>
-                  <dd>急いで答えを出したいときほど、考える時間の差がすれ違いに見えやすくなります。</dd>
-                </div>
-                <div>
-                  <dt>Aさんへ</dt>
-                  <dd>Bさんのアイデアが広がる時間を少し待つと、あなたの整理力がもっと伝わります。</dd>
-                </div>
-                <div>
-                  <dt>Bさんへ</dt>
-                  <dd>思いつきを先に共有したら、Aさんが考えをまとめる余白も一緒に渡してみてください。</dd>
-                </div>
-              </dl>
-
               <p className="report-preview__purchase-note">
-                <strong>1組 300円・買い切り</strong>
-                4つの視点と、ふたりそれぞれへのヒントをまとめて読めます。追加料金や自動更新はありません。
+                <strong>気になる1組だけ、300円。</strong>
+                追加料金なし。自動更新なし。
               </p>
             </div>
 

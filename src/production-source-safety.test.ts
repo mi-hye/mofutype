@@ -332,8 +332,10 @@ describe("production source safety", () => {
     const pageSource = readFileSync(path.join(sourceRoot, "app/page.tsx"), "utf8");
 
     expect(pageSource).toContain('className="report-preview"');
-    expect(pageSource).toContain("1組300円で、こんな関係レポートが読めます。");
+    expect(pageSource).toContain("気になるふたりを、300円で深掘り。");
     expect(pageSource).toContain("ONE PAIR / ONE TIME");
+    expect(pageSource).toContain("気になる1組だけ、300円。");
+    expect(pageSource).not.toContain("急いで答えを出したいときほど");
     expect(pageSource).toContain("このサンプルは表示イメージです。");
     expect(pageSource).not.toMatch(/お客様の声|満足度|診断精度|当たる/);
     expect(globalStyles).toContain(".report-preview__paper {");

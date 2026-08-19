@@ -17,7 +17,7 @@ describe("ReportSampleGraph", () => {
     render(<ReportSampleGraph />);
 
     expect(screen.getByRole("region", { name: "メンバー関係性グラフ" })).toBeInTheDocument();
-    expect(screen.getByText(/実際のグループ画面と同じ関係グラフです/)).toBeInTheDocument();
+    expect(screen.getByText("Aさん × Bさんの関係だけをピックアップ。")).toBeInTheDocument();
 
     const members = graphProps.current?.members as Array<{
       id: string;
@@ -25,8 +25,8 @@ describe("ReportSampleGraph", () => {
       zodiacId: string;
       profile: { zodiacId: string; mbti: string };
     }>;
-    expect(members).toHaveLength(4);
-    expect(members.map(({ nickname }) => nickname)).toEqual(["Aさん", "Bさん", "Cさん", "Dさん"]);
+    expect(members).toHaveLength(2);
+    expect(members.map(({ nickname }) => nickname)).toEqual(["Aさん", "Bさん"]);
     expect(members.every((member) => member.zodiacId === member.profile.zodiacId)).toBe(true);
     expect(graphProps.current?.unlocks).toEqual([]);
   });

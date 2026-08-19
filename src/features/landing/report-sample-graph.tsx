@@ -36,8 +36,6 @@ function sampleMember(
 const SAMPLE_MEMBERS: readonly RelationshipGraphMember[] = [
   sampleMember("sample-a", "Aさん", "rat", "INTJ"),
   sampleMember("sample-b", "Bさん", "rabbit", "ENFP"),
-  sampleMember("sample-c", "Cさん", "horse", "ISFJ"),
-  sampleMember("sample-d", "Dさん", "sheep", "ENTP"),
 ];
 
 const ignoreSamplePairSelection = () => undefined;
@@ -45,14 +43,14 @@ const ignoreSamplePairSelection = () => undefined;
 export function ReportSampleGraph() {
   return (
     <div className="report-sample-graph">
-      <p className="report-sample-graph__eyebrow">GROUP RELATION MAP</p>
+      <p className="report-sample-graph__eyebrow">PAIR RELATION MAP</p>
       <GroupGraph
         members={SAMPLE_MEMBERS}
         unlocks={[]}
         onPairSelect={ignoreSamplePairSelection}
       />
       <p className="report-sample-graph__note">
-        実際のグループ画面と同じ関係グラフです。メンバーを選ぶと、つながる線をまとめて確認できます。
+        Aさん × Bさんの関係だけをピックアップ。
       </p>
     </div>
   );

@@ -145,7 +145,7 @@ button, input, textarea, select { font: inherit; }
 .report-preview__pair i { height: 1px; background: var(--relationship-calm); }
 .report-sample-graph { display: grid; z-index: 1; min-width: 0; gap: 0.55rem; }
 .report-sample-graph__eyebrow { margin: 0; color: var(--accent-vermilion); font-size: 0.62rem; font-weight: 850; letter-spacing: 0.12em; }
-.report-sample-graph .group-graph__canvas { height: 20rem; min-height: 20rem; }
+.report-sample-graph .group-graph__canvas { height: 15rem; min-height: 15rem; }
 .report-sample-graph__note { margin: 0; color: var(--text-muted); font-size: 0.7rem; line-height: 1.55; }
 .report-preview__lead { display: grid; gap: 0.45rem; border-block: 1px solid rgb(var(--ink-rgb) / 20%); padding-block: 1rem; }
 .report-preview__lead > span { color: var(--accent-vermilion); font-size: 0.68rem; font-weight: 800; letter-spacing: 0.08em; }
@@ -156,12 +156,6 @@ button, input, textarea, select { font: inherit; }
 .report-preview__layers section > span { color: var(--accent-vermilion); font-size: 0.6rem; font-weight: 850; letter-spacing: 0.12em; }
 .report-preview__layers h4 { margin: 0; color: var(--ink); font-size: 0.76rem; line-height: 1.4; }
 .report-preview__layers strong { color: var(--ink); font-size: 0.88rem; line-height: 1.45; }
-.report-preview__layers p { margin: 0; color: var(--text-muted); font-size: 0.72rem; line-height: 1.65; overflow-wrap: anywhere; }
-.report-preview__contents { display: grid; z-index: 1; gap: 0; margin: 0; }
-.report-preview__contents > div { display: grid; grid-template-columns: 5rem minmax(0, 1fr); gap: 0.65rem; border-bottom: 1px dotted rgb(var(--ink-rgb) / 24%); padding: 0.68rem 0; }
-.report-preview__contents > div:last-child { border-bottom: 0; }
-.report-preview__contents dt { color: var(--ink); font-size: 0.73rem; font-weight: 800; }
-.report-preview__contents dd { margin: 0; color: var(--text-muted); font-size: 0.76rem; line-height: 1.55; overflow-wrap: anywhere; }
 .report-preview__purchase-note { display: grid; z-index: 1; gap: 0.25rem; margin: 0; border-top: 1.5px solid rgb(var(--ink-rgb) / 28%); padding-top: 0.9rem; color: var(--text-muted); font-size: 0.72rem; line-height: 1.6; }
 .report-preview__purchase-note strong { width: fit-content; border-radius: 999px; padding: 0.3rem 0.65rem; background: var(--butter); color: var(--ink); font-size: 0.76rem; line-height: 1.2; }
 .report-preview__disclaimer { margin: 0; color: var(--text-muted); font-size: 0.7rem; line-height: 1.6; }

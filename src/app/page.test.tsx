@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("@/features/landing/report-sample-graph", () => ({
   ReportSampleGraph: () => (
     <section aria-label="メンバー関係性グラフ">
-      <p>実際のグループ画面と同じ関係グラフです。</p>
+      <p>Aさん × Bさんの関係だけをピックアップ。</p>
     </section>
   ),
 }));
@@ -94,15 +94,16 @@ describe("Home", () => {
     ).not.toBeInTheDocument();
     expect(screen.queryByText("0円")).not.toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: "1組300円で、こんな関係レポートが読めます。" }),
+      screen.getByRole("heading", { name: "気になるふたりを、300円で深掘り。" }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "十二支の関係" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "五行と陰陽" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "十二支・五行・陰陽" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "MBTIの4つの軸" })).toBeInTheDocument();
-    expect(screen.getByText("違いが刺激になる関係")).toBeInTheDocument();
-    expect(screen.getByText(/追加料金や自動更新はありません/)).toBeInTheDocument();
+    expect(screen.getByText("惹かれ合う理由")).toBeInTheDocument();
+    expect(screen.getByText("すれ違いのクセ")).toBeInTheDocument();
+    expect(screen.getByText("もっと合うヒント")).toBeInTheDocument();
+    expect(screen.getByText("追加料金なし。自動更新なし。")).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "メンバー関係性グラフ" })).toBeInTheDocument();
-    expect(screen.getByText(/実際のグループ画面と同じ関係グラフです/)).toBeInTheDocument();
+    expect(screen.getByText("Aさん × Bさんの関係だけをピックアップ。")).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "無料でグループを作る" })).not.toBeInTheDocument();
   });
 
