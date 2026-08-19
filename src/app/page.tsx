@@ -121,7 +121,10 @@ export default function Home() {
 
               <div className="report-preview__lead">
                 <span>FREE PREVIEW</span>
-                <strong>違うペースが、いいリズムになる。</strong>
+                <strong aria-label="違うペースが、いいリズムになる。">
+                  <span>違うペースが、</span>
+                  <span>いいリズムになる。</span>
+                </strong>
                 <p>この先に、すれ違う理由と仲よくなるコツ。</p>
               </div>
 

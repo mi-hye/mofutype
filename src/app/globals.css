@@ -150,6 +150,7 @@ button, input, textarea, select { font: inherit; }
 .report-preview__lead { display: grid; gap: 0.45rem; border-block: 1px solid rgb(var(--ink-rgb) / 20%); padding-block: 1rem; }
 .report-preview__lead > span { color: var(--accent-vermilion); font-size: 0.68rem; font-weight: 800; letter-spacing: 0.08em; }
 .report-preview__lead strong { max-width: 17ch; color: var(--ink); font-family: var(--font-display); font-size: clamp(1.35rem, 6vw, 2rem); letter-spacing: -0.035em; line-height: 1.25; text-wrap: balance; }
+.report-preview__lead strong > span { display: block; }
 .report-preview__lead p { max-width: 38rem; margin: 0; color: var(--text-muted); font-size: 0.8rem; line-height: 1.7; }
 .report-preview__layers { display: grid; z-index: 1; gap: 0.7rem; }
 .report-preview__layers section { display: grid; min-width: 0; align-content: start; gap: 0.35rem; border: 1px solid rgb(var(--ink-rgb) / 20%); border-radius: 1rem; padding: 0.85rem; background: rgb(var(--paper-rgb) / 62%); }

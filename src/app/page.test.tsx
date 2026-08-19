@@ -98,6 +98,8 @@ describe("Home", () => {
     ).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "十二支・五行・陰陽" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "MBTIの4つの軸" })).toBeInTheDocument();
+    expect(screen.getByText("違うペースが、")).toBeInTheDocument();
+    expect(screen.getByText("いいリズムになる。")).toBeInTheDocument();
     expect(screen.getByText("惹かれ合う理由")).toBeInTheDocument();
     expect(screen.getByText("すれ違いのクセ")).toBeInTheDocument();
     expect(screen.getByText("もっと合うヒント")).toBeInTheDocument();
