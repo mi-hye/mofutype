@@ -141,7 +141,7 @@ describe("GroupScreen", () => {
     ]);
     const repo = repository(initial);
 
-    render(<GroupScreen initialAggregate={initial} repository={repo.api} currentUserId="u-b" />);
+    render(<GroupScreen initialAggregate={initial} repository={repo.api} currentUserId="u-b" inviteToken={"a".repeat(64)} />);
 
     expect(screen.getByText("わたしの四柱推命")).toBeInTheDocument();
     expect(screen.queryByText("MY PROFILE")).not.toBeInTheDocument();
@@ -157,6 +157,7 @@ describe("GroupScreen", () => {
     expect(screen.getByRole("heading", { name: "火・陽の行動スタイル" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "うさぎ × ENTJ × 火・陽" })).toBeInTheDocument();
     expect(screen.getByRole("list", { name: "診断結果の詳細" })).toHaveTextContent("ENTJ火・陽出生時刻を反映");
+    expect(screen.getByRole("button", { name: "共有する" })).toBeInTheDocument();
     expect(screen.queryByText("たつタイプとして")).not.toBeInTheDocument();
   });
 

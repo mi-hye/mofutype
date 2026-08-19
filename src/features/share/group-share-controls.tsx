@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 
 import { Button } from "@/components/ui/button";
@@ -68,6 +68,7 @@ interface GroupShareControlsProps {
   origin?: string;
   shareApi?: ShareApi | null;
   writeClipboard?: ClipboardApi | null;
+  triggerLabel?: string;
 }
 
 export function GroupShareControls({
@@ -77,6 +78,7 @@ export function GroupShareControls({
   origin,
   shareApi,
   writeClipboard,
+  triggerLabel,
 }: GroupShareControlsProps) {
   const [message, setMessage] = useState<"shared" | "copied" | "error" | null>(null);
   const [loading, setLoading] = useState(false);
@@ -84,6 +86,9 @@ export function GroupShareControls({
   const mounted = useRef(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const firstActionRef = useRef<HTMLButtonElement>(null);
+  const controlId = useId();
+  const actionsId = `${controlId}-group-share-actions`;
+  const titleId = `${controlId}-group-share-title`;
   const browserOrigin = useSyncExternalStore(
     subscribeToNoopStore,
     browserOriginSnapshot,
@@ -171,16 +176,16 @@ export function GroupShareControls({
   }
 
   return (
-    <div className="group-share-controls">
+    <div className="group-share-controls" data-trigger={triggerLabel ? "text" : "icon"}>
       <Button
         ref={triggerRef}
         type="button"
-        className="group-share-button"
+        className={triggerLabel ? "my-result-card__share-button" : "group-share-button"}
         variant="secondary"
-        size="sm"
+        size={triggerLabel ? "md" : "sm"}
         loading={loading}
-        aria-label="招待リンクを共有"
-        aria-controls="group-share-actions"
+        aria-label={triggerLabel ?? "招待リンクを共有"}
+        aria-controls={actionsId}
         aria-expanded={open}
         title="招待リンクを共有"
         onClick={() => {
@@ -188,9 +193,18 @@ export function GroupShareControls({
           setOpen((value) => !value);
         }}
       >
-        <svg data-testid="share-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24">
-          <path d="M12 3v12m0-12 4 4m-4-4L8 7M5 11v8h14v-8" />
-        </svg>
+        {triggerLabel ? (
+          <>
+            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24">
+              <path d="M12 3v12m0-12 4 4m-4-4L8 7M5 11v8h14v-8" />
+            </svg>
+            <span>{triggerLabel}</span>
+          </>
+        ) : (
+          <svg data-testid="share-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24">
+            <path d="M12 3v12m0-12 4 4m-4-4L8 7M5 11v8h14v-8" />
+          </svg>
+        )}
       </Button>
       {open && typeof document !== "undefined" ? createPortal(
         <div className="group-share-backdrop" onMouseDown={(event) => {
@@ -198,10 +212,10 @@ export function GroupShareControls({
           setOpen(false);
           triggerRef.current?.focus();
         }}>
-          <section id="group-share-actions" className="group-share-actions"
-            role="dialog" aria-modal="true" aria-labelledby="group-share-title">
+          <section id={actionsId} className="group-share-actions"
+            role="dialog" aria-modal="true" aria-labelledby={titleId}>
             <header>
-              <h2 id="group-share-title">共有方法</h2>
+              <h2 id={titleId}>共有方法</h2>
               <button type="button" className="group-share-actions__close"
                 aria-label="共有メニューを閉じる" onClick={() => {
                   setOpen(false);

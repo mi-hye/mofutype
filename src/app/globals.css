@@ -371,6 +371,10 @@ body:has(.group-share-backdrop) { overflow: hidden; }
 .my-result-card__axes strong { color: var(--accent-navy); font-size: 0.72rem; }
 .my-result-card__axes span { color: var(--text-muted); font-size: 0.74rem; line-height: 1.55; }
 .my-result-card__note { grid-column: 1 / -1; color: var(--text-muted); font-size: 0.68rem; }
+.my-result-card__reading-grid > .group-share-controls { grid-column: 1 / -1; width: 100%; justify-items: center; padding-top: 0.15rem; }
+.my-result-card__share-button { width: min(100%, 22rem); }
+.my-result-card__share-button > span:first-child { display: inline-flex; align-items: center; gap: 0.45rem; }
+.my-result-card__share-button svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width: 1.8; }
 
 @media (max-width: 560px) {
   .my-result-card__reading-grid, .my-result-card__axes { grid-template-columns: 1fr; }

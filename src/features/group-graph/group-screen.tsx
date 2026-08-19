@@ -467,6 +467,14 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken, curren
             <small className="my-result-card__note">
               十二支・MBTI・五行と陰陽を重ねた、自己理解のための読み解きです。
             </small>
+            {inviteToken ? (
+              <GroupShareControls
+                groupName={aggregate.group.name}
+                inviteToken={inviteToken}
+                memberCount={aggregate.members.length}
+                triggerLabel="共有する"
+              />
+            ) : null}
           </div>
         </section>
       ) : null}
