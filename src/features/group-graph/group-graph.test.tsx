@@ -120,6 +120,25 @@ describe("GroupGraph", () => {
     expect(screen.queryByRole("status", { name: "選択中のメンバー" })).not.toBeInTheDocument();
   });
 
+  it("lets people filter relationship lines by their shared color", async () => {
+    const user = userEvent.setup();
+    render(<GroupGraph members={[member("a"), member("b"), member("c"), member("d")]} unlocks={[]} onPairSelect={vi.fn()} />);
+
+    const filters = screen.getByRole("group", { name: "関係線を色で絞り込む" });
+    const clearFilter = within(filters).getByRole("button", { name: "可能性・ペース" });
+    expect(within(filters).getByRole("button", { name: "すべて" })).toHaveAttribute("aria-pressed", "true");
+
+    await user.click(clearFilter);
+    expect(clearFilter).toHaveAttribute("aria-pressed", "true");
+    expect((flowProps.current?.edges as Array<MockEdge & { style?: React.CSSProperties }> )
+      .filter((edge) => Number(edge.style?.opacity) > 0)
+      .every((edge) => edge.style?.stroke === "var(--relationship-clear)"))
+      .toBe(true);
+
+    await user.click(clearFilter);
+    expect(within(filters).getByRole("button", { name: "すべて" })).toHaveAttribute("aria-pressed", "true");
+  });
+
   it("shows each free member's zodiac character title with and without MBTI", () => {
     render(
       <GroupGraph

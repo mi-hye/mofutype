@@ -21,6 +21,7 @@ import {
   type RelationshipFactory,
   type RelationshipGraphMember,
   type RelationshipGraphEdge,
+  type RelationshipLineColor,
   type ZodiacGraphNode,
 } from "./build-graph";
 
@@ -39,6 +40,14 @@ interface GroupGraphProps {
 }
 
 const nodeTypes = { zodiac: ZodiacNode };
+const lineColorFilters: readonly {
+  value: RelationshipLineColor;
+  label: string;
+}[] = [
+  { value: "calm", label: "息ぴったり" },
+  { value: "clear", label: "可能性・ペース" },
+  { value: "warm", label: "いい刺激" },
+];
 
 function removeFromTabOrder(canvas: HTMLDivElement) {
   for (const element of canvas.querySelectorAll<HTMLElement>("a, button, [tabindex]")) {
@@ -63,6 +72,7 @@ function GroupGraphComponent({
   relationshipFactory = createEtoRelationship,
 }: GroupGraphProps) {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [selectedLineColor, setSelectedLineColor] = useState<RelationshipLineColor | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
   const membersVersion = graphMembersVersion(members);
   const topology = useMemo(
@@ -72,16 +82,18 @@ function GroupGraphComponent({
     [membersVersion, relationshipFactory],
   );
   const graph = useMemo(
-    () => decorateGraph(topology, selectedNodeId, unlocks),
-    [topology, selectedNodeId, unlocks],
+    () => decorateGraph(topology, selectedNodeId, unlocks, selectedLineColor),
+    [topology, selectedNodeId, unlocks, selectedLineColor],
   );
   const selectedMember = useMemo(
     () => members.find((member) => member.id === selectedNodeId) ?? null,
     [members, selectedNodeId],
   );
   const incidentEdges = useMemo(
-    () => graph.edges.filter((edge) => edge.data?.emphasis === "incident"),
-    [graph.edges],
+    () => selectedNodeId === null
+      ? []
+      : graph.edges.filter((edge) => edge.data.memberIds.includes(selectedNodeId)),
+    [graph.edges, selectedNodeId],
   );
   const fitViewPadding = members.length <= 6 ? 0.34 : 0.22;
 
@@ -134,6 +146,30 @@ function GroupGraphComponent({
           elementsSelectable
           proOptions={{ hideAttribution: true }}
         />
+      </div>
+
+      <div className="group-graph__filters" role="group" aria-label="関係線を色で絞り込む">
+        <button
+          type="button"
+          data-color="all"
+          aria-pressed={selectedLineColor === null}
+          onClick={() => setSelectedLineColor(null)}
+        >
+          すべて
+        </button>
+        {lineColorFilters.map((filter) => (
+          <button
+            key={filter.value}
+            type="button"
+            data-color={filter.value}
+            aria-pressed={selectedLineColor === filter.value}
+            onClick={() => setSelectedLineColor((current) =>
+              current === filter.value ? null : filter.value
+            )}
+          >
+            {filter.label}
+          </button>
+        ))}
       </div>
 
       {selectedMember ? (

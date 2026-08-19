@@ -220,6 +220,39 @@ describe("buildGraph", () => {
     },
   );
 
+  it("filters every calculated pair by relationship line color", () => {
+    const topology = buildGraphTopology([member("a"), member("b"), member("c"), member("d")]);
+    const categories = [
+      "NATURAL_INTERLOCK",
+      "EXPANDING_POSSIBILITIES",
+      "POSITIVE_STIMULATION",
+      "LEARNING_EACH_OTHERS_PACE",
+    ] as const;
+    const categorized = {
+      ...topology,
+      edges: topology.edges.map((edge, index) => ({
+        ...edge,
+        data: {
+          ...edge.data,
+          relationship: {
+            ...edge.data.relationship,
+            category: categories[index % categories.length],
+          },
+        },
+      })),
+    };
+
+    const filtered = decorateGraph(categorized, null, [], "clear");
+    const visibleEdges = filtered.edges.filter((edge) => Number(edge.style?.opacity) > 0);
+
+    expect(visibleEdges).toHaveLength(3);
+    expect(visibleEdges.every((edge) => edge.style?.stroke === "var(--relationship-clear)"))
+      .toBe(true);
+    expect(filtered.edges.filter((edge) => Number(edge.style?.opacity) === 0)
+      .every((edge) => edge.style?.pointerEvents === "none"))
+      .toBe(true);
+  });
+
   it("exposes relationship results and only completed unlocks", () => {
     const pending = { ...unlock("a", "c"), id: "pending", status: "pending" as const };
     const graph = buildGraph(

@@ -13,6 +13,7 @@ import type { GroupMember, RelationUnlock } from "@/lib/supabase/models";
 
 export type GraphNodeSize = "sm" | "md" | "lg";
 export type EdgeEmphasis = "default" | "incident" | "faint";
+export type RelationshipLineColor = "calm" | "clear" | "warm";
 export type RelationshipFactory = (
   input: CreateEtoRelationshipInput,
 ) => EtoRelationshipResult;
@@ -65,6 +66,15 @@ const RELATIONSHIP_LINE_COLORS: Readonly<Record<RelationshipCategory, string>> =
   EXPANDING_POSSIBILITIES: "var(--relationship-clear)",
   POSITIVE_STIMULATION: "var(--relationship-warm)",
   LEARNING_EACH_OTHERS_PACE: "var(--relationship-clear)",
+};
+
+const RELATIONSHIP_LINE_COLOR_GROUPS: Readonly<
+  Record<RelationshipCategory, RelationshipLineColor>
+> = {
+  NATURAL_INTERLOCK: "calm",
+  EXPANDING_POSSIBILITIES: "clear",
+  POSITIVE_STIMULATION: "warm",
+  LEARNING_EACH_OTHERS_PACE: "clear",
 };
 
 const RELATIONSHIP_LABEL_COLORS: Readonly<Record<RelationshipCategory, string>> = {
@@ -242,6 +252,7 @@ export function decorateGraph(
   topology: GraphTopology,
   selectedNodeId: string | null,
   unlocks: readonly RelationUnlock[],
+  selectedLineColor: RelationshipLineColor | null = null,
 ): BuiltGraph {
   const perimeterPairs = new Set<string>();
   if (topology.nodes.length === 2) {
@@ -269,10 +280,14 @@ export function decorateGraph(
     const incident = selectedNodeId !== null &&
       (edge.source === selectedNodeId || edge.target === selectedNodeId);
     const perimeter = perimeterPairs.has(edge.id);
-    const visible = selectedNodeId === null ? perimeter : incident;
+    const lineColor = RELATIONSHIP_LINE_COLOR_GROUPS[edge.data.relationship.category];
+    const matchesColor = selectedLineColor === null || lineColor === selectedLineColor;
+    const visible = selectedNodeId === null
+      ? selectedLineColor === null ? perimeter : matchesColor
+      : incident && matchesColor;
     const emphasis: EdgeEmphasis = selectedNodeId === null
-      ? perimeter ? "default" : "faint"
-      : incident ? "incident" : "faint";
+      ? visible ? "default" : "faint"
+      : visible ? "incident" : "faint";
     const unlocked = unlockedPairs.has(edge.id);
     const showLabel = visible && (selectedNodeId === null
       ? topology.nodes.length <= 6
@@ -325,6 +340,12 @@ export function buildGraph(
   members: readonly RelationshipGraphMember[],
   selectedNodeId: string | null,
   unlocks: readonly RelationUnlock[],
+  selectedLineColor: RelationshipLineColor | null = null,
 ): BuiltGraph {
-  return decorateGraph(buildGraphTopology(members), selectedNodeId, unlocks);
+  return decorateGraph(
+    buildGraphTopology(members),
+    selectedNodeId,
+    unlocks,
+    selectedLineColor,
+  );
 }

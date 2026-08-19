@@ -353,8 +353,17 @@ body:has(.group-share-backdrop) { overflow: hidden; }
 .zodiac-graph-node[data-selected="true"] .zodiac-graph-node__frame::before { border-width: 3px; box-shadow: 0 12px 24px rgb(var(--ink-rgb) / 20%), 0 3px 8px rgb(var(--ink-rgb) / 12%); }
 .zodiac-graph-node__character-title { width: 7rem; max-width: 7rem; color: var(--ink); font-size: 0.68rem; font-weight: 700; line-height: 1.25; overflow-wrap: anywhere; text-wrap: balance; }
 .zodiac-graph-node__discriminator { color: var(--text-muted); font-size: 0.64rem; font-weight: 600; }
-.group-graph__selection, .group-pair-selection { width: fit-content; margin: 0; border: var(--border-subtle); border-radius: 999px; padding: 0.4rem 0.72rem; background: var(--surface-coral); color: var(--ink); font-size: 0.82rem; font-weight: 700; }
-.group-pair-selection { background: var(--surface-mint); }
+.group-graph__filters { display: flex; min-width: 0; align-items: center; flex-wrap: wrap; gap: 0 0.8rem; padding-inline: 0.2rem; }
+.group-graph__filters button { --filter-color: var(--ink); display: inline-flex; min-height: 44px; align-items: center; gap: 0.42rem; border: 0; border-bottom: 2px solid transparent; padding: 0.35rem 0.05rem 0.25rem; background: transparent; color: var(--text-muted); font-size: 0.72rem; font-weight: 750; line-height: 1.2; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.group-graph__filters button::before { width: 0.68rem; height: 0.68rem; flex: 0 0 auto; border-radius: 50%; background: var(--filter-color); box-shadow: 0 0 0 1px rgb(var(--ink-rgb) / 12%); content: ""; }
+.group-graph__filters button[data-color="all"]::before { background: conic-gradient(var(--relationship-calm) 0 33%, var(--relationship-clear) 0 66%, var(--relationship-warm) 0); }
+.group-graph__filters button[data-color="calm"] { --filter-color: var(--relationship-calm); }
+.group-graph__filters button[data-color="clear"] { --filter-color: var(--relationship-clear); }
+.group-graph__filters button[data-color="warm"] { --filter-color: var(--relationship-warm); }
+.group-graph__filters button[aria-pressed="true"] { border-bottom-color: var(--filter-color); color: var(--ink); }
+.group-graph__filters button:focus-visible { outline: 2px solid var(--accent-navy); outline-offset: 3px; }
+.group-graph__selection { position: absolute; width: 1px; height: 1px; overflow: hidden; margin: -1px; border: 0; padding: 0; clip-path: inset(50%); white-space: nowrap; }
+.group-pair-selection { width: fit-content; margin: 0; border: var(--border-subtle); border-radius: 999px; padding: 0.4rem 0.72rem; background: var(--surface-mint); color: var(--ink); font-size: 0.82rem; font-weight: 700; }
 .group-graph__accessible { position: absolute; width: 1px; height: 1px; overflow: hidden; margin: -1px; border: 0; padding: 0; clip-path: inset(50%); white-space: nowrap; }
 .group-graph__accessible:focus-within { position: relative; width: auto; height: auto; overflow: visible; margin: 0; border: var(--border-subtle); border-radius: var(--radius-18); padding: var(--space-18); background: var(--surface-elevated); box-shadow: 0 12px 28px rgb(var(--ink-rgb) / 8%); clip-path: none; white-space: normal; }
 .group-graph__accessible h2, .group-graph__accessible p { margin-top: 0; }
