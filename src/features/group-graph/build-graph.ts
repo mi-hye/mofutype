@@ -266,13 +266,13 @@ export function decorateGraph(
       ? topology.nodes.length <= 6
       : incident;
     const category = edge.data.relationship.category;
-    const strokeWidth = incident ? (unlocked ? 5 : 4) : unlocked ? 3 : 1.5;
+    const strokeWidth = incident ? (unlocked ? 5 : 4) : unlocked ? 4 : 3;
     const opacity = emphasis === "faint"
-      ? unlocked ? 0.28 : 0.06
-      : incident ? 1 : unlocked ? 0.68 : 0.16;
+      ? unlocked ? 0.3 : 0.1
+      : incident ? 1 : 0.72;
     return {
       ...edge,
-      animated: incident,
+      animated: false,
       className: [
         "relationship-edge",
         `relationship-edge--${unlocked ? "unlocked" : "locked"}`,
