@@ -91,16 +91,13 @@ function GroupGraphComponent({
   );
   const renderedEdges = useMemo(() => {
     if (variant === "default") return graph.edges;
-    const anchorNodeId = topology.nodes[0]?.id;
-    if (!anchorNodeId) return [];
     return graph.edges
-      .filter((edge) => edge.source === anchorNodeId || edge.target === anchorNodeId)
       .map((edge) => ({
         ...edge,
         label: undefined,
         labelShowBg: false,
       }));
-  }, [graph.edges, topology.nodes, variant]);
+  }, [graph.edges, variant]);
   const selectedMember = useMemo(
     () => members.find((member) => member.id === selectedNodeId) ?? null,
     [members, selectedNodeId],

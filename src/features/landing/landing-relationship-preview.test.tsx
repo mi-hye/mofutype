@@ -35,5 +35,25 @@ describe("LandingRelationshipPreview", () => {
     )).toBe(true);
     expect(graphProps.current?.unlocks).toEqual([]);
     expect(graphProps.current?.variant).toBe("minimal");
+
+    const relationshipFactory = graphProps.current?.relationshipFactory as (input: {
+      memberA: { id: string; profile: typeof members[number]["profile"] };
+      memberB: { id: string; profile: typeof members[number]["profile"] };
+    }) => { category: string };
+    const byZodiac = new Map(members.map((member) => [member.zodiacId, member]));
+    const categoryFor = (first: string, second: string) => relationshipFactory({
+      memberA: {
+        id: `member-${first}`,
+        profile: byZodiac.get(first)!.profile,
+      },
+      memberB: {
+        id: `member-${second}`,
+        profile: byZodiac.get(second)!.profile,
+      },
+    }).category;
+
+    expect(categoryFor("tiger", "rat")).toBe("NATURAL_INTERLOCK");
+    expect(categoryFor("rat", "rabbit")).toBe("EXPANDING_POSSIBILITIES");
+    expect(categoryFor("rabbit", "tiger")).toBe("CAREFUL_COORDINATION");
   });
 });

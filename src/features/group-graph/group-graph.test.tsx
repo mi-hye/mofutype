@@ -124,7 +124,7 @@ describe("GroupGraph", () => {
     expect(screen.queryByRole("status", { name: "選択中のメンバー" })).not.toBeInTheDocument();
   });
 
-  it("keeps the minimal preview to two original-color lines without filters or labels", () => {
+  it("keeps all three minimal preview lines without filters or labels", () => {
     render(
       <GroupGraph
         members={[member("a"), member("b"), member("c")]}
@@ -139,9 +139,9 @@ describe("GroupGraph", () => {
       target: string;
       style?: React.CSSProperties;
     }>;
-    expect(edges).toHaveLength(2);
-    expect(edges.every((edge) => edge.source === "a" || edge.target === "a"))
-      .toBe(true);
+    expect(edges).toHaveLength(3);
+    expect(edges.map((edge) => [edge.source, edge.target].sort().join(":")))
+      .toEqual(["a:b", "a:c", "b:c"]);
     expect(edges.every((edge) => edge.label === undefined)).toBe(true);
     expect(edges.every((edge) => String(edge.style?.stroke).startsWith("var(--relationship-")))
       .toBe(true);
@@ -154,21 +154,22 @@ describe("GroupGraph", () => {
     render(<GroupGraph members={[member("a"), member("b"), member("c"), member("d")]} unlocks={[]} onPairSelect={vi.fn()} />);
 
     const filters = screen.getByRole("group", { name: "関係線を色で絞り込む" });
-    const clearFilter = within(filters).getByRole("button", { name: "可能性・ペース" });
+    const neutralFilter = within(filters).getByRole("button", { name: "ペース発見" });
     expect(within(filters).queryByRole("button", { name: "すべて" })).not.toBeInTheDocument();
     expect(within(filters).queryByRole("button", { name: "息ぴったり" })).not.toBeInTheDocument();
-    expect(within(filters).queryByRole("button", { name: "いい刺激" })).not.toBeInTheDocument();
-    expect(clearFilter).toHaveAttribute("aria-pressed", "false");
+    expect(within(filters).queryByRole("button", { name: "刺激つよめ" })).not.toBeInTheDocument();
+    expect(within(filters).queryByRole("button", { name: "すれ違い注意" })).not.toBeInTheDocument();
+    expect(neutralFilter).toHaveAttribute("aria-pressed", "false");
 
-    await user.click(clearFilter);
-    expect(clearFilter).toHaveAttribute("aria-pressed", "true");
+    await user.click(neutralFilter);
+    expect(neutralFilter).toHaveAttribute("aria-pressed", "true");
     expect((flowProps.current?.edges as Array<MockEdge & { style?: React.CSSProperties }> )
       .filter((edge) => Number(edge.style?.opacity) > 0)
       .every((edge) => edge.style?.opacity === 1))
       .toBe(true);
 
-    await user.click(clearFilter);
-    expect(clearFilter).toHaveAttribute("aria-pressed", "false");
+    await user.click(neutralFilter);
+    expect(neutralFilter).toHaveAttribute("aria-pressed", "false");
   });
 
   it("shows each free member's zodiac character title with and without MBTI", () => {
