@@ -245,7 +245,9 @@ function koreanCopy(value: string): string {
 interface TranslationRecord { ja: string; ko: string }
 
 const subscribeToHostname = () => () => {};
-const isLocalHostname = () => ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
+const isLocalHostname = () =>
+  process.env.NEXT_PUBLIC_DEV_LOCALE_TOGGLE === "1"
+  || ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
 
 export function DevLocaleToggle() {
   const available = useSyncExternalStore(subscribeToHostname, isLocalHostname, () => false);
