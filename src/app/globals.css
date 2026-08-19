@@ -293,8 +293,7 @@ button, input, textarea, select { font: inherit; }
 .group-member-header:has(.group-share-feedback) { padding-bottom: calc(clamp(1rem, 4vw, 1.8rem) + 2.5rem); }
 .group-member-header::after { display: none; }
 .group-member-header p { margin-block: 0.45rem 0; color: var(--text-muted); }
-.group-member-header:not(:has(.status-banner)) > div:first-child { padding-right: 6.5rem; }
-.group-member-header:not(:has(.status-banner)) .group-member-actions { position: absolute; top: clamp(1rem, 4vw, 1.8rem); right: clamp(1rem, 4vw, 1.8rem); display: flex; flex-wrap: nowrap; align-items: center; gap: 0.25rem; }
+.group-member-header:not(:has(.status-banner)) .group-member-actions { position: static; display: flex; flex-wrap: nowrap; align-items: center; justify-self: end; gap: 0.25rem; }
 .group-member-actions { display: flex; min-width: 0; flex-wrap: wrap; align-items: flex-start; gap: 0.7rem; }
 .group-member-actions > * { max-width: 100%; }
 .group-share-controls { display: grid; min-width: 0; justify-items: end; gap: 0.55rem; }

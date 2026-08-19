@@ -135,6 +135,12 @@ describe("production source safety", () => {
       ".group-member-header:not(:has(.status-banner)) .group-member-actions",
     );
     expect(globalStyles).toMatch(
+      /\.group-member-header:not\(:has\(\.status-banner\)\) \.group-member-actions\s*\{[^}]*position:\s*static/,
+    );
+    expect(globalStyles).not.toContain(
+      ".group-member-header:not(:has(.status-banner)) > div:first-child { padding-right:",
+    );
+    expect(globalStyles).toMatch(
       /\.group-member-header:has\(\.group-share-feedback\)[^{]*\{[^}]*padding-bottom:/,
     );
     expect(globalStyles).toMatch(
