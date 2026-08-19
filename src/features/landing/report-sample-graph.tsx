@@ -1,42 +1,59 @@
-import Image from "next/image";
+"use client";
 
-import styles from "./report-sample-graph.module.css";
+import { GroupGraph } from "@/features/group-graph/group-graph";
+import type { RelationshipGraphMember } from "@/features/group-graph/build-graph";
+import type { DerivedEtoProfile, MbtiType, ZodiacId } from "@/lib/eto/types";
 
-const NODES = [
-  { id: "a", name: "Aさん", profile: "INFJ・うさぎ", image: "/zodiac/rabbit.png", selected: true },
-  { id: "b", name: "Bさん", profile: "ENTP・うま", image: "/zodiac/horse.png", selected: true },
-  { id: "c", name: "Cさん", profile: "ISFJ・ひつじ", image: "/zodiac/sheep.png", selected: false },
-  { id: "d", name: "Dさん", profile: "INTJ・いぬ", image: "/zodiac/dog.png", selected: false },
-] as const;
+function sampleProfile(zodiacId: ZodiacId, mbti: MbtiType): DerivedEtoProfile {
+  return {
+    version: 1,
+    zodiacId,
+    mbti,
+    dayMaster: { element: "WOOD", polarity: "YANG" },
+    fiveElements: { WOOD: 2, FIRE: 1, EARTH: 1, METAL: 1, WATER: 1 },
+    yinYang: { YIN: 3, YANG: 3 },
+    calculationMode: "date-only",
+    boundaryState: "exact",
+    engineVersion: "mofu-eto-four-pillars-v1",
+  };
+}
+
+function sampleMember(
+  id: string,
+  nickname: string,
+  zodiacId: ZodiacId,
+  mbti: MbtiType,
+): RelationshipGraphMember {
+  return {
+    id,
+    nickname,
+    zodiacId,
+    mbti,
+    profile: sampleProfile(zodiacId, mbti),
+  };
+}
+
+const SAMPLE_MEMBERS: readonly RelationshipGraphMember[] = [
+  sampleMember("sample-a", "Aさん", "rat", "INTJ"),
+  sampleMember("sample-b", "Bさん", "rabbit", "ENFP"),
+  sampleMember("sample-c", "Cさん", "horse", "ISFJ"),
+  sampleMember("sample-d", "Dさん", "sheep", "ENTP"),
+];
+
+const ignoreSamplePairSelection = () => undefined;
 
 export function ReportSampleGraph() {
   return (
-    <figure className={styles.graph} aria-label="AさんとBさんのサンプル">
-      <svg className={styles.lines} viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-        <path className={styles.lineSoft} d="M17 53 L50 18 L83 47" />
-        <path className={styles.lineSoft} d="M17 53 L50 83 L83 47" />
-        <path className={styles.lineSoft} d="M50 18 L50 83" />
-        <path className={styles.lineActiveGlow} d="M17 53 C38 34 62 66 83 47" />
-        <path className={styles.lineActive} d="M17 53 C38 34 62 66 83 47" />
-      </svg>
-
-      {NODES.map((node) => (
-        <div
-          className={styles.node}
-          data-node={node.id}
-          data-selected={node.selected ? "true" : "false"}
-          key={node.id}
-        >
-          <span className={styles.avatar}>
-            <Image src={node.image} alt="" width={88} height={88} />
-          </span>
-          <strong>{node.name}</strong>
-          <small>{node.profile}</small>
-        </div>
-      ))}
-
-      <span className={styles.pairBadge}>A × B</span>
-      <figcaption className={styles.caption}>SELECTED RELATION</figcaption>
-    </figure>
+    <div className="report-sample-graph">
+      <p className="report-sample-graph__eyebrow">GROUP RELATION MAP</p>
+      <GroupGraph
+        members={SAMPLE_MEMBERS}
+        unlocks={[]}
+        onPairSelect={ignoreSamplePairSelection}
+      />
+      <p className="report-sample-graph__note">
+        実際のグループ画面と同じ関係グラフです。メンバーを選ぶと、つながる線をまとめて確認できます。
+      </p>
+    </div>
   );
 }

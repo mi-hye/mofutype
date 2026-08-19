@@ -169,6 +169,12 @@ button, input, textarea, select { font: inherit; }
 .report-preview__pair span { border-radius: 999px; padding: 0.3rem 0.65rem; background: var(--animal-rat-pastel); color: var(--ink); font-size: 0.72rem; font-weight: 800; line-height: 1.15; }
 .report-preview__pair span:last-child { background: var(--animal-rabbit-pastel); }
 .report-preview__pair i { height: 1px; background: var(--relationship-calm); }
+.report-sample-graph { display: grid; z-index: 1; min-width: 0; gap: 0.55rem; border: 1px solid rgb(var(--ink-rgb) / 16%); border-radius: 1.15rem; padding: 0.75rem; background: color-mix(in srgb, var(--surface-elevated) 82%, var(--butter)); }
+.report-sample-graph__eyebrow { margin: 0; color: var(--accent-vermilion); font-size: 0.62rem; font-weight: 850; letter-spacing: 0.12em; }
+.report-sample-graph .group-graph { gap: 0.45rem; }
+.report-sample-graph .group-graph__canvas { min-height: 20rem; border: 0; border-radius: 0.85rem; background: rgb(var(--paper-rgb) / 58%); }
+.report-sample-graph .group-graph__filters { justify-content: center; }
+.report-sample-graph__note { margin: 0; color: var(--text-muted); font-size: 0.7rem; line-height: 1.55; }
 .report-preview__lead { display: grid; gap: 0.45rem; border-block: 1px solid rgb(var(--ink-rgb) / 20%); padding-block: 1rem; }
 .report-preview__lead > span { color: var(--accent-vermilion); font-size: 0.68rem; font-weight: 800; letter-spacing: 0.08em; }
 .report-preview__lead strong { max-width: 17ch; color: var(--ink); font-family: var(--font-display); font-size: clamp(1.35rem, 6vw, 2rem); letter-spacing: -0.035em; line-height: 1.25; text-wrap: balance; }

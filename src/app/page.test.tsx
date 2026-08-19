@@ -1,5 +1,13 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("@/features/landing/report-sample-graph", () => ({
+  ReportSampleGraph: () => (
+    <section aria-label="メンバー関係性グラフ">
+      <p>実際のグループ画面と同じ関係グラフです。</p>
+    </section>
+  ),
+}));
 
 import Home from "./page";
 
@@ -89,8 +97,8 @@ describe("Home", () => {
     expect(screen.getByRole("heading", { name: "MBTIの4つの軸" })).toBeInTheDocument();
     expect(screen.getByText("違いが刺激になる関係")).toBeInTheDocument();
     expect(screen.getByText(/追加料金や自動更新はありません/)).toBeInTheDocument();
-    expect(screen.getByRole("figure", { name: "AさんとBさんのサンプル" })).toBeInTheDocument();
-    expect(screen.getByText("A × B")).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "メンバー関係性グラフ" })).toBeInTheDocument();
+    expect(screen.getByText(/実際のグループ画面と同じ関係グラフです/)).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "無料でグループを作る" })).not.toBeInTheDocument();
   });
 
