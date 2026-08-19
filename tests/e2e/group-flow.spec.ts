@@ -32,8 +32,11 @@ test("three independent members share one unlocked relationship", async ({ brows
       fullPage: true,
     });
 
-    await pageA.getByRole("button", { name: "Aさんを選択" }).focus();
-    await pageA.keyboard.press("Enter");
+    await pageA.locator(".react-flow__node", { hasText: "Aさん" }).click();
+    await expect(pageA.locator('.zodiac-graph-node[data-selected="true"]')).toHaveCount(1);
+    await pageA.locator(".group-graph__canvas").screenshot({
+      path: testInfo.outputPath("selected-node.png"),
+    });
     await pageA.getByRole("button", { name: /^AさんとBさんの関係を見る/ }).focus();
     await pageA.keyboard.press("Enter");
     await expect(pageA.getByRole("heading", { name: "解放するとわかること" })).toBeVisible();
