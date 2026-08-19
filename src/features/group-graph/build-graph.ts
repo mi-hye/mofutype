@@ -291,13 +291,11 @@ export function decorateGraph(
       ? visible ? "default" : "faint"
       : visible ? "incident" : "faint";
     const unlocked = unlockedPairs.has(edge.id);
-    const showLabel = visible && (selectedNodeId === null
-      ? topology.nodes.length <= 6
-      : incident);
+    const showLabel = selectedNodeId !== null && incident;
     const category = edge.data.relationship.category;
     const strokeWidth = incident ? (unlocked ? 5 : 4) : unlocked ? 4 : 3;
     const emphasized = selectedLineColor !== null ? matchesColor : incident;
-    const opacity = visible ? emphasized ? 1 : 0.72 : 0;
+    const opacity = visible ? emphasized ? 1 : 0.4 : 0;
     return {
       ...edge,
       animated: false,

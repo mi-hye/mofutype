@@ -104,8 +104,10 @@ describe("GroupGraph", () => {
     const user = userEvent.setup();
     render(<GroupGraph members={[member("a", "あお"), member("b", "べに"), member("c", "ちゃ")]} unlocks={[]} onPairSelect={vi.fn()} />);
 
-    expect((flowProps.current?.edges as MockEdge[]).map((edge) => edge.label))
-      .toEqual(["ペース発見", "ペース発見", "ペース発見"]);
+    expect((flowProps.current?.edges as MockEdge[]).every((edge) => edge.label === undefined))
+      .toBe(true);
+    expect(screen.getByRole("region", { name: "メンバー関係性グラフ" }))
+      .toHaveAttribute("data-has-selection", "false");
 
     await user.click(screen.getByTestId("canvas-node-b"));
     expect((flowProps.current?.edges as MockEdge[]).filter((edge) => edge.label))
@@ -114,9 +116,11 @@ describe("GroupGraph", () => {
       .toHaveAttribute("data-selected", "true");
     expect(screen.getByRole("status", { name: "選択中のメンバー" })).toHaveTextContent("べに");
     expect(screen.getByRole("status", { name: "選択中のメンバー" })).toHaveTextContent("2本");
+    expect(screen.getByRole("region", { name: "メンバー関係性グラフ" }))
+      .toHaveAttribute("data-has-selection", "true");
     await user.click(screen.getByTestId("canvas-pane"));
-    expect((flowProps.current?.edges as MockEdge[]).map((edge) => edge.label))
-      .toEqual(["ペース発見", "ペース発見", "ペース発見"]);
+    expect((flowProps.current?.edges as MockEdge[]).every((edge) => edge.label === undefined))
+      .toBe(true);
     expect(screen.queryByRole("status", { name: "選択中のメンバー" })).not.toBeInTheDocument();
   });
 

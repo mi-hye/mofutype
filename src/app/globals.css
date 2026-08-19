@@ -327,7 +327,8 @@ body:has(.group-share-backdrop) { overflow: hidden; }
 .zodiac-graph-node__frame img { position: absolute; top: 26%; left: 50%; z-index: 1; width: 58%; height: 48%; transform: translateX(-50%); object-fit: contain; filter: drop-shadow(0 2px 1px rgb(var(--ink-rgb) / 10%)); }
 .zodiac-graph-node__nickname { position: absolute; right: 0.55rem; bottom: 12%; left: 0.55rem; z-index: 2; overflow: hidden; color: var(--ink); font-size: 0.58rem; font-weight: 750; line-height: 1; text-overflow: ellipsis; white-space: nowrap; }
 .zodiac-graph-node[data-selected="true"] .zodiac-graph-node__frame::before { border-width: 3px; box-shadow: 0 0 0 0.55rem color-mix(in srgb, var(--node-pastel) 78%, transparent), 0 0.8rem 1.65rem color-mix(in srgb, var(--node-border) 26%, transparent); }
-.zodiac-graph-node__character-title { width: 7rem; max-width: 7rem; color: var(--ink); font-size: 0.68rem; font-weight: 700; line-height: 1.25; overflow-wrap: anywhere; text-wrap: balance; }
+.zodiac-graph-node__character-title { width: 7rem; max-width: 7rem; color: var(--ink); font-size: 0.68rem; font-weight: 700; line-height: 1.25; opacity: 1; overflow-wrap: anywhere; text-wrap: balance; transition: opacity 160ms ease, visibility 160ms ease; }
+.group-graph[data-has-selection="false"] .zodiac-graph-node__character-title { visibility: hidden; opacity: 0; }
 .zodiac-graph-node__discriminator { color: var(--text-muted); font-size: 0.64rem; font-weight: 600; }
 .group-graph__filters { display: flex; min-width: 0; align-items: center; flex-wrap: wrap; gap: 0 0.8rem; padding-inline: 0.2rem; }
 .group-graph__filters button { --filter-color: var(--ink); display: inline-flex; min-height: 44px; align-items: center; gap: 0.42rem; border: 0; padding: 0.35rem 0.05rem; background: transparent; color: var(--ink); font-size: 0.72rem; font-weight: 750; line-height: 1.2; opacity: 0.72; cursor: pointer; transition: opacity 160ms ease; -webkit-tap-highlight-color: transparent; }

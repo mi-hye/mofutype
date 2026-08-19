@@ -144,7 +144,9 @@ function GroupGraphComponent({
   }, [membersVersion]);
 
   return (
-    <section className="group-graph" data-variant={variant} aria-label="メンバー関係性グラフ">
+    <section className="group-graph" data-variant={variant}
+      data-has-selection={selectedNodeId === null ? "false" : "true"}
+      aria-label="メンバー関係性グラフ">
       <div ref={canvasRef} className="group-graph__canvas"
         data-testid="group-graph-canvas" data-member-count={members.length} aria-hidden="true">
         <ReactFlow<ZodiacGraphNode, RelationshipGraphEdge>
