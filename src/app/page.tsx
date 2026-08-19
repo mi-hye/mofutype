@@ -3,6 +3,7 @@ import Image from "next/image";
 import { ButtonLink } from "@/components/ui/button";
 import { Capsule } from "@/components/ui/capsule";
 import { LandingRelationshipPreview } from "@/features/landing/landing-relationship-preview";
+import { ReportSampleGraph } from "@/features/landing/report-sample-graph";
 
 export default function Home() {
   return (
@@ -148,6 +149,8 @@ export default function Home() {
                 <i aria-hidden="true" />
                 <span>Bさん</span>
               </div>
+
+              <ReportSampleGraph />
 
               <div className="report-preview__lead">
                 <span>ふたりでいるとき</span>

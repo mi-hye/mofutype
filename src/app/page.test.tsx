@@ -89,6 +89,8 @@ describe("Home", () => {
     expect(screen.getByRole("heading", { name: "MBTIの4つの軸" })).toBeInTheDocument();
     expect(screen.getByText("違いが刺激になる関係")).toBeInTheDocument();
     expect(screen.getByText(/追加料金や自動更新はありません/)).toBeInTheDocument();
+    expect(screen.getByRole("figure", { name: "AさんとBさんのサンプル" })).toBeInTheDocument();
+    expect(screen.getByText("A × B")).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "無料でグループを作る" })).not.toBeInTheDocument();
   });
 
