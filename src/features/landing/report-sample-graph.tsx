@@ -48,6 +48,7 @@ export function ReportSampleGraph() {
         members={SAMPLE_MEMBERS}
         unlocks={[]}
         onPairSelect={ignoreSamplePairSelection}
+        layout="horizontal-pair"
       />
       <p className="report-sample-graph__note">
         Aさん × Bさんの関係だけをピックアップ。

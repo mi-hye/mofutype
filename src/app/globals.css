@@ -145,7 +145,7 @@ button, input, textarea, select { font: inherit; }
 .report-preview__pair i { height: 1px; background: var(--relationship-calm); }
 .report-sample-graph { display: grid; z-index: 1; min-width: 0; gap: 0.55rem; }
 .report-sample-graph__eyebrow { margin: 0; color: var(--accent-vermilion); font-size: 0.62rem; font-weight: 850; letter-spacing: 0.12em; }
-.report-sample-graph .group-graph__canvas { height: 15rem; min-height: 15rem; }
+.report-sample-graph .group-graph__canvas { height: 12rem; min-height: 12rem; }
 .report-sample-graph__note { margin: 0; color: var(--text-muted); font-size: 0.7rem; line-height: 1.55; }
 .report-preview__lead { display: grid; gap: 0.45rem; border-block: 1px solid rgb(var(--ink-rgb) / 20%); padding-block: 1rem; }
 .report-preview__lead > span { color: var(--accent-vermilion); font-size: 0.68rem; font-weight: 800; letter-spacing: 0.08em; }

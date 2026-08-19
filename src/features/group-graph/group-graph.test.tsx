@@ -6,7 +6,12 @@ import { createEtoRelationship } from "@/lib/eto/relationship";
 import type { DerivedEtoProfile, ZodiacId } from "@/lib/eto/types";
 import type { GroupMember, RelationUnlock } from "@/lib/supabase/models";
 
-type MockNode = { id: string; type: string; data: Record<string, unknown> };
+type MockNode = {
+  id: string;
+  type: string;
+  data: Record<string, unknown>;
+  position: { x: number; y: number };
+};
 type MockEdge = { id: string; label?: string; data: Record<string, unknown> };
 
 const flowProps = vi.hoisted(() => ({ current: null as Record<string, unknown> | null }));
@@ -149,6 +154,23 @@ describe("GroupGraph", () => {
     expect(screen.queryByRole("group", { name: "関係線を色で絞り込む" }))
       .not.toBeInTheDocument();
     expect(screen.queryByText("おしてな！")).not.toBeInTheDocument();
+  });
+
+  it("lays a two-person report sample out from left to right", () => {
+    render(
+      <GroupGraph
+        members={[member("a"), member("b")]}
+        unlocks={[]}
+        onPairSelect={vi.fn()}
+        variant="minimal"
+        layout="horizontal-pair"
+      />,
+    );
+
+    const nodes = flowProps.current?.nodes as MockNode[];
+    expect(nodes).toHaveLength(2);
+    expect(nodes[0]?.position.y).toBe(nodes[1]?.position.y);
+    expect(nodes[0]?.position.x).toBeLessThan(nodes[1]?.position.x ?? 0);
   });
 
   it("lets people filter relationship lines by their shared color", async () => {

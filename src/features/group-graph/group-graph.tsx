@@ -38,6 +38,7 @@ interface GroupGraphProps {
   onPairSelect: (selection: PairSelection) => void;
   relationshipFactory?: RelationshipFactory;
   variant?: "default" | "minimal";
+  layout?: "radial" | "horizontal-pair";
 }
 
 const nodeTypes = { zodiac: ZodiacNode };
@@ -74,16 +75,32 @@ function GroupGraphComponent({
   onPairSelect,
   relationshipFactory = createEtoRelationship,
   variant = "default",
+  layout = "radial",
 }: GroupGraphProps) {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [selectedLineColor, setSelectedLineColor] = useState<RelationshipLineColor | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
   const membersVersion = graphMembersVersion(members);
   const topology = useMemo(
-    () => buildGraphTopology(graphMemberSnapshot(members), relationshipFactory),
+    () => {
+      const nextTopology = buildGraphTopology(
+        graphMemberSnapshot(members),
+        relationshipFactory,
+      );
+      if (layout !== "horizontal-pair" || nextTopology.nodes.length !== 2) {
+        return nextTopology;
+      }
+      return {
+        ...nextTopology,
+        nodes: nextTopology.nodes.map((node, index) => ({
+          ...node,
+          position: { x: index === 0 ? -160 : 160, y: 0 },
+        })),
+      };
+    },
     // Raw array identity is intentionally replaced by the complete semantic version.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [membersVersion, relationshipFactory],
+    [membersVersion, relationshipFactory, layout],
   );
   const graph = useMemo(
     () => decorateGraph(topology, selectedNodeId, unlocks, selectedLineColor),

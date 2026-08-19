@@ -29,5 +29,6 @@ describe("ReportSampleGraph", () => {
     expect(members.map(({ nickname }) => nickname)).toEqual(["Aさん", "Bさん"]);
     expect(members.every((member) => member.zodiacId === member.profile.zodiacId)).toBe(true);
     expect(graphProps.current?.unlocks).toEqual([]);
+    expect(graphProps.current?.layout).toBe("horizontal-pair");
   });
 });
