@@ -157,14 +157,13 @@ describe("GroupGraph", () => {
     expect(screen.getByText("おしてな！")).toBeInTheDocument();
   });
 
-  it("lays a two-person report sample out from left to right", () => {
+  it("lays a two-person graph out from left to right by default", () => {
     render(
       <GroupGraph
         members={[member("a"), member("b")]}
         unlocks={[]}
         onPairSelect={vi.fn()}
         variant="minimal"
-        layout="horizontal-pair"
       />,
     );
 

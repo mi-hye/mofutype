@@ -76,7 +76,7 @@ function GroupGraphComponent({
   onPairSelect,
   relationshipFactory = createEtoRelationship,
   variant = "default",
-  layout = "radial",
+  layout = "horizontal-pair",
   showTapHint = false,
 }: GroupGraphProps) {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
