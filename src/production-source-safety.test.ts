@@ -135,7 +135,19 @@ describe("production source safety", () => {
       /\.group-member-header__topbar\s*\{[^}]*display:\s*flex[^}]*align-items:\s*center[^}]*justify-content:\s*space-between/,
     );
     expect(globalStyles).toMatch(
-      /\.group-member-actions\s*\{[^}]*flex-wrap:\s*nowrap[^}]*justify-content:\s*flex-end/,
+      /\.group-member-header\s*\{[^}]*gap:\s*0\.25rem/,
+    );
+    expect(globalStyles).toMatch(
+      /\.group-member-header__identity h1\s*\{[^}]*margin-top:\s*0\.15rem/,
+    );
+    expect(globalStyles).toMatch(
+      /\.group-member-actions\s*\{[^}]*flex-wrap:\s*nowrap[^}]*justify-content:\s*flex-end[^}]*gap:\s*0/,
+    );
+    expect(globalStyles).toMatch(
+      /\.group-share-button\s*\{[^}]*width:\s*44px[^}]*min-width:\s*44px[^}]*min-height:\s*44px/,
+    );
+    expect(globalStyles).toMatch(
+      /\.group-refresh-button\s*\{[^}]*width:\s*44px[^}]*min-width:\s*44px[^}]*min-height:\s*44px/,
     );
     expect(globalStyles).not.toContain(".group-member-header:has(.group-share-feedback)");
     expect(globalStyles).toMatch(
