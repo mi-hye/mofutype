@@ -160,6 +160,24 @@ describe("GroupScreen", () => {
     expect(screen.queryByText("たつタイプとして")).not.toBeInTheDocument();
   });
 
+  it("places the selected relationship offer before the personal result", async () => {
+    const user = userEvent.setup();
+    const initial = aggregate("g1", [member("a", "わたし"), member("b", "ともだち")]);
+    const repo = repository(initial);
+    render(<GroupScreen initialAggregate={initial} repository={repo.api} currentUserId="u-a" inviteToken="token-a" />);
+
+    await user.click(screen.getByRole("button", { name: "aとbの関係を選択" }));
+    const relationSheet = screen.getByRole("heading", { name: /関係です$/ }).closest(".relation-sheet");
+    const personalResult = screen.getByText("わたしの四柱推命").closest(".my-result-card");
+
+    expect(relationSheet).not.toBeNull();
+    expect(personalResult).not.toBeNull();
+    const documentOrder = relationSheet && personalResult
+      ? relationSheet.compareDocumentPosition(personalResult)
+      : 0;
+    expect(documentOrder & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it("keeps the personal result complete and neutral when MBTI is unknown", () => {
     const initial = aggregate("g1", [member("a", "わたし")]);
     const repo = repository(initial);
@@ -228,11 +246,11 @@ describe("GroupScreen", () => {
     const sessionB = within(screen.getByRole("region", { name: "セッションB" }));
     await user.click(sessionA.getByRole("button", { name: "aとbの関係を選択" }));
     await user.click(sessionB.getByRole("button", { name: "aとbの関係を選択" }));
-    expect(sessionA.getByRole("link", { name: "このふたりを300円で解放" })).toHaveAttribute(
+    expect(sessionA.getByRole("link", { name: "この関係を詳しく見る 300円" })).toHaveAttribute(
       "href",
       "/checkout/a%3Ab?invite=token-a",
     );
-    expect(sessionB.getByRole("link", { name: "このふたりを300円で解放" })).toBeInTheDocument();
+    expect(sessionB.getByRole("link", { name: "この関係を詳しく見る 300円" })).toBeInTheDocument();
 
     const sharedUnlock = unlock("shared", "unlocked");
     act(() => {
@@ -242,7 +260,7 @@ describe("GroupScreen", () => {
 
     expect(sessionA.getByText("解放済み")).toBeInTheDocument();
     expect(sessionB.getByText("解放済み")).toBeInTheDocument();
-    expect(sessionA.queryByRole("link", { name: "このふたりを300円で解放" })).not.toBeInTheDocument();
+    expect(sessionA.queryByRole("link", { name: "この関係を詳しく見る 300円" })).not.toBeInTheDocument();
     expect(sessionB.getByText("言葉を交わしながら互いに心地よい進み方を見つけていける組み合わせです。")).toBeInTheDocument();
   });
 

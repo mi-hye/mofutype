@@ -393,6 +393,21 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken, curren
       ) : null}
 
       <GroupGraph members={aggregate.members} unlocks={aggregate.unlocks} onPairSelect={setSelectedPair} />
+      {selectedPair && selectedMembers && selectedRelationship ? (
+        <RelationSheet
+          relationship={selectedRelationship}
+          memberNames={[selectedMembers[0].nickname, selectedMembers[1].nickname]}
+          memberProfiles={[selectedMembers[0].profile, selectedMembers[1].profile]}
+          unlocked={isPairUnlocked(aggregate.unlocks, selectedPair.memberIds)}
+          checkoutHref={inviteToken
+            ? `/checkout/${encodeURIComponent(selectedPair.pairKey)}?invite=${encodeURIComponent(inviteToken)}`
+            : "#"}
+          detailHref={inviteToken
+            ? `/g/${encodeURIComponent(inviteToken)}/relation/${encodeURIComponent(selectedPair.pairKey)}`
+            : undefined}
+          onClose={() => setSelectedPair(null)}
+        />
+      ) : null}
       {currentMember && currentZodiac && currentCharacter && currentReading ? (
         <section className="my-result-card" aria-labelledby="my-result-title">
           <div className="my-result-card__summary">
@@ -454,21 +469,6 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken, curren
             </small>
           </div>
         </section>
-      ) : null}
-      {selectedPair && selectedMembers && selectedRelationship ? (
-        <RelationSheet
-          relationship={selectedRelationship}
-          memberNames={[selectedMembers[0].nickname, selectedMembers[1].nickname]}
-          memberProfiles={[selectedMembers[0].profile, selectedMembers[1].profile]}
-          unlocked={isPairUnlocked(aggregate.unlocks, selectedPair.memberIds)}
-          checkoutHref={inviteToken
-            ? `/checkout/${encodeURIComponent(selectedPair.pairKey)}?invite=${encodeURIComponent(inviteToken)}`
-            : "#"}
-          detailHref={inviteToken
-            ? `/g/${encodeURIComponent(inviteToken)}/relation/${encodeURIComponent(selectedPair.pairKey)}`
-            : undefined}
-          onClose={() => setSelectedPair(null)}
-        />
       ) : null}
     </main>
   );

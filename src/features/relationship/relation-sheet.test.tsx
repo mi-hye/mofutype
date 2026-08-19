@@ -71,7 +71,7 @@ describe("RelationSheet", () => {
 
     expect(screen.getByText(relationship.categoryLabelJa)).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: relationship.headlineJa })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "このふたりを300円で解放" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "この関係を詳しく見る 300円" })).toHaveAttribute(
       "href",
       "/checkout/a%3Ab?invite=token",
     );
@@ -80,6 +80,8 @@ describe("RelationSheet", () => {
     expect(screen.getByText("十二支・五行・陰陽・MBTIの読み解き")).toBeInTheDocument();
     expect(screen.getByText("ふたりでいるときのヒント")).toBeInTheDocument();
     expect(screen.getByText("1組 300円")).toBeInTheDocument();
+    expect(screen.getByText("FREE PREVIEW")).toBeInTheDocument();
+    expect(screen.getByText("買い切り・追加料金なし・自動更新なし")).toBeInTheDocument();
     for (const chapter of [
       "十二支の関係",
       "五行と陰陽",
@@ -112,7 +114,7 @@ describe("RelationSheet", () => {
 
     expect(screen.getByText("解放済み")).toBeInTheDocument();
     expect(screen.getByText(disclaimer)).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "このふたりを300円で解放" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "この関係を詳しく見る 300円" })).not.toBeInTheDocument();
     for (const heading of ["十二支の関係", "五行と陰陽", "MBTIの4つの軸", "ふたりでいるとき"]) {
       expect(screen.getByRole("heading", { name: heading })).toBeInTheDocument();
     }

@@ -61,7 +61,10 @@ export function RelationSheet({
           </button>
         ) : null}
       </header>
-      <p className="relation-sheet__category">{relationship.categoryLabelJa}</p>
+      <div className="relation-sheet__preview-heading">
+        <span>FREE PREVIEW</span>
+        <p className="relation-sheet__category">{relationship.categoryLabelJa}</p>
+      </div>
       <h2 id="relation-sheet-title">{relationship.headlineJa}</h2>
       {usesDateOnlyAnalysis ? (
         <p className="relation-sheet__note">出生時刻を使わない分析です</p>
@@ -159,8 +162,9 @@ export function RelationSheet({
             ))}
           </div>
           <ButtonLink size="lg" href={checkoutHref}>
-            このふたりを300円で解放
+            この関係を詳しく見る 300円
           </ButtonLink>
+          <p className="relation-sheet__purchase-note">買い切り・追加料金なし・自動更新なし</p>
         </div>
       )}
       <p className="relation-sheet__disclaimer">
