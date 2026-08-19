@@ -30,5 +30,6 @@ describe("ReportSampleGraph", () => {
     expect(members.every((member) => member.zodiacId === member.profile.zodiacId)).toBe(true);
     expect(graphProps.current?.unlocks).toEqual([]);
     expect(graphProps.current?.layout).toBe("horizontal-pair");
+    expect(graphProps.current?.showTapHint).not.toBe(true);
   });
 });

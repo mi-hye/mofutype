@@ -35,6 +35,7 @@ describe("LandingRelationshipPreview", () => {
     )).toBe(true);
     expect(graphProps.current?.unlocks).toEqual([]);
     expect(graphProps.current?.variant).toBe("minimal");
+    expect(graphProps.current?.showTapHint).toBe(true);
 
     const relationshipFactory = graphProps.current?.relationshipFactory as (input: {
       memberA: { id: string; profile: typeof members[number]["profile"] };

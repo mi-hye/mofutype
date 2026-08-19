@@ -92,6 +92,7 @@ export function LandingRelationshipPreview() {
         onPairSelect={ignorePreviewPairSelection}
         relationshipFactory={landingRelationshipFactory}
         variant="minimal"
+        showTapHint
       />
     </div>
   );

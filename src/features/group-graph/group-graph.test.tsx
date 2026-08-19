@@ -109,7 +109,7 @@ describe("GroupGraph", () => {
     const user = userEvent.setup();
     render(<GroupGraph members={[member("a", "あお"), member("b", "べに"), member("c", "ちゃ")]} unlocks={[]} onPairSelect={vi.fn()} />);
 
-    expect(screen.getByText("おしてな！")).toBeInTheDocument();
+    expect(screen.queryByText("おしてな！")).not.toBeInTheDocument();
     expect((flowProps.current?.edges as MockEdge[]).every((edge) => edge.label === undefined))
       .toBe(true);
     expect(screen.getByRole("region", { name: "メンバー関係性グラフ" }))
@@ -137,6 +137,7 @@ describe("GroupGraph", () => {
         unlocks={[]}
         onPairSelect={vi.fn()}
         variant="minimal"
+        showTapHint
       />,
     );
 
@@ -153,7 +154,7 @@ describe("GroupGraph", () => {
       .toBe(true);
     expect(screen.queryByRole("group", { name: "関係線を色で絞り込む" }))
       .not.toBeInTheDocument();
-    expect(screen.queryByText("おしてな！")).not.toBeInTheDocument();
+    expect(screen.getByText("おしてな！")).toBeInTheDocument();
   });
 
   it("lays a two-person report sample out from left to right", () => {

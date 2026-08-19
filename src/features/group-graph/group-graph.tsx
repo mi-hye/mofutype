@@ -39,6 +39,7 @@ interface GroupGraphProps {
   relationshipFactory?: RelationshipFactory;
   variant?: "default" | "minimal";
   layout?: "radial" | "horizontal-pair";
+  showTapHint?: boolean;
 }
 
 const nodeTypes = { zodiac: ZodiacNode };
@@ -76,6 +77,7 @@ function GroupGraphComponent({
   relationshipFactory = createEtoRelationship,
   variant = "default",
   layout = "radial",
+  showTapHint = false,
 }: GroupGraphProps) {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [selectedLineColor, setSelectedLineColor] = useState<RelationshipLineColor | null>(null);
@@ -187,7 +189,7 @@ function GroupGraphComponent({
           elementsSelectable
           proOptions={{ hideAttribution: true }}
         />
-        {variant === "default" && members.length > 1 ? (
+        {showTapHint && members.length > 1 ? (
           <p className="group-graph__tap-hint">おしてな！</p>
         ) : null}
       </div>
