@@ -23,6 +23,7 @@ interface RelationSheetProps {
   unlocked: boolean;
   checkoutHref: string;
   detailHref?: string;
+  compact?: boolean;
   onClose?: () => void;
 }
 
@@ -43,6 +44,7 @@ export function RelationSheet({
   unlocked,
   checkoutHref,
   detailHref,
+  compact = false,
   onClose,
 }: RelationSheetProps) {
   const boundaryDistributionUnavailable = hasUnavailableBoundaryDistribution(memberProfiles);
@@ -50,6 +52,37 @@ export function RelationSheet({
     (profile) => profile.calculationMode === "date-only",
   );
   const mbtiInsight = relationship.mbtiInsight;
+
+  if (compact) {
+    return (
+      <section className="relation-sheet relation-sheet--compact" aria-labelledby="relation-sheet-title">
+        <header className="relation-sheet__header">
+          <p>{memberNames[0]} × {memberNames[1]}</p>
+          {onClose ? (
+            <button type="button" onClick={onClose} aria-label="関係詳細を閉じる">閉じる</button>
+          ) : null}
+        </header>
+        <div className="relation-sheet__preview-heading">
+          <span>{unlocked ? "UNLOCKED" : "FREE PREVIEW"}</span>
+          <p className="relation-sheet__category">{relationship.categoryLabelJa}</p>
+        </div>
+        <h2 id="relation-sheet-title">{relationship.headlineJa}</h2>
+        <p className="relation-sheet__compact-copy">
+          {unlocked
+            ? "ふたりの関係レポートは解放済みです。詳しい読み解きを確認できます。"
+            : "ふたりの違い、心地よい距離、それぞれへの具体的なヒントまで読み解きます。"}
+        </p>
+        {unlocked && detailHref ? (
+          <ButtonLink href={detailHref}>詳しい関係レポートを見る</ButtonLink>
+        ) : (
+          <>
+            <ButtonLink href={checkoutHref}>この関係を詳しく見る 300円</ButtonLink>
+            <p className="relation-sheet__purchase-note">買い切り・追加料金なし・自動更新なし</p>
+          </>
+        )}
+      </section>
+    );
+  }
 
   return (
     <section className="relation-sheet" aria-labelledby="relation-sheet-title">

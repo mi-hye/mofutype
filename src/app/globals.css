@@ -364,6 +364,14 @@ body:has(.group-share-backdrop) { overflow: hidden; }
 .my-result-card__identity strong { color: var(--accent-navy); font-family: var(--font-display); font-size: clamp(1rem, 4vw, 1.3rem); font-weight: 700; line-height: 1.3; }
 .my-result-card__identity ul { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0.35rem 0 0; padding: 0; list-style: none; }
 .my-result-card__identity li { display: contents; }
+.my-result-card__preview { display: grid; gap: 0.3rem; border-top: var(--border-subtle); padding-top: 0.95rem; }
+.my-result-card__preview > p:first-child { width: fit-content; margin: 0; color: var(--accent-vermilion); font-size: 0.6rem; font-weight: 850; letter-spacing: 0.13em; line-height: 1; }
+.my-result-card__preview h2 { margin: 0.2rem 0 0; color: var(--accent-navy); font-size: 1rem; line-height: 1.35; }
+.my-result-card__preview > p:last-child { max-width: 48rem; margin: 0; color: var(--text-muted); font-size: 0.82rem; line-height: 1.72; }
+.my-result-card__actions { display: flex; min-width: 0; align-items: center; flex-wrap: wrap; gap: 0.65rem; }
+.my-result-card__actions > .ui-button { min-width: min(100%, 12rem); text-decoration: none; }
+.my-result-card__actions > .group-share-controls { justify-items: start; }
+.my-result-card__actions .my-result-card__share-button { width: auto; min-width: 8.5rem; }
 .my-result-card__reading-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.8rem; border-top: var(--border-subtle); padding-top: 1rem; }
 .my-result-card__reading { min-width: 0; border: var(--border-subtle); border-radius: 1.1rem; padding: 0.85rem; background: var(--surface); }
 .my-result-card__reading--mbti { grid-column: 1 / -1; }
@@ -383,6 +391,8 @@ body:has(.group-share-backdrop) { overflow: hidden; }
 
 @media (max-width: 560px) {
   .my-result-card__reading-grid, .my-result-card__axes { grid-template-columns: 1fr; }
+  .my-result-card__actions { align-items: stretch; flex-direction: column; }
+  .my-result-card__actions > .ui-button, .my-result-card__actions > .group-share-controls, .my-result-card__actions .my-result-card__share-button { width: 100%; }
 }
 
 .relation-sheet { position: relative; width: min(100%, 58rem); min-width: 0; overflow: hidden; margin: 2rem auto 0; border: var(--border-panel); border-radius: 2.4rem 2.15rem 2.55rem 2rem / 2.2rem 2.5rem 2.05rem 2.4rem; outline: 1px solid rgb(var(--ink-rgb) / 12%); outline-offset: -5px; padding: clamp(1.1rem, 4vw, 2.25rem); background: var(--surface-elevated); box-shadow: 3px 4px 0 rgb(var(--ink-rgb) / 6%), var(--shadow-pop), inset 0 0 0 4px rgb(255 255 255 / 42%); animation: rise-in 420ms ease-out both; }
@@ -424,6 +434,26 @@ body:has(.group-share-backdrop) { overflow: hidden; }
 .relation-sheet__note { margin: 0.7rem 0 0 !important; color: var(--text-muted); font-size: 0.8rem; }
 .relation-sheet__directional-tips { display: grid; min-width: 0; gap: 0; }
 .relation-sheet__disclaimer { margin-top: 1rem !important; border-top: var(--border-subtle); padding-top: 0.8rem; color: var(--text-muted); font-size: 0.76rem; }
+.relation-sheet--compact { display: grid; gap: 0.75rem; }
+.relation-sheet--compact .relation-sheet__preview-heading { margin-top: 0; }
+.relation-sheet--compact > h2 { margin: 0; font-size: clamp(1.45rem, 5vw, 2.35rem); }
+.relation-sheet--compact .relation-sheet__compact-copy { max-width: 42rem; margin: 0; color: var(--text-muted); font-size: 0.84rem; line-height: 1.7; }
+.relation-sheet--compact > .ui-button { width: fit-content; max-width: 100%; margin-top: 0.25rem; text-align: center; text-decoration: none; }
+.relation-sheet--compact .relation-sheet__purchase-note { margin: -0.2rem 0 0; }
+
+.personal-detail-shell { width: min(calc(100% - 1.5rem), 58rem); margin-inline: auto; padding: 1.25rem 0 5rem; }
+.personal-detail__back { display: inline-flex; min-height: 44px; align-items: center; color: var(--text-muted); font-size: 0.8rem; font-weight: 700; text-underline-offset: 0.2rem; }
+.personal-detail__back::before { margin-right: 0.35rem; content: "←"; }
+.personal-detail-card { margin-top: 0.5rem; }
+.personal-detail-offer { --list-accent: var(--accent-vermilion); display: grid; gap: 0.85rem; margin-top: 1.1rem; border: var(--border-panel); border-radius: 2rem 1.8rem 2.2rem 1.7rem / 1.85rem 2.15rem 1.75rem 2rem; outline: 1px solid rgb(var(--ink-rgb) / 12%); outline-offset: -5px; padding: clamp(1.1rem, 4vw, 2rem); background: var(--butter); box-shadow: 3px 4px 0 rgb(var(--ink-rgb) / 6%), var(--shadow-pop); }
+.personal-detail-offer__eyebrow { margin: 0; color: var(--accent-vermilion); font-size: 0.62rem; font-weight: 850; letter-spacing: 0.14em; line-height: 1; }
+.personal-detail-offer h2 { max-width: 20ch; margin: 0; color: var(--accent-navy); font-family: var(--font-display); font-size: clamp(1.45rem, 5vw, 2.3rem); line-height: 1.2; }
+.personal-detail-offer > p:not(.personal-detail-offer__eyebrow) { max-width: 42rem; margin: 0; color: var(--ink); font-size: 0.84rem; line-height: 1.75; }
+.personal-detail-offer__purchase { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.4rem 0.75rem; border-top: 1.5px solid rgb(var(--ink-rgb) / 25%); padding-top: 0.8rem; }
+.personal-detail-offer__purchase strong { font-size: 1.15rem; }
+.personal-detail-offer__purchase span { color: var(--text-muted); font-size: 0.72rem; font-weight: 650; }
+.personal-detail-offer > .ui-button { width: fit-content; max-width: 100%; text-align: center; text-decoration: none; }
+.personal-detail-shell > .group-share-controls { justify-items: start; margin-top: 1rem; }
 
 .checkout-panel { position: relative; width: min(100%, 38rem); min-width: 0; overflow: hidden; margin-inline: auto; border: var(--border-panel); border-radius: 2.35rem 2.1rem 2.5rem 2rem / 2.15rem 2.45rem 2.05rem 2.35rem; outline: 1px solid rgb(var(--ink-rgb) / 12%); outline-offset: -5px; padding: clamp(1.1rem, 5vw, 2.4rem); background: var(--surface-elevated); box-shadow: 3px 4px 0 rgb(var(--ink-rgb) / 6%), var(--shadow-pop), inset 0 0 0 4px rgb(255 255 255 / 44%); animation: rise-in 420ms ease-out both; }
 .checkout-panel::before { display: none; }

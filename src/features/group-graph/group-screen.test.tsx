@@ -133,7 +133,7 @@ describe("GroupScreen", () => {
     expect(topbar).toContainElement(screen.getByRole("button", { name: "最新の情報に更新" }));
   });
 
-  it("shows the signed-in member's derived astrology result below the graph", () => {
+  it("shows a concise personal preview with a dedicated detail CTA below the graph", () => {
     const initial = aggregate("g1", [
       member("a", "わたし"),
       { ...member("b", "ともだち"), mbti: "ENTJ",
@@ -146,17 +146,15 @@ describe("GroupScreen", () => {
     expect(screen.getByText("わたしの四柱推命")).toBeInTheDocument();
     expect(screen.queryByText("MY PROFILE")).not.toBeInTheDocument();
     expect(screen.getByText("大胆に道を切り開くうさぎ")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "十二支の気質" })).toBeInTheDocument();
+    expect(screen.getByText("FREE PREVIEW")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "うさぎの気質" })).toBeInTheDocument();
     expect(screen.getByText(/豊かな感性と気配り/)).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "ENTJの思考と行動" })).toBeInTheDocument();
-    const mbtiAxes = screen.getByRole("list", { name: "MBTIの4つの視点" });
-    expect(mbtiAxes).toHaveTextContent("E · エネルギー");
-    expect(mbtiAxes).toHaveTextContent("N · 情報の捉え方");
-    expect(mbtiAxes).toHaveTextContent("T · 判断の軸");
-    expect(mbtiAxes).toHaveTextContent("J · 進め方");
-    expect(screen.getByRole("heading", { name: "火・陽の行動スタイル" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "うさぎ × ENTJ × 火・陽" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "ENTJの思考と行動" })).not.toBeInTheDocument();
     expect(screen.getByRole("list", { name: "診断結果の詳細" })).toHaveTextContent("ENTJ火・陽出生時刻を反映");
+    expect(screen.getByRole("link", { name: "わたしの詳細を見る" })).toHaveAttribute(
+      "href",
+      `/g/${"a".repeat(64)}/profile`,
+    );
     expect(screen.getByRole("button", { name: "共有する" })).toBeInTheDocument();
     expect(screen.queryByText("たつタイプとして")).not.toBeInTheDocument();
   });
@@ -179,15 +177,13 @@ describe("GroupScreen", () => {
     expect(documentOrder & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it("keeps the personal result complete and neutral when MBTI is unknown", () => {
+  it("keeps the personal preview neutral when MBTI is unknown", () => {
     const initial = aggregate("g1", [member("a", "わたし")]);
     const repo = repository(initial);
 
     render(<GroupScreen initialAggregate={initial} repository={repo.api} currentUserId="u-a" />);
 
-    expect(screen.getByRole("heading", { name: "十二支の気質" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "木・陽の行動スタイル" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "たつ × 木・陽" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "たつの気質" })).toBeInTheDocument();
     expect(screen.queryByText(/MBTIの思考と行動/)).not.toBeInTheDocument();
     expect(screen.getByText("MBTI未設定")).toBeInTheDocument();
   });
@@ -259,10 +255,10 @@ describe("GroupScreen", () => {
       secondRepository.callbacks()?.onUnlockChange?.({ eventType: "INSERT", new: sharedUnlock });
     });
 
-    expect(sessionA.getByText("解放済み")).toBeInTheDocument();
-    expect(sessionB.getByText("解放済み")).toBeInTheDocument();
+    expect(sessionA.getByText("UNLOCKED")).toBeInTheDocument();
+    expect(sessionB.getByText("UNLOCKED")).toBeInTheDocument();
     expect(sessionA.queryByRole("link", { name: "この関係を詳しく見る 300円" })).not.toBeInTheDocument();
-    expect(sessionB.getByText("言葉を交わしながら互いに心地よい進み方を見つけていける組み合わせです。")).toBeInTheDocument();
+    expect(sessionB.getByRole("link", { name: "詳しい関係レポートを見る" })).toBeInTheDocument();
   });
 
   it("recomputes an open relationship from the latest realtime member profiles", async () => {
@@ -281,9 +277,8 @@ describe("GroupScreen", () => {
     expect(screen.getByRole("heading", {
       name: "たつととりは、自然にかみ合う関係です",
     })).toBeInTheDocument();
-    expect(screen.getByText("互いの持ち味が無理なくかみ合い、自然な連携を育てやすい組み合わせです。")).toBeInTheDocument();
-    expect(screen.getByText("木の視点を穏やかに伝え、相手の土の選択肢を広げましょう。")).toBeInTheDocument();
-    expect(screen.getByText("節入りの境界に近いため、五行と陰陽の分布は表示していません。")).toBeInTheDocument();
+    expect(screen.getByText("自然にかみ合う関係")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "詳しい関係レポートを見る" })).toBeInTheDocument();
     expect(screen.queryByText("十二支の本文")).not.toBeInTheDocument();
   });
 

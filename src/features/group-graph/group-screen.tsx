@@ -2,16 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { ZodiacAvatar } from "@/components/zodiac-avatar";
 import { Button } from "@/components/ui/button";
-import { Capsule } from "@/components/ui/capsule";
+import { PersonalReadingSummary } from "@/features/personal-reading/personal-reading-view";
 import { StatusBanner, type ConnectionStatus } from "@/components/ui/status-banner";
 import { RelationSheet } from "@/features/relationship/relation-sheet";
 import { GroupShareControls } from "@/features/share/group-share-controls";
-import { createCharacterCopy } from "@/lib/eto/character";
-import { createPersonalReading } from "@/lib/eto/personal-reading";
 import { createEtoRelationship } from "@/lib/eto/relationship";
-import { ZODIACS } from "@/lib/eto/zodiac";
 import type {
   GroupAggregate,
   GroupSubscriptionCallbacks,
@@ -316,19 +312,6 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken, curren
   const currentMember = activeUserId
     ? aggregate.members.find((member) => member.userId === activeUserId) ?? null
     : null;
-  const currentZodiac = currentMember ? ZODIACS[currentMember.zodiacId] : null;
-  const currentCharacter = currentMember
-    ? createCharacterCopy(currentMember.zodiacId, currentMember.mbti)
-    : null;
-  const currentReading = currentMember
-    ? createPersonalReading(currentMember.profile)
-    : null;
-  const elementLabel = currentMember
-    ? { WOOD: "木", FIRE: "火", EARTH: "土", METAL: "金", WATER: "水" }[currentMember.profile.dayMaster.element]
-    : null;
-  const polarityLabel = currentMember
-    ? { YIN: "陰", YANG: "陽" }[currentMember.profile.dayMaster.polarity]
-    : null;
 
   const selectedMembers = selectedPair
     ? findSelectedMembers(aggregate.members, selectedPair.memberIds)
@@ -405,78 +388,17 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken, curren
           detailHref={inviteToken
             ? `/g/${encodeURIComponent(inviteToken)}/relation/${encodeURIComponent(selectedPair.pairKey)}`
             : undefined}
+          compact
           onClose={() => setSelectedPair(null)}
         />
       ) : null}
-      {currentMember && currentZodiac && currentCharacter && currentReading ? (
-        <section className="my-result-card" aria-labelledby="my-result-title">
-          <div className="my-result-card__summary">
-            <ZodiacAvatar
-              zodiacId={currentMember.zodiacId}
-              nickname={currentMember.nickname}
-              size="md"
-            />
-            <div className="my-result-card__identity">
-              <span id="my-result-title">わたしの四柱推命</span>
-              <strong>{currentCharacter.titleJa}</strong>
-              <ul aria-label="診断結果の詳細">
-                <li>
-                  <Capsule>{currentMember.mbti ?? "MBTI未設定"}</Capsule>
-                </li>
-                <li>
-                  <Capsule>{elementLabel}・{polarityLabel}</Capsule>
-                </li>
-                <li>
-                  <Capsule>
-                    {currentMember.profile.calculationMode === "date-time"
-                      ? "出生時刻を反映"
-                      : "生年月日で診断"}
-                  </Capsule>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div className="my-result-card__reading-grid">
-            <section className="my-result-card__reading">
-              <h2>十二支の気質</h2>
-              <h3>{currentReading.zodiac.titleJa}</h3>
-              <p>{currentReading.zodiac.summaryJa}</p>
-            </section>
-            {currentReading.mbti ? (
-              <section className="my-result-card__reading my-result-card__reading--mbti">
-                <h2>{currentReading.mbti.titleJa}</h2>
-                <p>{currentReading.mbti.leadJa}</p>
-                <ul className="my-result-card__axes" aria-label="MBTIの4つの視点">
-                  {currentReading.mbti.axes.map((axisReading) => (
-                    <li key={axisReading.code}>
-                      <strong>{axisReading.code} · {axisReading.labelJa}</strong>
-                      <span>{axisReading.summaryJa}</span>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            ) : null}
-            <section className="my-result-card__reading">
-              <h2>{currentReading.fourPillars.titleJa}</h2>
-              <p>{currentReading.fourPillars.summaryJa}</p>
-            </section>
-            <section className="my-result-card__reading my-result-card__reading--combined">
-              <h2>{currentReading.combined.titleJa}</h2>
-              <p>{currentReading.combined.summaryJa}</p>
-            </section>
-            <small className="my-result-card__note">
-              十二支・MBTI・五行と陰陽を重ねた、自己理解のための読み解きです。
-            </small>
-            {inviteToken ? (
-              <GroupShareControls
-                groupName={aggregate.group.name}
-                inviteToken={inviteToken}
-                memberCount={aggregate.members.length}
-                triggerLabel="共有する"
-              />
-            ) : null}
-          </div>
-        </section>
+      {currentMember ? (
+        <PersonalReadingSummary
+          member={currentMember}
+          groupName={aggregate.group.name}
+          memberCount={aggregate.members.length}
+          inviteToken={inviteToken}
+        />
       ) : null}
     </main>
   );
