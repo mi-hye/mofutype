@@ -220,7 +220,7 @@ describe("buildGraph", () => {
     },
   );
 
-  it("filters every calculated pair by relationship line color", () => {
+  it("emphasizes a selected perimeter color without adding hidden chord colors", () => {
     const topology = buildGraphTopology([member("a"), member("b"), member("c"), member("d")]);
     const categories = [
       "NATURAL_INTERLOCK",
@@ -244,10 +244,12 @@ describe("buildGraph", () => {
 
     const filtered = decorateGraph(categorized, null, [], "clear");
     const visibleEdges = filtered.edges.filter((edge) => Number(edge.style?.opacity) > 0);
+    const selectedEdges = visibleEdges.filter((edge) => edge.data.lineColor === "clear");
+    const unselectedEdges = visibleEdges.filter((edge) => edge.data.lineColor !== "clear");
 
-    expect(visibleEdges).toHaveLength(3);
-    expect(visibleEdges.every((edge) => edge.style?.stroke === "var(--relationship-clear)"))
-      .toBe(true);
+    expect(visibleEdges).toHaveLength(4);
+    expect(selectedEdges.every((edge) => edge.style?.opacity === 1)).toBe(true);
+    expect(unselectedEdges.every((edge) => edge.style?.opacity === 0.72)).toBe(true);
     expect(filtered.edges.filter((edge) => Number(edge.style?.opacity) === 0)
       .every((edge) => edge.style?.pointerEvents === "none"))
       .toBe(true);

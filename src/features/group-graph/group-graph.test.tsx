@@ -126,17 +126,20 @@ describe("GroupGraph", () => {
 
     const filters = screen.getByRole("group", { name: "関係線を色で絞り込む" });
     const clearFilter = within(filters).getByRole("button", { name: "可能性・ペース" });
-    expect(within(filters).getByRole("button", { name: "すべて" })).toHaveAttribute("aria-pressed", "true");
+    expect(within(filters).queryByRole("button", { name: "すべて" })).not.toBeInTheDocument();
+    expect(within(filters).queryByRole("button", { name: "息ぴったり" })).not.toBeInTheDocument();
+    expect(within(filters).queryByRole("button", { name: "いい刺激" })).not.toBeInTheDocument();
+    expect(clearFilter).toHaveAttribute("aria-pressed", "false");
 
     await user.click(clearFilter);
     expect(clearFilter).toHaveAttribute("aria-pressed", "true");
     expect((flowProps.current?.edges as Array<MockEdge & { style?: React.CSSProperties }> )
       .filter((edge) => Number(edge.style?.opacity) > 0)
-      .every((edge) => edge.style?.stroke === "var(--relationship-clear)"))
+      .every((edge) => edge.style?.opacity === 1))
       .toBe(true);
 
     await user.click(clearFilter);
-    expect(within(filters).getByRole("button", { name: "すべて" })).toHaveAttribute("aria-pressed", "true");
+    expect(clearFilter).toHaveAttribute("aria-pressed", "false");
   });
 
   it("shows each free member's zodiac character title with and without MBTI", () => {

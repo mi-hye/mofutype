@@ -95,6 +95,14 @@ function GroupGraphComponent({
       : graph.edges.filter((edge) => edge.data.memberIds.includes(selectedNodeId)),
     [graph.edges, selectedNodeId],
   );
+  const availableLineFilters = useMemo(() => {
+    const colors = new Set(
+      graph.edges
+        .filter((edge) => edge.className?.includes("relationship-edge--perimeter"))
+        .map((edge) => edge.data.lineColor),
+    );
+    return lineColorFilters.filter((filter) => colors.has(filter.value));
+  }, [graph.edges]);
   const fitViewPadding = members.length <= 6 ? 0.34 : 0.22;
 
   const handleNodeClick = useCallback<NodeMouseHandler<ZodiacGraphNode>>(
@@ -148,16 +156,9 @@ function GroupGraphComponent({
         />
       </div>
 
-      <div className="group-graph__filters" role="group" aria-label="関係線を色で絞り込む">
-        <button
-          type="button"
-          data-color="all"
-          aria-pressed={selectedLineColor === null}
-          onClick={() => setSelectedLineColor(null)}
-        >
-          すべて
-        </button>
-        {lineColorFilters.map((filter) => (
+      {availableLineFilters.length > 0 ? (
+        <div className="group-graph__filters" role="group" aria-label="関係線を色で絞り込む">
+        {availableLineFilters.map((filter) => (
           <button
             key={filter.value}
             type="button"
@@ -170,7 +171,8 @@ function GroupGraphComponent({
             {filter.label}
           </button>
         ))}
-      </div>
+        </div>
+      ) : null}
 
       {selectedMember ? (
         <p className="group-graph__selection" role="status" aria-label="選択中のメンバー">

@@ -42,6 +42,7 @@ export interface TopologyEdgeData extends Record<string, unknown> {
 export interface RelationshipEdgeData extends TopologyEdgeData {
   unlocked: boolean;
   emphasis: EdgeEmphasis;
+  lineColor: RelationshipLineColor;
 }
 
 export type TopologyNode = Node<TopologyNodeData, "zodiac">;
@@ -282,9 +283,7 @@ export function decorateGraph(
     const perimeter = perimeterPairs.has(edge.id);
     const lineColor = RELATIONSHIP_LINE_COLOR_GROUPS[edge.data.relationship.category];
     const matchesColor = selectedLineColor === null || lineColor === selectedLineColor;
-    const visible = selectedNodeId === null
-      ? selectedLineColor === null ? perimeter : matchesColor
-      : incident && matchesColor;
+    const visible = selectedNodeId === null ? perimeter : incident;
     const emphasis: EdgeEmphasis = selectedNodeId === null
       ? visible ? "default" : "faint"
       : visible ? "incident" : "faint";
@@ -294,7 +293,8 @@ export function decorateGraph(
       : incident);
     const category = edge.data.relationship.category;
     const strokeWidth = incident ? (unlocked ? 5 : 4) : unlocked ? 4 : 3;
-    const opacity = visible ? incident ? 1 : 0.72 : 0;
+    const emphasized = selectedLineColor !== null ? matchesColor : incident;
+    const opacity = visible ? emphasized ? 1 : 0.72 : 0;
     return {
       ...edge,
       animated: false,
@@ -330,6 +330,7 @@ export function decorateGraph(
         ...edge.data,
         unlocked,
         emphasis,
+        lineColor,
       },
     };
   });

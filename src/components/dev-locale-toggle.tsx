@@ -13,7 +13,6 @@ const KO_COPY: Readonly<Record<string, string>> = {
   "MofuType ホーム": "MofuType 홈",
   "MofuType グループ": "MofuType 그룹",
   "関係線を色で絞り込む": "관계선을 색상으로 필터링",
-  "すべて": "전체",
   "可能性・ペース": "가능성·속도",
   "わたしたち、こんな感じ。": "우리들, 이런 느낌.",
   "わたしたち、": "우리들,",
