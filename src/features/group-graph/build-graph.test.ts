@@ -250,6 +250,8 @@ describe("buildGraph", () => {
     expect(visibleEdges).toHaveLength(4);
     expect(selectedEdges.every((edge) => edge.style?.opacity === 1)).toBe(true);
     expect(unselectedEdges.every((edge) => edge.style?.opacity === 0.72)).toBe(true);
+    expect(visibleEdges.every((edge) => edge.labelBgStyle?.fill === edge.style?.stroke))
+      .toBe(true);
     expect(filtered.edges.filter((edge) => Number(edge.style?.opacity) === 0)
       .every((edge) => edge.style?.pointerEvents === "none"))
       .toBe(true);
