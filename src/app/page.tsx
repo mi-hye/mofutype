@@ -111,12 +111,6 @@ export default function Home() {
             </header>
 
             <div className="report-preview__paper">
-              <div className="report-preview__pair" aria-label="AさんとBさんのサンプル">
-                <span>Aさん</span>
-                <i aria-hidden="true" />
-                <span>Bさん</span>
-              </div>
-
               <ReportSampleGraph />
 
               <div className="report-preview__lead">

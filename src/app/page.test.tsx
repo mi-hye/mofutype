@@ -105,6 +105,7 @@ describe("Home", () => {
     expect(screen.getByText("もっと合うヒント")).toBeInTheDocument();
     expect(screen.getByText("追加料金なし。自動更新なし。")).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "メンバー関係性グラフ" })).toBeInTheDocument();
+    expect(screen.queryByLabelText("AさんとBさんのサンプル")).not.toBeInTheDocument();
     expect(screen.getByText("Aさん × Bさんの関係だけをピックアップ。")).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "無料でグループを作る" })).not.toBeInTheDocument();
   });
