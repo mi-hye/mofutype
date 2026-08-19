@@ -15,7 +15,9 @@ vi.mock("@xyflow/react", async () => {
   const React = await import("react");
   return {
     Background: () => null,
-    Handle: () => null,
+    Handle: ({ type, style }: { type: string; style?: React.CSSProperties }) => (
+      <span data-testid={`flow-handle-${type}`} style={style} />
+    ),
     Position: { Top: "top", Bottom: "bottom" },
     ReactFlow: (props: Record<string, unknown>) => {
       flowProps.current = props;
@@ -145,6 +147,17 @@ describe("GroupGraph", () => {
     expect(within(accessibleList).getByText("好奇心のまま駆け出すいのしし"))
       .toBeInTheDocument();
     expect(within(accessibleList).getByText("さるタイプ")).toBeInTheDocument();
+  });
+
+  it("anchors both ends of every relationship line at each node center", () => {
+    render(<GroupGraph members={[member("a"), member("b")]} unlocks={[]} onPairSelect={vi.fn()} />);
+
+    for (const handle of [
+      ...screen.getAllByTestId("flow-handle-target"),
+      ...screen.getAllByTestId("flow-handle-source"),
+    ]) {
+      expect(handle).toHaveStyle({ left: "50%", top: "3.125rem", transform: "translate(-50%, -50%)" });
+    }
   });
 
   it("sends a stable complete payload when an edge is clicked", async () => {

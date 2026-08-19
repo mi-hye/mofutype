@@ -243,6 +243,16 @@ export function decorateGraph(
   selectedNodeId: string | null,
   unlocks: readonly RelationUnlock[],
 ): BuiltGraph {
+  const perimeterPairs = new Set<string>();
+  if (topology.nodes.length === 2) {
+    perimeterPairs.add(canonicalPairKey(topology.nodes[0].id, topology.nodes[1].id));
+  } else if (topology.nodes.length > 2) {
+    for (let index = 0; index < topology.nodes.length; index += 1) {
+      const current = topology.nodes[index];
+      const next = topology.nodes[(index + 1) % topology.nodes.length];
+      perimeterPairs.add(canonicalPairKey(current.id, next.id));
+    }
+  }
   const unlockedPairs = new Set(
     unlocks
       .filter((item) => item.status === "unlocked")
@@ -258,18 +268,18 @@ export function decorateGraph(
   const edges = topology.edges.map<RelationshipGraphEdge>((edge) => {
     const incident = selectedNodeId !== null &&
       (edge.source === selectedNodeId || edge.target === selectedNodeId);
+    const perimeter = perimeterPairs.has(edge.id);
+    const visible = selectedNodeId === null ? perimeter : incident;
     const emphasis: EdgeEmphasis = selectedNodeId === null
-      ? "default"
+      ? perimeter ? "default" : "faint"
       : incident ? "incident" : "faint";
     const unlocked = unlockedPairs.has(edge.id);
-    const showLabel = selectedNodeId === null
+    const showLabel = visible && (selectedNodeId === null
       ? topology.nodes.length <= 6
-      : incident;
+      : incident);
     const category = edge.data.relationship.category;
     const strokeWidth = incident ? (unlocked ? 5 : 4) : unlocked ? 4 : 3;
-    const opacity = emphasis === "faint"
-      ? unlocked ? 0.3 : 0.1
-      : incident ? 1 : 0.72;
+    const opacity = visible ? incident ? 1 : 0.72 : 0;
     return {
       ...edge,
       animated: false,
@@ -277,6 +287,7 @@ export function decorateGraph(
         "relationship-edge",
         `relationship-edge--${unlocked ? "unlocked" : "locked"}`,
         `relationship-edge--${emphasis}`,
+        `relationship-edge--${perimeter ? "perimeter" : "chord"}`,
       ].join(" "),
       label: showLabel ? RELATIONSHIP_SHORT_LABELS[category] : undefined,
       labelShowBg: showLabel,
@@ -298,6 +309,7 @@ export function decorateGraph(
         stroke: RELATIONSHIP_LINE_COLORS[category],
         strokeWidth,
         opacity,
+        pointerEvents: visible ? "auto" : "none",
       },
       data: {
         ...edge.data,

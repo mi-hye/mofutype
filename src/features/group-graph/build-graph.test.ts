@@ -197,6 +197,29 @@ describe("buildGraph", () => {
     expect(graph.edges.every((edge) => edge.style?.strokeDasharray === undefined)).toBe(true);
   });
 
+  it.each([4, 5, 6])(
+    "shows a %i-sided perimeter while preserving every calculated relationship",
+    (count) => {
+      const ids = Array.from({ length: count }, (_, index) => String.fromCharCode(97 + index));
+      const graph = buildGraph(
+        ids.map((id) => member(id)),
+        null,
+        [],
+      );
+      const visibleEdges = graph.edges.filter((edge) => Number(edge.style?.opacity) > 0);
+      const expectedPerimeter = ids.map((id, index) =>
+        [id, ids[(index + 1) % ids.length]].sort().join(":"),
+      ).sort();
+
+      expect(graph.edges).toHaveLength(count * (count - 1) / 2);
+      expect(visibleEdges).toHaveLength(count);
+      expect(visibleEdges.map((edge) => edge.id).sort()).toEqual(expectedPerimeter);
+      expect(graph.edges.filter((edge) => Number(edge.style?.opacity) === 0)
+        .every((edge) => edge.label === undefined && edge.style?.pointerEvents === "none"))
+        .toBe(true);
+    },
+  );
+
   it("exposes relationship results and only completed unlocks", () => {
     const pending = { ...unlock("a", "c"), id: "pending", status: "pending" as const };
     const graph = buildGraph(
