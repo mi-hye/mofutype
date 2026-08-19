@@ -45,7 +45,7 @@ export function ZodiacNode({ data }: { data: ZodiacNodeData }) {
       ) : null}
       <Handle
         type="source"
-        position={Position.Bottom}
+        position={Position.Top}
         className="zodiac-graph-node__handle"
         style={{ left: "50%", top: frameCenter, transform: "translate(-50%, -50%)" }}
       />
