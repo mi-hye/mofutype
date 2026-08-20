@@ -417,8 +417,8 @@ body:has(.group-share-backdrop) { overflow: hidden; }
 .relation-sheet { position: relative; width: min(100%, 58rem); min-width: 0; overflow: hidden; margin: 2rem auto 0; border: var(--border-panel); border-radius: 2.4rem 2.15rem 2.55rem 2rem / 2.2rem 2.5rem 2.05rem 2.4rem; outline: 1px solid rgb(var(--ink-rgb) / 12%); outline-offset: -5px; padding: clamp(1.1rem, 4vw, 2.25rem); background: var(--surface-elevated); box-shadow: 3px 4px 0 rgb(var(--ink-rgb) / 6%), var(--shadow-pop), inset 0 0 0 4px rgb(255 255 255 / 42%); animation: rise-in 420ms ease-out both; }
 .relation-sheet::before { display: none; }
 .relation-sheet__header { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 1rem; border-bottom: var(--border-subtle); padding-bottom: 0.85rem; }
-.relation-sheet__header p { min-width: 0; margin: 0; color: var(--text-muted); font-size: 0.82rem; font-weight: 700; overflow-wrap: anywhere; }
-.relation-sheet__header button { display: inline-grid; width: 48px; height: 48px; flex: 0 0 auto; place-items: center; border: var(--border-subtle); border-radius: 999px; padding: 0; background: var(--surface); color: var(--ink); cursor: pointer; }
+.relation-sheet__header p { min-width: 0; margin: 0; color: var(--ink); font-size: clamp(1.05rem, 3vw, 1.25rem); font-weight: 800; overflow-wrap: anywhere; }
+.relation-sheet__header button { display: inline-grid; width: 48px; height: 48px; flex: 0 0 auto; place-items: center; border: 0; border-radius: 999px; padding: 0; background: transparent; color: var(--ink); cursor: pointer; }
 .relation-sheet__header button svg { width: 1.35rem; height: 1.35rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
 .relation-sheet__preview-heading { display: flex; align-items: center; flex-wrap: wrap; gap: 0.45rem; margin-top: 0.8rem; }
 .relation-sheet__preview-heading > span { color: var(--accent-vermilion); font-size: 0.6rem; font-weight: 850; letter-spacing: 0.13em; line-height: 1; }

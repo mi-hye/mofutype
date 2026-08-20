@@ -107,6 +107,12 @@ describe("production source safety", () => {
     expect(globalStyles).toMatch(
       /\.group-graph__relationship-cards button:hover \.zodiac-avatar\s*\{[^}]*box-shadow:\s*none[^}]*transform:\s*none/,
     );
+    expect(globalStyles).toMatch(
+      /\.relation-sheet__header p\s*\{[^}]*font-size:\s*clamp\(1\.05rem,[^)]*1\.25rem\)/,
+    );
+    expect(globalStyles).toMatch(
+      /\.relation-sheet__header button\s*\{[^}]*border:\s*0[^}]*background:\s*transparent/,
+    );
     for (const variant of ["cream", "pink", "mint", "violet"]) {
       expect(globalStyles).toContain(`.ui-card[data-variant="${variant}"]`);
     }
