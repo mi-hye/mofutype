@@ -252,7 +252,10 @@ describe("RelationSheet", () => {
       />,
     );
 
-    await user.click(screen.getByRole("button", { name: "関係詳細を閉じる" }));
+    const closeButton = screen.getByRole("button", { name: "関係詳細を閉じる" });
+    expect(closeButton).not.toHaveTextContent("閉じる");
+    expect(closeButton.querySelector("svg")).toBeInTheDocument();
+    await user.click(closeButton);
     expect(onClose).toHaveBeenCalledOnce();
   });
 });

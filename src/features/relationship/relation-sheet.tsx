@@ -37,6 +37,16 @@ function hasUnavailableBoundaryDistribution(
   );
 }
 
+function CollapseRelationButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button type="button" onClick={onClick} aria-label="関係詳細を閉じる">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="m6.5 14.5 5.5-5 5.5 5" />
+      </svg>
+    </button>
+  );
+}
+
 export function RelationSheet({
   relationship,
   memberNames,
@@ -63,7 +73,7 @@ export function RelationSheet({
         <header className="relation-sheet__header">
           <p>{memberNames[0]} × {memberNames[1]}</p>
           {onClose ? (
-            <button type="button" onClick={onClose} aria-label="関係詳細を閉じる">閉じる</button>
+            <CollapseRelationButton onClick={onClose} />
           ) : null}
         </header>
         <div className="relation-sheet__preview-heading">
@@ -97,9 +107,7 @@ export function RelationSheet({
       <header className="relation-sheet__header">
         <p>{memberNames[0]} × {memberNames[1]}</p>
         {onClose ? (
-          <button type="button" onClick={onClose} aria-label="関係詳細を閉じる">
-            閉じる
-          </button>
+          <CollapseRelationButton onClick={onClose} />
         ) : null}
       </header>
       <div className="relation-sheet__preview-heading">
