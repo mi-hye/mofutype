@@ -395,7 +395,8 @@ body:has(.group-share-backdrop) { overflow: hidden; }
 .my-result-card__actions > .ui-button { min-width: min(100%, 12rem); text-decoration: none; }
 .my-result-card__actions > .group-share-controls { justify-items: start; }
 .my-result-card__actions .my-result-card__share-button { width: auto; min-width: 8.5rem; }
-.my-result-card--summary + .group-graph { margin-top: clamp(1rem, 3vw, 1.5rem); }
+.group-graph__interstitial { min-width: 0; }
+.group-graph__interstitial > .my-result-card--summary { margin-top: clamp(1rem, 3vw, 1.5rem); }
 .my-result-card__reading-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.8rem; border-top: var(--border-subtle); padding-top: 1rem; }
 .my-result-card__reading { min-width: 0; border: var(--border-subtle); border-radius: 1.1rem; padding: 0.85rem; background: var(--surface); }
 .my-result-card__reading--mbti { grid-column: 1 / -1; }

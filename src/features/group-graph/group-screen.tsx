@@ -337,6 +337,14 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken, curren
       onClose={() => setSelectedPair(null)}
     />
   ) : null;
+  const personalReadingContent = currentMember ? (
+    <PersonalReadingSummary
+      member={currentMember}
+      groupName={aggregate.group.name}
+      memberCount={aggregate.members.length}
+      inviteToken={inviteToken}
+    />
+  ) : null;
 
   return (
     <main className="group-member-shell">
@@ -390,19 +398,12 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken, curren
         </p>
       ) : null}
 
-      {currentMember ? (
-        <PersonalReadingSummary
-          member={currentMember}
-          groupName={aggregate.group.name}
-          memberCount={aggregate.members.length}
-          inviteToken={inviteToken}
-        />
-      ) : null}
       <GroupGraph
         anchorId="relationship-map"
         members={aggregate.members}
         unlocks={aggregate.unlocks}
         onPairSelect={setSelectedPair}
+        interstitialContent={personalReadingContent}
         relationshipDetail={relationshipDetail}
       />
     </main>

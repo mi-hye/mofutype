@@ -7,10 +7,11 @@ import type { GroupAggregate, GroupSubscriptionCallbacks } from "@/lib/supabase/
 import type { GroupMember, RelationUnlock } from "@/lib/supabase/models";
 
 vi.mock("./group-graph", () => ({
-  GroupGraph: ({ members, unlocks, onPairSelect, relationshipDetail }: {
+  GroupGraph: ({ members, unlocks, onPairSelect, interstitialContent, relationshipDetail }: {
     members: GroupMember[];
     unlocks: RelationUnlock[];
     onPairSelect(selection: unknown): void;
+    interstitialContent?: ReactNode;
     relationshipDetail?: ReactNode;
   }) => (
     <div data-testid="graph-state">
@@ -48,6 +49,7 @@ vi.mock("./group-graph", () => ({
           },
         })}>aとbの関係を選択</button>
       ) : null}
+      <div data-testid="mock-graph-interstitial">{interstitialContent}</div>
       <div data-testid="mock-relationship-panel">{relationshipDetail}</div>
     </div>
   ),
@@ -165,7 +167,7 @@ describe("GroupScreen", () => {
     expect(screen.queryByText("たつタイプとして")).not.toBeInTheDocument();
   });
 
-  it("places the personal result before the relationship graph and offer", async () => {
+  it("places the personal result below the graph and before the relationship offer", async () => {
     const user = userEvent.setup();
     const initial = aggregate("g1", [member("a", "わたし"), member("b", "ともだち")]);
     const repo = repository(initial);
@@ -174,11 +176,13 @@ describe("GroupScreen", () => {
     await user.click(screen.getByRole("button", { name: "aとbの関係を選択" }));
     const relationSheet = screen.getByRole("heading", { name: /関係です$/ }).closest(".relation-sheet");
     const relationshipPanel = screen.getByTestId("mock-relationship-panel");
+    const graphInterstitial = screen.getByTestId("mock-graph-interstitial");
     const personalResult = screen.getByText("わたしの四柱推命").closest(".my-result-card");
 
     expect(relationSheet).not.toBeNull();
     expect(relationSheet && relationshipPanel.contains(relationSheet)).toBe(true);
     expect(personalResult).not.toBeNull();
+    expect(personalResult && graphInterstitial.contains(personalResult)).toBe(true);
     const documentOrder = relationSheet && personalResult
       ? personalResult.compareDocumentPosition(relationSheet)
       : 0;

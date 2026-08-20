@@ -176,6 +176,26 @@ describe("GroupGraph", () => {
     expect(detail.parentElement).toHaveClass("group-graph__relationship-detail");
   });
 
+  it("places supporting content after the graph canvas and before relationship detail", () => {
+    render(
+      <GroupGraph
+        members={[member("a"), member("b")]}
+        unlocks={[]}
+        onPairSelect={vi.fn()}
+        interstitialContent={<article data-testid="graph-interstitial">わたしの結果</article>}
+        relationshipDetail={<article data-testid="graph-detail">関係詳細</article>}
+      />,
+    );
+
+    const canvas = screen.getByTestId("group-graph-canvas");
+    const interstitial = screen.getByTestId("graph-interstitial");
+    const detail = screen.getByTestId("graph-detail");
+    expect(canvas.compareDocumentPosition(interstitial) & Node.DOCUMENT_POSITION_FOLLOWING)
+      .toBeTruthy();
+    expect(interstitial.compareDocumentPosition(detail) & Node.DOCUMENT_POSITION_FOLLOWING)
+      .toBeTruthy();
+  });
+
   it("keeps all three minimal preview lines without filters or labels", () => {
     render(
       <GroupGraph

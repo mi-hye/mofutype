@@ -46,6 +46,7 @@ interface GroupGraphProps {
   members: readonly RelationshipGraphMember[];
   unlocks: readonly RelationUnlock[];
   onPairSelect: (selection: PairSelection) => void;
+  interstitialContent?: ReactNode;
   relationshipFactory?: RelationshipFactory;
   relationshipDetail?: ReactNode;
   variant?: "default" | "minimal";
@@ -86,6 +87,7 @@ function GroupGraphComponent({
   members,
   unlocks,
   onPairSelect,
+  interstitialContent,
   relationshipFactory = createEtoRelationship,
   relationshipDetail,
   variant = "default",
@@ -222,6 +224,12 @@ function GroupGraphComponent({
             {filter.label}
           </button>
         ))}
+        </div>
+      ) : null}
+
+      {variant === "default" && interstitialContent ? (
+        <div className="group-graph__interstitial">
+          {interstitialContent}
         </div>
       ) : null}
 
