@@ -330,17 +330,14 @@ body:has(.group-share-backdrop) { overflow: hidden; }
 .group-graph__filters { display: flex; min-width: 0; align-items: center; flex-wrap: wrap; gap: 0 0.8rem; padding-inline: 0.2rem; }
 .group-graph__filters button { --filter-color: var(--ink); position: relative; display: inline-flex; min-height: 44px; align-items: center; gap: 0.42rem; border: 0; padding: 0.35rem 0.05rem; background: transparent; color: var(--ink); font-size: 0.72rem; font-weight: 750; line-height: 1.2; opacity: 0.72; cursor: pointer; transition: opacity 160ms ease; -webkit-tap-highlight-color: transparent; }
 .group-graph__filters button::before { z-index: 1; width: 0.68rem; height: 0.68rem; flex: 0 0 auto; border-radius: 50%; background: var(--filter-color); box-shadow: 0 0 0 1px rgb(var(--ink-rgb) / 12%); content: ""; }
-.group-graph__filters button::after { position: absolute; top: 50%; left: 0.05rem; width: 0.68rem; height: 0.68rem; border: 1.5px solid var(--filter-color); border-radius: 50%; content: ""; opacity: 0; pointer-events: none; transform: translateY(-50%) scale(0.8); animation: relationship-sonar-ping 4.5s cubic-bezier(0.2, 0.72, 0.3, 1) infinite; }
-.group-graph__filters button:nth-child(2)::after { animation-delay: 0.55s; }
-.group-graph__filters button:nth-child(3)::after { animation-delay: 1.1s; }
-.group-graph__filters button:nth-child(4)::after { animation-delay: 1.65s; }
-.group-graph__filters button:nth-child(5)::after { animation-delay: 2.2s; }
+.group-graph__filters button::after { position: absolute; top: 50%; left: 0.05rem; width: 0.68rem; height: 0.68rem; border: 1.5px solid var(--filter-color); border-radius: 50%; content: ""; opacity: 0; pointer-events: none; transform: translateY(-50%) scale(0.8); animation: none; }
 .group-graph__filters button[data-color="calm"] { --filter-color: var(--relationship-calm); }
 .group-graph__filters button[data-color="clear"] { --filter-color: var(--relationship-clear); }
 .group-graph__filters button[data-color="neutral"] { --filter-color: var(--relationship-neutral); }
 .group-graph__filters button[data-color="warm"] { --filter-color: var(--relationship-warm); }
 .group-graph__filters button[data-color="careful"] { --filter-color: var(--relationship-careful); }
 .group-graph__filters button[aria-pressed="true"] { opacity: 1; }
+.group-graph__filters button[aria-pressed="true"]::after { animation: relationship-sonar-ping 2s cubic-bezier(0.2, 0.72, 0.3, 1) infinite; }
 .group-graph__filters button:focus-visible { outline: 2px solid var(--accent-navy); outline-offset: 3px; }
 .group-graph__selection { position: absolute; width: 1px; height: 1px; overflow: hidden; margin: -1px; border: 0; padding: 0; clip-path: inset(50%); white-space: nowrap; }
 .group-pair-selection { width: fit-content; margin: 0; border: var(--border-subtle); border-radius: 999px; padding: 0.4rem 0.72rem; background: var(--surface-mint); color: var(--ink); font-size: 0.82rem; font-weight: 700; }

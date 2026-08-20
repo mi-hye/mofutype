@@ -332,11 +332,12 @@ describe("production source safety", () => {
     ]) expect(globalStyles).toContain(token);
     expect(globalStyles).toContain("@keyframes relationship-sonar-ping");
     expect(globalStyles).toMatch(
-      /\.group-graph__filters button::after\s*\{[^}]*animation:\s*relationship-sonar-ping 4\.5s/,
+      /\.group-graph__filters button::after\s*\{[^}]*animation:\s*none/,
     );
     expect(globalStyles).toMatch(
-      /\.group-graph__filters button:nth-child\(5\)::after\s*\{[^}]*animation-delay:\s*2\.2s/,
+      /\.group-graph__filters button\[aria-pressed="true"\]::after\s*\{[^}]*animation:\s*relationship-sonar-ping 2s/,
     );
+    expect(globalStyles).not.toContain("button:nth-child(5)::after");
     expect(globalStyles).toMatch(/\.zodiac-graph-node__frame::before[^}]*border:\s*2px solid var\(--node-border\)[^}]*filter:\s*none/);
     expect(globalStyles).toMatch(/\.zodiac-graph-node__type[^}]*top:\s*0\.72rem/);
     expect(globalStyles).toMatch(/\.zodiac-graph-node__frame\[data-zodiac="tiger"\][^}]*--node-pastel:\s*var\(--animal-tiger-pastel\)/);
