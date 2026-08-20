@@ -375,7 +375,6 @@ body:has(.group-share-backdrop) { overflow: hidden; }
 .relationship-detail-picker > ul { display: grid; max-height: 14rem; overflow-y: auto; gap: 0.45rem; margin: 0.55rem 0 0; padding: 0.55rem; border: var(--border-subtle); border-radius: 1.1rem; background: var(--surface); box-shadow: var(--shadow-pop); list-style: none; }
 .relationship-detail-picker li, .relationship-detail-picker li > .ui-button { width: 100%; min-width: 0; }
 .relationship-detail-picker li > .ui-button { justify-content: flex-start; text-align: left; text-decoration: none; }
-.personal-detail-offer > .relationship-detail-picker { width: min(100%, 22rem); }
 .my-result-card__reading-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.8rem; border-top: var(--border-subtle); padding-top: 1rem; }
 .my-result-card__reading { min-width: 0; border: var(--border-subtle); border-radius: 1.1rem; padding: 0.85rem; background: var(--surface); }
 .my-result-card__reading--mbti { grid-column: 1 / -1; }
@@ -451,14 +450,6 @@ body:has(.group-share-backdrop) { overflow: hidden; }
 .personal-detail__back { display: inline-flex; min-height: 44px; align-items: center; color: var(--text-muted); font-size: 0.8rem; font-weight: 700; text-underline-offset: 0.2rem; }
 .personal-detail__back::before { margin-right: 0.35rem; content: "←"; }
 .personal-detail-card { margin-top: 0.5rem; }
-.personal-detail-offer { --list-accent: var(--accent-vermilion); display: grid; gap: 0.85rem; margin-top: 1.1rem; border: var(--border-panel); border-radius: 2rem 1.8rem 2.2rem 1.7rem / 1.85rem 2.15rem 1.75rem 2rem; outline: 1px solid rgb(var(--ink-rgb) / 12%); outline-offset: -5px; padding: clamp(1.1rem, 4vw, 2rem); background: var(--butter); box-shadow: 3px 4px 0 rgb(var(--ink-rgb) / 6%), var(--shadow-pop); }
-.personal-detail-offer__eyebrow { margin: 0; color: var(--accent-vermilion); font-size: 0.62rem; font-weight: 850; letter-spacing: 0.14em; line-height: 1; }
-.personal-detail-offer h2 { max-width: 20ch; margin: 0; color: var(--accent-navy); font-family: var(--font-display); font-size: clamp(1.45rem, 5vw, 2.3rem); line-height: 1.2; }
-.personal-detail-offer > p:not(.personal-detail-offer__eyebrow) { max-width: 42rem; margin: 0; color: var(--ink); font-size: 0.84rem; line-height: 1.75; }
-.personal-detail-offer__purchase { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.4rem 0.75rem; border-top: 1.5px solid rgb(var(--ink-rgb) / 25%); padding-top: 0.8rem; }
-.personal-detail-offer__purchase strong { font-size: 1.15rem; }
-.personal-detail-offer__purchase span { color: var(--text-muted); font-size: 0.72rem; font-weight: 650; }
-.personal-detail-offer > .ui-button { width: fit-content; max-width: 100%; text-align: center; text-decoration: none; }
 .personal-detail-shell > .group-share-controls { justify-items: center; margin-top: 1rem; }
 
 .checkout-panel { position: relative; width: min(100%, 38rem); min-width: 0; overflow: hidden; margin-inline: auto; border: var(--border-panel); border-radius: 2.35rem 2.1rem 2.5rem 2rem / 2.15rem 2.45rem 2.05rem 2.35rem; outline: 1px solid rgb(var(--ink-rgb) / 12%); outline-offset: -5px; padding: clamp(1.1rem, 5vw, 2.4rem); background: var(--surface-elevated); box-shadow: 3px 4px 0 rgb(var(--ink-rgb) / 6%), var(--shadow-pop), inset 0 0 0 4px rgb(255 255 255 / 44%); animation: rise-in 420ms ease-out both; }

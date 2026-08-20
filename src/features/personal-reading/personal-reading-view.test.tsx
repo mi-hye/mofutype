@@ -54,7 +54,7 @@ describe("personal reading conversion flow", () => {
     );
   });
 
-  it("shows the full reading and leads into the existing paid relation report", () => {
+  it("shows the full personal reading without a paid relationship offer", () => {
     render(
       <PersonalReadingDetail
         member={member}
@@ -70,13 +70,11 @@ describe("personal reading conversion flow", () => {
     );
 
     expect(screen.getByRole("heading", { name: "ISFJの思考と行動" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "この性格が、あの人との間でどう表れる？" })).toBeInTheDocument();
-    expect(screen.getByText("1組 100円")).toBeInTheDocument();
-    expect(screen.getByText("買い切り・自動更新なし")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "このグループで、誰と相性がいい？" })).toHaveAttribute(
-      "href",
-      `/g/${"a".repeat(64)}/relation/member-a%3Amember-b`,
-    );
+    expect(screen.queryByText("RELATION REPORT")).not.toBeInTheDocument();
+    expect(screen.queryByText("1組 100円")).not.toBeInTheDocument();
+    expect(screen.queryByText("買い切り・自動更新なし")).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "このグループで、誰と相性がいい？" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "この結果を共有する" })).toBeInTheDocument();
   });
 
   it("offers a direct detail link for each relationship in a larger group", () => {

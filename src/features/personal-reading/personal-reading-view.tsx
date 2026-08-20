@@ -118,7 +118,6 @@ export function PersonalReadingDetail({
   groupName,
   memberCount,
   inviteToken,
-  relationshipLinks,
 }: PersonalReadingProps) {
   const reading = createPersonalReading(member.profile);
   const groupHref = `/g/${encodeURIComponent(inviteToken)}`;
@@ -161,21 +160,6 @@ export function PersonalReadingDetail({
           </small>
         </div>
       </article>
-
-      <section className="personal-detail-offer" aria-labelledby="personal-relation-offer-title">
-        <p className="personal-detail-offer__eyebrow">RELATION REPORT</p>
-        <h2 id="personal-relation-offer-title">この性格が、あの人との間でどう表れる？</h2>
-        <p>関係マップで相手を選ぶと、ふたりの違い・心地よい距離・具体的な関わり方まで読めます。</p>
-        <ul>
-          <li>十二支・五行・陰陽・MBTIを重ねた相性</li>
-          <li>ふたりでいるときの空気と、それぞれへのヒント</li>
-        </ul>
-        <div className="personal-detail-offer__purchase">
-          <strong>1組 100円</strong>
-          <span>買い切り・自動更新なし</span>
-        </div>
-        <RelationshipDetailCta links={relationshipLinks} />
-      </section>
 
       <GroupShareControls
         groupName={groupName}
