@@ -375,7 +375,12 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken, curren
         </p>
       ) : null}
 
-      <GroupGraph members={aggregate.members} unlocks={aggregate.unlocks} onPairSelect={setSelectedPair} />
+      <GroupGraph
+        anchorId="relationship-map"
+        members={aggregate.members}
+        unlocks={aggregate.unlocks}
+        onPairSelect={setSelectedPair}
+      />
       {selectedPair && selectedMembers && selectedRelationship ? (
         <RelationSheet
           relationship={selectedRelationship}

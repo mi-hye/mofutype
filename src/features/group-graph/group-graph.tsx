@@ -33,6 +33,7 @@ export interface PairSelection {
 }
 
 interface GroupGraphProps {
+  anchorId?: string;
   members: readonly RelationshipGraphMember[];
   unlocks: readonly RelationUnlock[];
   onPairSelect: (selection: PairSelection) => void;
@@ -71,6 +72,7 @@ function selectionFromEdge(edge: RelationshipGraphEdge): PairSelection | null {
 }
 
 function GroupGraphComponent({
+  anchorId,
   members,
   unlocks,
   onPairSelect,
@@ -160,7 +162,7 @@ function GroupGraphComponent({
   }, [membersVersion]);
 
   return (
-    <section className="group-graph" data-variant={variant}
+    <section id={anchorId} className="group-graph" data-variant={variant}
       data-has-selection={selectedNodeId === null ? "false" : "true"}
       aria-label="メンバー関係性グラフ">
       <div ref={canvasRef} className="group-graph__canvas"

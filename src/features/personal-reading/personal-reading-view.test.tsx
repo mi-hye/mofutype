@@ -43,6 +43,10 @@ describe("personal reading conversion flow", () => {
       "href",
       `/g/${"a".repeat(64)}/profile`,
     );
+    expect(screen.getByRole("link", { name: "このグループで、誰と相性がいい？" })).toHaveAttribute(
+      "href",
+      "#relationship-map",
+    );
   });
 
   it("shows the full reading and leads into the existing paid relation report", () => {
@@ -59,9 +63,9 @@ describe("personal reading conversion flow", () => {
     expect(screen.getByRole("heading", { name: "この性格が、あの人との間でどう表れる？" })).toBeInTheDocument();
     expect(screen.getByText("1組 300円")).toBeInTheDocument();
     expect(screen.getByText("買い切り・自動更新なし")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "関係マップで相手を選ぶ" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "このグループで、誰と相性がいい？" })).toHaveAttribute(
       "href",
-      `/g/${"a".repeat(64)}`,
+      `/g/${"a".repeat(64)}#relationship-map`,
     );
   });
 });

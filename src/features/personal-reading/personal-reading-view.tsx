@@ -53,6 +53,7 @@ export function PersonalReadingSummary({
 }: PersonalReadingSummaryProps) {
   const reading = createPersonalReading(member.profile);
   const detailHref = inviteToken ? `/g/${encodeURIComponent(inviteToken)}/profile` : null;
+  const relationshipHref = inviteToken ? "#relationship-map" : null;
 
   return (
     <section className="my-result-card my-result-card--summary" aria-labelledby="my-result-preview-title">
@@ -64,6 +65,11 @@ export function PersonalReadingSummary({
       </div>
       <div className="my-result-card__actions">
         {detailHref ? <ButtonLink href={detailHref}>わたしの詳細を見る</ButtonLink> : null}
+        {relationshipHref ? (
+          <ButtonLink href={relationshipHref} variant="secondary">
+            このグループで、誰と相性がいい？
+          </ButtonLink>
+        ) : null}
         {inviteToken ? (
           <GroupShareControls
             groupName={groupName}
@@ -137,7 +143,9 @@ export function PersonalReadingDetail({
           <strong>1組 300円</strong>
           <span>買い切り・自動更新なし</span>
         </div>
-        <ButtonLink href={groupHref}>関係マップで相手を選ぶ</ButtonLink>
+        <ButtonLink href={`${groupHref}#relationship-map`}>
+          このグループで、誰と相性がいい？
+        </ButtonLink>
       </section>
 
       <GroupShareControls
