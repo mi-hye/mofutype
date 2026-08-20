@@ -291,7 +291,7 @@ export function decorateGraph(
         ? incident && emphasized ? 1 : 0.22
         : selectedLineColor !== null
           ? matchesColor ? 1 : 0.22
-          : 0.72;
+          : 0.22;
     return {
       ...edge,
       animated: false,
