@@ -459,7 +459,7 @@ body:has(.group-share-backdrop) { overflow: hidden; }
 .personal-detail-offer__purchase strong { font-size: 1.15rem; }
 .personal-detail-offer__purchase span { color: var(--text-muted); font-size: 0.72rem; font-weight: 650; }
 .personal-detail-offer > .ui-button { width: fit-content; max-width: 100%; text-align: center; text-decoration: none; }
-.personal-detail-shell > .group-share-controls { justify-items: start; margin-top: 1rem; }
+.personal-detail-shell > .group-share-controls { justify-items: center; margin-top: 1rem; }
 
 .checkout-panel { position: relative; width: min(100%, 38rem); min-width: 0; overflow: hidden; margin-inline: auto; border: var(--border-panel); border-radius: 2.35rem 2.1rem 2.5rem 2rem / 2.15rem 2.45rem 2.05rem 2.35rem; outline: 1px solid rgb(var(--ink-rgb) / 12%); outline-offset: -5px; padding: clamp(1.1rem, 5vw, 2.4rem); background: var(--surface-elevated); box-shadow: 3px 4px 0 rgb(var(--ink-rgb) / 6%), var(--shadow-pop), inset 0 0 0 4px rgb(255 255 255 / 44%); animation: rise-in 420ms ease-out both; }
 .checkout-panel::before { display: none; }

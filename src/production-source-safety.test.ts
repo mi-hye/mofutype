@@ -192,6 +192,9 @@ describe("production source safety", () => {
     expect(globalStyles).toMatch(
       /\.relation-sheet__details p,\s*\.relation-sheet__details dd\s*\{[^}]*max-width:\s*100%[^}]*overflow-wrap:\s*anywhere/,
     );
+    expect(globalStyles).toMatch(
+      /\.personal-detail-shell > \.group-share-controls\s*\{[^}]*justify-items:\s*center/,
+    );
   });
 
   it("lets mobile pages scroll vertically over the relationship graph", () => {
