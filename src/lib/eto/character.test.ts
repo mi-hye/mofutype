@@ -77,6 +77,7 @@ describe("createCharacterCopy", () => {
 
     expect(copy.titleJa).toBe(`${zodiac.nameJa}タイプ`);
     expect(copy.mbtiModifierJa).toBeNull();
+    expect(copy.zodiacDescriptionJa.length).toBeGreaterThanOrEqual(60);
     expect(copy.descriptionJa).not.toMatch(/未回答|不明|わからない|不足|欠け|劣|弱点/);
   });
 

@@ -57,7 +57,7 @@ const disclaimer =
   "この分析は自己理解とコミュニケーションを楽しむためのもので、科学的・医学的な判定ではありません。";
 
 describe("RelationSheet", () => {
-  it("shows the representative category and headline with meaningless skeletons while locked", () => {
+  it("shows the representative category and a private chapter outline while locked", () => {
     render(
       <RelationSheet
         relationship={relationship}
@@ -71,11 +71,26 @@ describe("RelationSheet", () => {
 
     expect(screen.getByText(relationship.categoryLabelJa)).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: relationship.headlineJa })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "このふたりを300円で解放" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "この関係を詳しく見る 100円" })).toHaveAttribute(
       "href",
       "/checkout/a%3Ab?invite=token",
     );
     expect(screen.getByLabelText("ロック中の詳細")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "解放するとわかること" })).toBeInTheDocument();
+    expect(screen.getByText("十二支・五行・陰陽・MBTIの読み解き")).toBeInTheDocument();
+    expect(screen.getByText("ふたりでいるときのヒント")).toBeInTheDocument();
+    expect(screen.getByText("1組 100円")).toBeInTheDocument();
+    expect(screen.getByText("FREE PREVIEW")).toBeInTheDocument();
+    expect(screen.getByText("買い切り・追加料金なし・自動更新なし")).toBeInTheDocument();
+    for (const chapter of [
+      "十二支の関係",
+      "五行と陰陽",
+      "MBTIの4つの軸",
+      "ふたりでいるとき",
+      "それぞれへのヒント",
+    ]) {
+      expect(screen.getByText(chapter)).toBeInTheDocument();
+    }
     expect(screen.getByText(disclaimer)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "この関係の共有ページ" })).toHaveAttribute(
       "href",
@@ -98,8 +113,10 @@ describe("RelationSheet", () => {
     );
 
     expect(screen.getByText("解放済み")).toBeInTheDocument();
+    expect(screen.getByText("UNLOCKED REPORT")).toBeInTheDocument();
+    expect(screen.queryByText("FREE PREVIEW")).not.toBeInTheDocument();
     expect(screen.getByText(disclaimer)).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "このふたりを300円で解放" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "この関係を詳しく見る 100円" })).not.toBeInTheDocument();
     for (const heading of ["十二支の関係", "五行と陰陽", "MBTIの4つの軸", "ふたりでいるとき"]) {
       expect(screen.getByRole("heading", { name: heading })).toBeInTheDocument();
     }
@@ -116,6 +133,10 @@ describe("RelationSheet", () => {
     expect(screen.getByText(relationship.tips.forPersonAJa)).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "ももさんへのヒント" })).toBeInTheDocument();
     expect(screen.getByText(relationship.tips.forPersonBJa)).toBeInTheDocument();
+    expect(screen.getByText("UNLOCKED REPORT").closest(".relation-sheet")).toHaveAttribute(
+      "data-unlocked",
+      "true",
+    );
   });
 
   it("treats missing MBTI as neutral unavailable information", () => {
@@ -231,7 +252,10 @@ describe("RelationSheet", () => {
       />,
     );
 
-    await user.click(screen.getByRole("button", { name: "関係詳細を閉じる" }));
+    const closeButton = screen.getByRole("button", { name: "関係詳細を閉じる" });
+    expect(closeButton).not.toHaveTextContent("閉じる");
+    expect(closeButton.querySelector("svg")).toBeInTheDocument();
+    await user.click(closeButton);
     expect(onClose).toHaveBeenCalledOnce();
   });
 });

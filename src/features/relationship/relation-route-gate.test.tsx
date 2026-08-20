@@ -106,7 +106,7 @@ describe("RelationRouteGate", () => {
     );
 
     expect(await screen.findByRole("heading", { name: /お互いのペースを学ぶ関係です/ })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "このふたりを300円で解放" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "この関係を詳しく見る 100円" })).toHaveAttribute(
       "href",
       `/checkout/a%3Ab?invite=${token}`,
     );
@@ -152,7 +152,7 @@ describe("RelationRouteGate", () => {
         repositoryFactory={() => repo.api as never}
       />,
     );
-    await screen.findByRole("link", { name: "このふたりを300円で解放" });
+    await screen.findByRole("link", { name: "この関係を詳しく見る 100円" });
     await waitFor(() => expect(repo.callbacks()).toBeDefined());
 
     act(() => repo.callbacks()?.onUnlockChange?.({ eventType: "INSERT", new: unlocked() }));
@@ -216,7 +216,7 @@ describe("RelationRouteGate", () => {
     await act(async () => resolveFresh(aggregate()));
 
     expect(screen.getByText("解放済み")).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "このふたりを300円で解放" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "この関係を詳しく見る 100円" })).not.toBeInTheDocument();
   });
 
   it("does not let a fresh load overwrite a member update received in the subscribe/load gap", async () => {
@@ -261,6 +261,7 @@ describe("RelationRouteGate", () => {
     const user = userEvent.setup();
     const repo = repository();
     const navigate = vi.fn();
+    const confirm = vi.fn(async () => undefined);
     render(
       <RelationRouteGate
         inviteToken={token}
@@ -268,12 +269,13 @@ describe("RelationRouteGate", () => {
         mode="checkout"
         repositoryFactory={() => repo.api as never}
         navigate={navigate}
+        mockConfirmationClient={{ confirm }}
       />,
     );
 
     await user.click(await screen.findByRole("button", { name: "モック決済を完了" }));
     expect(repo.api.createPaymentOrder).toHaveBeenCalledWith("g1", "a", "b", "paypay");
-    expect(repo.api.unlockPair).toHaveBeenCalledWith("g1", "a", "b");
+    expect(confirm).toHaveBeenCalledWith("order-1");
     expect(navigate).toHaveBeenCalledWith(`/g/${token}/relation/a%3Ab`);
   });
 

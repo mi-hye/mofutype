@@ -160,6 +160,13 @@ describe("buildGraph", () => {
     expect(reordered.edges).toEqual(first.edges);
   });
 
+  it("uses a tighter radius for small social groups", () => {
+    const graph = buildGraph([member("a"), member("b"), member("c")], null, []);
+
+    expect(graph.nodes.every((node) => Math.hypot(node.position.x, node.position.y) <= 161))
+      .toBe(true);
+  });
+
   it("rejects duplicate member IDs and groups over 30", () => {
     expect(() => buildGraph([member("same"), member("same")], null, [])).toThrow(/duplicate/i);
     expect(() => buildGraph(Array.from({ length: 31 }, (_, index) => member(`m-${index}`)), null, [])).toThrow(/30/);
@@ -172,10 +179,92 @@ describe("buildGraph", () => {
 
     expect(highlighted).toHaveLength(3);
     expect(unrelated).toHaveLength(3);
-    expect(highlighted.every((edge) => edge.style?.strokeWidth === 4 && edge.animated)).toBe(true);
+    expect(highlighted.every((edge) => edge.style?.strokeWidth === 4 && !edge.animated)).toBe(true);
     expect(highlighted.every((edge) => edge.className?.includes("relationship-edge--incident"))).toBe(true);
     expect(unrelated.every((edge) => edge.className?.includes("relationship-edge--faint"))).toBe(true);
+    expect(graph.edges.filter((edge) =>
+      edge.className?.includes("relationship-edge--perimeter") &&
+      edge.className?.includes("relationship-edge--faint")
+    ).every((edge) => edge.style?.opacity === 0.22)).toBe(true);
+    expect(graph.edges.filter((edge) =>
+      edge.className?.includes("relationship-edge--chord") &&
+      edge.className?.includes("relationship-edge--faint")
+    ).every((edge) => edge.style?.opacity === 0)).toBe(true);
+    expect(graph.edges.every((edge) => edge.style?.strokeDasharray === undefined)).toBe(true);
+    expect(graph.edges.every((edge) => String(edge.style?.stroke).startsWith("var(--relationship-"))).toBe(true);
+    expect(graph.edges.every((edge) => edge.type === "straight")).toBe(true);
     expect(graph.nodes.find((node) => node.id === "b")?.data.selected).toBe(true);
+  });
+
+  it("renders the idle graph with quiet relationship lines and no labels", () => {
+    const graph = buildGraph([member("a"), member("b"), member("c")], null, []);
+
+    expect(graph.edges.every((edge) => !edge.animated)).toBe(true);
+    expect(graph.edges.every((edge) => edge.style?.strokeWidth === 3)).toBe(true);
+    expect(graph.edges.every((edge) => edge.style?.opacity === 0.22)).toBe(true);
+    expect(graph.edges.every((edge) => edge.label === undefined)).toBe(true);
+    expect(graph.edges.every((edge) => edge.style?.strokeDasharray === undefined)).toBe(true);
+  });
+
+  it.each([4, 5, 6])(
+    "shows a %i-sided perimeter while preserving every calculated relationship",
+    (count) => {
+      const ids = Array.from({ length: count }, (_, index) => String.fromCharCode(97 + index));
+      const graph = buildGraph(
+        ids.map((id) => member(id)),
+        null,
+        [],
+      );
+      const visibleEdges = graph.edges.filter((edge) => Number(edge.style?.opacity) > 0);
+      const expectedPerimeter = ids.map((id, index) =>
+        [id, ids[(index + 1) % ids.length]].sort().join(":"),
+      ).sort();
+
+      expect(graph.edges).toHaveLength(count * (count - 1) / 2);
+      expect(visibleEdges).toHaveLength(count);
+      expect(visibleEdges.map((edge) => edge.id).sort()).toEqual(expectedPerimeter);
+      expect(graph.edges.filter((edge) => Number(edge.style?.opacity) === 0)
+        .every((edge) => edge.label === undefined && edge.style?.pointerEvents === "none"))
+        .toBe(true);
+    },
+  );
+
+  it("emphasizes a selected perimeter color without adding hidden chord colors", () => {
+    const topology = buildGraphTopology([member("a"), member("b"), member("c"), member("d")]);
+    const categories = [
+      "NATURAL_INTERLOCK",
+      "EXPANDING_POSSIBILITIES",
+      "POSITIVE_STIMULATION",
+      "LEARNING_EACH_OTHERS_PACE",
+    ] as const;
+    const categorized = {
+      ...topology,
+      edges: topology.edges.map((edge, index) => ({
+        ...edge,
+        data: {
+          ...edge.data,
+          relationship: {
+            ...edge.data.relationship,
+            category: categories[index % categories.length],
+          },
+        },
+      })),
+    };
+
+    const filtered = decorateGraph(categorized, null, [], "clear");
+    const visibleEdges = filtered.edges.filter((edge) => Number(edge.style?.opacity) > 0);
+    const selectedEdges = visibleEdges.filter((edge) => edge.data.lineColor === "clear");
+    const unselectedEdges = visibleEdges.filter((edge) => edge.data.lineColor !== "clear");
+
+    expect(visibleEdges).toHaveLength(4);
+    expect(selectedEdges.every((edge) => edge.style?.opacity === 1)).toBe(true);
+    expect(unselectedEdges.every((edge) => edge.style?.opacity === 0.22)).toBe(true);
+    expect(filtered.edges.every((edge) =>
+      edge.label === undefined && edge.labelShowBg === false
+    )).toBe(true);
+    expect(filtered.edges.filter((edge) => Number(edge.style?.opacity) === 0)
+      .every((edge) => edge.style?.pointerEvents === "none"))
+      .toBe(true);
   });
 
   it("exposes relationship results and only completed unlocks", () => {
@@ -190,7 +279,9 @@ describe("buildGraph", () => {
     expect(graph.edges.find((edge) => edge.id === "a:c")?.data?.unlocked).toBe(false);
     expect(graph.edges.find((edge) => edge.id === "a:b")?.className).toContain("unlocked");
     expect(graph.edges.find((edge) => edge.id === "a:c")?.className).toContain("locked");
-    expect(Number(graph.edges.find((edge) => edge.id === "a:c")?.style?.opacity)).toBeLessThanOrEqual(0.2);
+    expect(graph.edges.find((edge) => edge.id === "a:c")?.style?.opacity).toBe(0.22);
+    expect(Number(graph.edges.find((edge) => edge.id === "a:b")?.style?.strokeWidth))
+      .toBeGreaterThan(Number(graph.edges.find((edge) => edge.id === "a:c")?.style?.strokeWidth));
     expect(graph.edges[0].data?.relationship.pairKey).toBe(graph.edges[0].id);
     expect(JSON.stringify(graph)).not.toMatch(/score|percent|percentage|%/i);
   });

@@ -24,7 +24,7 @@ describe("TokushohoPage", () => {
     ]) {
       expect(screen.getByText(label)).toBeInTheDocument();
     }
-    expect(screen.getByText("関係レポート1件 300円（税込・予定）")).toBeInTheDocument();
+    expect(screen.getByText("関係レポート1件 100円（税込・予定）")).toBeInTheDocument();
     expect(screen.getByText(/現在はモック決済のみ/)).toBeInTheDocument();
   });
 });

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { PersonalReadingSummary } from "@/features/personal-reading/personal-reading-view";
 import { StatusBanner, type ConnectionStatus } from "@/components/ui/status-banner";
 import { RelationSheet } from "@/features/relationship/relation-sheet";
 import { GroupShareControls } from "@/features/share/group-share-controls";
@@ -18,12 +19,13 @@ import { GroupGraph, type PairSelection } from "./group-graph";
 type GroupRepository = Pick<
   ReturnType<typeof createBrowserGroupRepository>,
   "loadGroup" | "subscribeToGroup"
->;
+> & Partial<Pick<ReturnType<typeof createBrowserGroupRepository>, "ensureAnonymousSession">>;
 
 interface GroupScreenProps {
   initialAggregate: GroupAggregate;
-  repository: GroupRepository;
+  repository?: GroupRepository;
   inviteToken?: string;
+  currentUserId?: string;
 }
 
 function upsertById<T extends { id: string }>(items: readonly T[], incoming: T): T[] {
@@ -111,12 +113,13 @@ export function GroupScreen(props: GroupScreenProps) {
   return <GroupScreenForGroup key={props.initialAggregate.group.id} {...props} />;
 }
 
-function GroupScreenForGroup({ initialAggregate, repository, inviteToken }: GroupScreenProps) {
+function GroupScreenForGroup({ initialAggregate, repository, inviteToken, currentUserId }: GroupScreenProps) {
   const [aggregate, setAggregate] = useState(initialAggregate);
   const [status, setStatus] = useState<ConnectionStatus>("connecting");
   const [loadError, setLoadError] = useState(false);
   const [subscriptionAttempt, setSubscriptionAttempt] = useState(0);
   const [selectedPair, setSelectedPair] = useState<PairSelection | null>(null);
+  const [resolvedUserId, setResolvedUserId] = useState<string | null>(null);
   const generation = useRef(0);
   const changeRevision = useRef(0);
   const memberRevisions = useRef(new Map<string, number>());
@@ -141,6 +144,7 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken }: Grou
   }, []);
 
   useEffect(() => {
+    if (!repository) return;
     const currentGeneration = generation.current + 1;
     generation.current = currentGeneration;
     const revisionBeforeLoad = changeRevision.current;
@@ -265,6 +269,7 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken }: Grou
   }, [applyMember, applyUnlock, initialAggregate.group.id, repository, subscriptionAttempt]);
 
   const refresh = useCallback(async () => {
+    if (!repository) return;
     const currentGeneration = generation.current;
     const revisionBeforeLoad = changeRevision.current;
     const request = loadRequest.current + 1;
@@ -292,6 +297,21 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken }: Grou
     }
   }, [initialAggregate.group.id, repository]);
 
+  useEffect(() => {
+    if (currentUserId || !repository?.ensureAnonymousSession) return;
+    let active = true;
+    void repository.ensureAnonymousSession().then((userId) => {
+      if (active) setResolvedUserId(userId);
+    }).catch(() => {
+      // The connection banner already exposes the recovery state.
+    });
+    return () => { active = false; };
+  }, [currentUserId, repository]);
+
+  const activeUserId = currentUserId ?? resolvedUserId;
+  const currentMember = activeUserId
+    ? aggregate.members.find((member) => member.userId === activeUserId) ?? null
+    : null;
   const selectedMembers = selectedPair
     ? findSelectedMembers(aggregate.members, selectedPair.memberIds)
     : null;
@@ -301,25 +321,66 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken }: Grou
         memberB: { id: selectedMembers[1].id, profile: selectedMembers[1].profile },
       })
     : null;
+  const relationshipDetail = selectedPair && selectedMembers && selectedRelationship ? (
+    <RelationSheet
+      relationship={selectedRelationship}
+      memberNames={[selectedMembers[0].nickname, selectedMembers[1].nickname]}
+      memberProfiles={[selectedMembers[0].profile, selectedMembers[1].profile]}
+      unlocked={isPairUnlocked(aggregate.unlocks, selectedPair.memberIds)}
+      checkoutHref={inviteToken
+        ? `/checkout/${encodeURIComponent(selectedPair.pairKey)}?invite=${encodeURIComponent(inviteToken)}`
+        : "#"}
+      detailHref={inviteToken
+        ? `/g/${encodeURIComponent(inviteToken)}/relation/${encodeURIComponent(selectedPair.pairKey)}`
+        : undefined}
+      compact
+      onClose={() => setSelectedPair(null)}
+    />
+  ) : null;
+  const personalReadingContent = currentMember ? (
+    <PersonalReadingSummary
+      member={currentMember}
+      groupName={aggregate.group.name}
+      memberCount={aggregate.members.length}
+      inviteToken={inviteToken}
+    />
+  ) : null;
 
   return (
     <main className="group-member-shell">
       <header className="group-member-header">
-        <div>
+        <div className="group-member-header__topbar">
           <p className="hero__eyebrow">MofuType グループ</p>
+          <div className="group-member-actions">
+            {inviteToken ? (
+              <GroupShareControls
+                groupName={aggregate.group.name}
+                inviteToken={inviteToken}
+                memberCount={aggregate.members.length}
+              />
+            ) : null}
+            <Button
+              type="button"
+              className="group-refresh-button"
+              variant="ghost"
+              aria-label="最新の情報に更新"
+              title="最新の情報に更新"
+              disabled={!repository}
+              onClick={() => void refresh()}
+            >
+              <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24">
+                <path d="M20 11a8 8 0 1 0-2.34 5.66M20 4v7h-7" />
+              </svg>
+            </Button>
+          </div>
+        </div>
+        <div className="group-member-header__identity">
           <h1>{aggregate.group.name}</h1>
           <p>メンバー {aggregate.members.length}人</p>
         </div>
-        <div className="group-member-actions">
-          <StatusBanner status={status} />
-          {inviteToken ? (
-            <GroupShareControls
-              groupName={aggregate.group.name}
-              inviteToken={inviteToken}
-              memberCount={aggregate.members.length}
-            />
-          ) : null}
-          {status === "offline" || status === "error" ? (
+        {status === "offline" || status === "error" ? (
+          <div className="group-member-connection">
+            <StatusBanner status={status} />
             <Button type="button" variant="secondary" onClick={() => {
               setStatus("connecting");
               setLoadError(false);
@@ -327,11 +388,8 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken }: Grou
             }}>
               接続を再試行
             </Button>
-          ) : null}
-          <Button type="button" variant="ghost" onClick={() => void refresh()}>
-            最新の情報に更新
-          </Button>
-        </div>
+          </div>
+        ) : null}
       </header>
 
       {loadError ? (
@@ -340,22 +398,14 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken }: Grou
         </p>
       ) : null}
 
-      <GroupGraph members={aggregate.members} unlocks={aggregate.unlocks} onPairSelect={setSelectedPair} />
-      {selectedPair && selectedMembers && selectedRelationship ? (
-        <RelationSheet
-          relationship={selectedRelationship}
-          memberNames={[selectedMembers[0].nickname, selectedMembers[1].nickname]}
-          memberProfiles={[selectedMembers[0].profile, selectedMembers[1].profile]}
-          unlocked={isPairUnlocked(aggregate.unlocks, selectedPair.memberIds)}
-          checkoutHref={inviteToken
-            ? `/checkout/${encodeURIComponent(selectedPair.pairKey)}?invite=${encodeURIComponent(inviteToken)}`
-            : "#"}
-          detailHref={inviteToken
-            ? `/g/${encodeURIComponent(inviteToken)}/relation/${encodeURIComponent(selectedPair.pairKey)}`
-            : undefined}
-          onClose={() => setSelectedPair(null)}
-        />
-      ) : null}
+      <GroupGraph
+        anchorId="relationship-map"
+        members={aggregate.members}
+        unlocks={aggregate.unlocks}
+        onPairSelect={setSelectedPair}
+        interstitialContent={personalReadingContent}
+        relationshipDetail={relationshipDetail}
+      />
     </main>
   );
 }

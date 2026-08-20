@@ -1,77 +1,187 @@
-import { Card } from "@/components/ui/card";
-import { CreateGroupForm } from "@/features/onboarding/create-group-form";
+import Image from "next/image";
+
+import { ButtonLink } from "@/components/ui/button";
+import { Capsule } from "@/components/ui/capsule";
+import { LandingRelationshipPreview } from "@/features/landing/landing-relationship-preview";
+import { ReportSampleGraph } from "@/features/landing/report-sample-graph";
 
 export default function Home() {
   return (
     <main className="landing-shell">
       <header className="landing-nav">
         <a className="wordmark" href="#top" aria-label="MofuType ホーム">
-          MofuType
+          <Image
+            className="wordmark__image"
+            src="/brand/mofutype-wordmark.png"
+            alt=""
+            width={960}
+            height={240}
+            priority
+          />
         </a>
-        <span className="edition-label">GROUP EDITION</span>
       </header>
 
       <section className="hero" id="top">
-        <div className="hero__decor" aria-hidden="true">
-          <span className="hero__tape" />
-          <span className="hero__dots" />
-          <span className="hero__stripe" />
-        </div>
-        <p className="hero__eyebrow">性格タイプ × 十二支キャラクター</p>
+        <LandingRelationshipPreview />
+        <span className="hero__cutout" aria-hidden="true">MOFU / 01</span>
         <h1 aria-label="わたしたち、こんな感じ。">
           わたしたち、<span>こんな感じ。</span>
         </h1>
         <div className="hero__stickers" aria-label="ムード">
-          <span>#MBTI</span>
-          <span>#十二支</span>
+          <Capsule>#MBTI</Capsule>
+          <Capsule>#12干支</Capsule>
         </div>
-        <p className="hero__copy">
-          誕生日と性格タイプで、友だちとの空気感を一枚の関係マップに。
-        </p>
+        <span className="hero__issue-note" aria-hidden="true">
+          FRIENDS FILE<br />ISSUE 01
+        </span>
         <div className="hero__actions">
-          <a
-            className="ui-button hero__cta"
-            data-size="lg"
-            data-variant="primary"
-            href="#create"
+          <ButtonLink
+            className="hero__cta"
+            size="lg"
+            href="/create/profile"
           >
             グループを作る
-          </a>
+          </ButtonLink>
         </div>
+
+        <section className="service-flow" aria-labelledby="service-flow-title">
+          <header className="service-flow__header">
+            <h2 id="service-flow-title">MofuTypeって？</h2>
+            <span aria-hidden="true" />
+          </header>
+
+          <div className="service-flow__steps">
+            <span className="service-flow__line" aria-hidden="true" />
+
+            <article className="service-flow__item" data-accent="butter">
+              <span className="service-flow__number" aria-hidden="true">01</span>
+              <div>
+                <h3>わたしを知る</h3>
+                <p>生年月日からわかる十二支に、出生時刻とMBTIを重ねて、自分らしいタイプへ。</p>
+              </div>
+              <Image
+                className="service-flow__animal"
+                src="/zodiac/tiger.png"
+                alt=""
+                width={256}
+                height={256}
+              />
+            </article>
+
+            <article className="service-flow__item" data-accent="blue">
+              <span className="service-flow__number" aria-hidden="true">02</span>
+              <div>
+                <h3>みんなをつなぐ</h3>
+                <p>友だちを招待すると、関係が一枚のマップに。</p>
+              </div>
+              <Image
+                className="service-flow__animal"
+                src="/zodiac/rat.png"
+                alt=""
+                width={256}
+                height={256}
+              />
+            </article>
+
+            <article className="service-flow__item" data-accent="pink">
+              <span className="service-flow__number" aria-hidden="true">03</span>
+              <div>
+                <h3>違いを楽しむ</h3>
+                <p>それぞれの個性を知って、もっと心地よい関係へ。</p>
+              </div>
+              <Image
+                className="service-flow__animal"
+                src="/zodiac/rabbit.png"
+                alt=""
+                width={256}
+                height={256}
+              />
+            </article>
+          </div>
+        </section>
+
+        <section className="value-ledger" aria-labelledby="report-preview-title">
+          <section className="report-preview" aria-labelledby="report-preview-title">
+            <header className="report-preview__header">
+              <span className="report-preview__sample-label">買い切り</span>
+              <div>
+                <p>ONE PAIR / ONE TIME</p>
+                <h2 id="report-preview-title">気になるふたりを、100円で深掘り。</h2>
+              </div>
+            </header>
+
+            <div className="report-preview__paper">
+              <ReportSampleGraph />
+
+              <div className="report-preview__lead">
+                <span>FREE PREVIEW</span>
+                <strong aria-label="違うペースが、いいリズムになる。">
+                  <span>違うペースが、</span>
+                  <span>いいリズムになる。</span>
+                </strong>
+                <p>この先に、すれ違う理由と仲よくなるコツ。</p>
+              </div>
+
+              <div className="report-preview__layers" aria-label="100円でわかる3つのポイント">
+                <section>
+                  <span>01</span>
+                  <h4>十二支・五行・陰陽</h4>
+                  <strong>惹かれ合う理由</strong>
+                </section>
+                <section>
+                  <span>02</span>
+                  <h4>MBTIの4つの軸</h4>
+                  <strong>すれ違いのクセ</strong>
+                </section>
+                <section>
+                  <span>03</span>
+                  <h4>Aさんへ・Bさんへ</h4>
+                  <strong>もっと合うヒント</strong>
+                </section>
+              </div>
+
+              <p className="report-preview__purchase-note">
+                <strong>気になる1組だけ、100円。</strong>
+                追加料金なし。自動更新なし。
+              </p>
+            </div>
+
+            <p className="report-preview__disclaimer">
+              このサンプルは表示イメージです。内容はふたりの組み合わせによって変わります。
+            </p>
+          </section>
+        </section>
+
+        <section className="trust-notes" aria-labelledby="trust-notes-title">
+          <header>
+            <p>BEFORE YOU START</p>
+            <h2 id="trust-notes-title" aria-label="始める前に、気になること。">
+              <span>始める前に、</span>
+              <span>気になること。</span>
+            </h2>
+          </header>
+          <div className="trust-notes__list">
+            <details>
+              <summary>何人まで使える？</summary>
+              <p>1グループ30人まで。友だち同士でも、サークルやチームでも使えます。</p>
+            </details>
+            <details>
+              <summary>出生時刻やMBTIがわからなくても大丈夫？</summary>
+              <p>どちらも「わからない」を選べます。入力できる情報だけで結果を表示します。</p>
+            </details>
+            <details>
+              <summary>結果はどんなもの？</summary>
+              <p>自己理解と会話を楽しむための読みものです。科学的・医学的な判定ではありません。</p>
+            </details>
+          </div>
+        </section>
       </section>
 
-      <section className="create-section" id="create" aria-labelledby="create-title">
-        <div className="create-section__intro">
-          <p className="hero__eyebrow">はじめる</p>
-          <h2 id="create-title">グループを作る</h2>
-          <p>あなたのプロフィールを入力して、みんなを招待するグループを作りましょう。</p>
-        </div>
-        <Card variant="accent">
-          <CreateGroupForm />
-        </Card>
-      </section>
-
-      <section
-        className="feature-grid"
-        id="features"
-        aria-label="MofuTypeでできること"
-      >
-        <Card variant="accent">
-          <span className="feature-card__number">01</span>
-          <h2>わたしを知る</h2>
-          <p>生年月日からわかる十二支に、出生時刻とMBTIを重ねて、あなたらしいタイプを見つけます。</p>
-        </Card>
-        <Card>
-          <span className="feature-card__number">02</span>
-          <h2>みんなをつなぐ</h2>
-          <p>友だちやチームを招待して、関係性を一枚のマップに。</p>
-        </Card>
-        <Card variant="subtle">
-          <span className="feature-card__number">03</span>
-          <h2>違いを楽しむ</h2>
-          <p>それぞれの個性を知って、もっと心地よい関係へ。</p>
-        </Card>
-      </section>
+      <footer className="landing-footer">
+        <a href="#top">MofuType</a>
+        <a href="/tokushoho">特定商取引法に基づく表記</a>
+        <small>© MofuType</small>
+      </footer>
     </main>
   );
 }

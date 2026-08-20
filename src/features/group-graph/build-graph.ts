@@ -3,7 +3,6 @@ import type { Edge, Node } from "@xyflow/react";
 import { createCharacterCopy } from "@/lib/eto/character";
 import {
   createEtoRelationship,
-  RELATIONSHIP_SHORT_LABELS,
   type CreateEtoRelationshipInput,
   type EtoRelationshipResult,
   type RelationshipCategory,
@@ -13,6 +12,7 @@ import type { GroupMember, RelationUnlock } from "@/lib/supabase/models";
 
 export type GraphNodeSize = "sm" | "md" | "lg";
 export type EdgeEmphasis = "default" | "incident" | "faint";
+export type RelationshipLineColor = "calm" | "clear" | "neutral" | "warm" | "careful";
 export type RelationshipFactory = (
   input: CreateEtoRelationshipInput,
 ) => EtoRelationshipResult;
@@ -41,6 +41,7 @@ export interface TopologyEdgeData extends Record<string, unknown> {
 export interface RelationshipEdgeData extends TopologyEdgeData {
   unlocked: boolean;
   emphasis: EdgeEmphasis;
+  lineColor: RelationshipLineColor;
 }
 
 export type TopologyNode = Node<TopologyNodeData, "zodiac">;
@@ -60,11 +61,22 @@ export interface BuiltGraph {
   edges: RelationshipGraphEdge[];
 }
 
-const RELATIONSHIP_LABEL_COLORS: Readonly<Record<RelationshipCategory, string>> = {
-  NATURAL_INTERLOCK: "var(--edge-mint)",
-  EXPANDING_POSSIBILITIES: "var(--edge-unlocked)",
-  POSITIVE_STIMULATION: "var(--coral-deep)",
-  LEARNING_EACH_OTHERS_PACE: "var(--edge-violet)",
+const RELATIONSHIP_LINE_COLORS: Readonly<Record<RelationshipCategory, string>> = {
+  NATURAL_INTERLOCK: "var(--relationship-calm)",
+  EXPANDING_POSSIBILITIES: "var(--relationship-clear)",
+  POSITIVE_STIMULATION: "var(--relationship-warm)",
+  LEARNING_EACH_OTHERS_PACE: "var(--relationship-neutral)",
+  CAREFUL_COORDINATION: "var(--relationship-careful)",
+};
+
+const RELATIONSHIP_LINE_COLOR_GROUPS: Readonly<
+  Record<RelationshipCategory, RelationshipLineColor>
+> = {
+  NATURAL_INTERLOCK: "calm",
+  EXPANDING_POSSIBILITIES: "clear",
+  POSITIVE_STIMULATION: "warm",
+  LEARNING_EACH_OTHERS_PACE: "neutral",
+  CAREFUL_COORDINATION: "careful",
 };
 
 function nodeSize(count: number): GraphNodeSize {
@@ -105,7 +117,7 @@ function positionAt(index: number, count: number): { x: number; y: number } {
   if (count === 1) return { x: 0, y: 0 };
 
   if (count <= 15) {
-    const radius = Math.max(230, count * 28);
+    const radius = count <= 6 ? 160 : Math.max(230, count * 28);
     const angle = -Math.PI / 2 + (index * Math.PI * 2) / count;
     return {
       x: Math.round(Math.cos(angle) * radius),
@@ -216,6 +228,7 @@ export function buildGraphTopology(
       });
       edges.push({
         id: pairKey,
+        type: "straight",
         source: first.id,
         target: second.id,
         interactionWidth: 24,
@@ -234,7 +247,18 @@ export function decorateGraph(
   topology: GraphTopology,
   selectedNodeId: string | null,
   unlocks: readonly RelationUnlock[],
+  selectedLineColor: RelationshipLineColor | null = null,
 ): BuiltGraph {
+  const perimeterPairs = new Set<string>();
+  if (topology.nodes.length === 2) {
+    perimeterPairs.add(canonicalPairKey(topology.nodes[0].id, topology.nodes[1].id));
+  } else if (topology.nodes.length > 2) {
+    for (let index = 0; index < topology.nodes.length; index += 1) {
+      const current = topology.nodes[index];
+      const next = topology.nodes[(index + 1) % topology.nodes.length];
+      perimeterPairs.add(canonicalPairKey(current.id, next.id));
+    }
+  }
   const unlockedPairs = new Set(
     unlocks
       .filter((item) => item.status === "unlocked")
@@ -250,51 +274,46 @@ export function decorateGraph(
   const edges = topology.edges.map<RelationshipGraphEdge>((edge) => {
     const incident = selectedNodeId !== null &&
       (edge.source === selectedNodeId || edge.target === selectedNodeId);
+    const perimeter = perimeterPairs.has(edge.id);
+    const lineColor = RELATIONSHIP_LINE_COLOR_GROUPS[edge.data.relationship.category];
+    const matchesColor = selectedLineColor === null || lineColor === selectedLineColor;
+    const visible = perimeter || incident;
     const emphasis: EdgeEmphasis = selectedNodeId === null
-      ? "default"
+      ? visible ? "default" : "faint"
       : incident ? "incident" : "faint";
     const unlocked = unlockedPairs.has(edge.id);
-    const showLabel = selectedNodeId === null
-      ? topology.nodes.length <= 6
-      : incident;
     const category = edge.data.relationship.category;
-    const strokeWidth = incident ? (unlocked ? 5 : 4) : unlocked ? 3 : 1.5;
-    const opacity = emphasis === "faint"
-      ? unlocked ? 0.28 : 0.06
-      : incident ? 1 : unlocked ? 0.68 : 0.16;
+    const strokeWidth = incident ? (unlocked ? 5 : 4) : unlocked ? 4 : 3;
+    const emphasized = selectedLineColor !== null ? matchesColor : incident;
+    const opacity = !visible
+      ? 0
+      : selectedNodeId !== null
+        ? incident && emphasized ? 1 : 0.22
+        : selectedLineColor !== null
+          ? matchesColor ? 1 : 0.22
+          : 0.22;
     return {
       ...edge,
-      animated: incident,
+      animated: false,
       className: [
         "relationship-edge",
         `relationship-edge--${unlocked ? "unlocked" : "locked"}`,
         `relationship-edge--${emphasis}`,
+        `relationship-edge--${perimeter ? "perimeter" : "chord"}`,
       ].join(" "),
-      label: showLabel ? RELATIONSHIP_SHORT_LABELS[category] : undefined,
-      labelShowBg: showLabel,
-      labelStyle: {
-        fill: "var(--surface-raised)",
-        fontSize: 11,
-        fontWeight: 950,
-        pointerEvents: "none",
-      },
-      labelBgStyle: {
-        fill: RELATIONSHIP_LABEL_COLORS[category],
-        stroke: "var(--surface-raised)",
-        strokeWidth: 1.5,
-        pointerEvents: "none",
-      },
-      labelBgPadding: [9, 5],
-      labelBgBorderRadius: 999,
+      label: undefined,
+      labelShowBg: false,
       style: {
+        stroke: RELATIONSHIP_LINE_COLORS[category],
         strokeWidth,
         opacity,
-        strokeDasharray: unlocked ? undefined : incident ? "9 4" : "3 7",
+        pointerEvents: visible ? "auto" : "none",
       },
       data: {
         ...edge.data,
         unlocked,
         emphasis,
+        lineColor,
       },
     };
   });
@@ -305,6 +324,12 @@ export function buildGraph(
   members: readonly RelationshipGraphMember[],
   selectedNodeId: string | null,
   unlocks: readonly RelationUnlock[],
+  selectedLineColor: RelationshipLineColor | null = null,
 ): BuiltGraph {
-  return decorateGraph(buildGraphTopology(members), selectedNodeId, unlocks);
+  return decorateGraph(
+    buildGraphTopology(members),
+    selectedNodeId,
+    unlocks,
+    selectedLineColor,
+  );
 }

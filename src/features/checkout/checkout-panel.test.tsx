@@ -11,18 +11,46 @@ const input = { groupId: "g1", memberA: "b", memberB: "a" };
 describe("MockPaymentProvider", () => {
   it("uses the repository unlock boundary only for the explicit test provider", async () => {
     const createPaymentOrder = vi.fn(async () => ({ id: "order-1" }));
-    const unlockPair = vi.fn(async () => ({ id: "private-row" }));
-    const provider = new MockPaymentProvider({ createPaymentOrder, unlockPair });
+    const confirm = vi.fn(async () => undefined);
+    const provider = new MockPaymentProvider({ createPaymentOrder }, { confirm });
 
     await expect(provider.start({ ...input, method: "paypay" })).resolves.toEqual({
       status: "confirmed",
     });
     expect(createPaymentOrder).toHaveBeenCalledWith("g1", "b", "a", "paypay");
-    expect(unlockPair).toHaveBeenCalledWith("g1", "b", "a");
+    expect(confirm).toHaveBeenCalledWith("order-1");
   });
 });
 
 describe("CheckoutPanel", () => {
+  it("collects the receipt email and starts a real 100 JPY checkout", async () => {
+    const user = userEvent.setup();
+    const start = vi.fn(async () => ({ status: "launched" as const }));
+    render(
+      <CheckoutPanel
+        mode="live"
+        pairNames={["あお", "もも"]}
+        input={input}
+        provider={{ start }}
+        onSuccess={vi.fn()}
+      />,
+    );
+
+    expect(screen.queryByText(/モック決済/)).not.toBeInTheDocument();
+    expect(screen.getByText("1組100円の買い切りです。追加料金や自動更新はありません。")).toBeInTheDocument();
+    const button = screen.getByRole("button", { name: "100円で解放する" });
+    expect(button).toBeDisabled();
+    await user.type(screen.getByRole("textbox", { name: "決済確認メール" }), "a@example.jp");
+    await user.click(button);
+    expect(start).toHaveBeenCalledWith({
+      ...input,
+      method: "paypay",
+      buyerName: "あお",
+      buyerEmail: "a@example.jp",
+    });
+    expect(button).toBeDisabled();
+  });
+
   it("clearly identifies the mock charge, amount and payment choices", () => {
     render(
       <CheckoutPanel
@@ -30,12 +58,25 @@ describe("CheckoutPanel", () => {
         input={input}
         provider={{ start: vi.fn() }}
         onSuccess={vi.fn()}
+        returnHref="/g/token/relation/a%3Ab"
       />,
     );
 
     expect(screen.getByRole("heading", { name: "関係レポートを解放" })).toBeInTheDocument();
-    expect(screen.getByText("300円")).toBeInTheDocument();
+    expect(screen.getByText("100円")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "解放される内容" })).toBeInTheDocument();
+    expect(screen.getByText("十二支・五行・陰陽・MBTIの読み解き")).toBeInTheDocument();
+    expect(screen.getByText("ふたりでいるときのヒント")).toBeInTheDocument();
+    expect(screen.getByText("このふたり1組分を解放します")).toBeInTheDocument();
+    expect(screen.getByText("今回のお支払い")).toBeInTheDocument();
+    expect(screen.getByText("合計 100円")).toBeInTheDocument();
+    expect(screen.getByText("定期課金や自動更新はありません")).toBeInTheDocument();
+    expect(screen.getByText("決済完了後、このふたりの関係レポートをすぐに表示します")).toBeInTheDocument();
     expect(screen.getByText("これはモック決済です。実際の請求は発生しません。")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "関係ページに戻る" })).toHaveAttribute(
+      "href",
+      "/g/token/relation/a%3Ab",
+    );
     expect(screen.getByRole("radio", { name: "PayPay（モック）" })).toBeChecked();
     expect(screen.getByRole("radio", { name: "カード（モック）" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "特定商取引法に基づく表記" })).toHaveAttribute(

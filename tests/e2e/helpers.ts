@@ -25,14 +25,14 @@ export async function createGroup(
   groupName: string,
   nickname: string,
 ) {
-  await page.goto("/");
+  await page.goto("/create/profile");
   await page.waitForLoadState("networkidle");
   await page.getByLabel("グループ名").fill(groupName);
   await fillProfile(page, nickname, "1995-05-15", "ENFP");
   await page.getByRole("button", { name: "グループを作成" }).click();
   await expect(page).toHaveURL(/\/g\/[a-f0-9]{64}$/);
   await expect(page.getByRole("heading", { name: groupName })).toBeVisible();
-  await expect(page.getByRole("status", { name: "接続完了" })).toBeVisible();
+  await expect(page.getByRole("button", { name: `${nickname}を選択` })).toBeVisible();
   return page.url().split("/").at(-1)!;
 }
 
@@ -47,6 +47,5 @@ export async function joinGroup(
   await expect(page.getByRole("heading", { name: "グループに招待されています" })).toBeVisible();
   await fillProfile(page, nickname, birthDate, mbti);
   await page.getByRole("button", { name: "グループに参加" }).click();
-  await expect(page.getByText(new RegExp(`${nickname}|メンバー`))).toBeVisible();
-  await expect(page.getByRole("status", { name: "接続完了" })).toBeVisible();
+  await expect(page.getByRole("button", { name: `${nickname}を選択` })).toBeVisible();
 }

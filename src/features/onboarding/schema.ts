@@ -21,6 +21,10 @@ export function todayIsoInTokyo(clock: () => Date = () => new Date()): string {
   return `${part("year")}-${part("month")}-${part("day")}`;
 }
 
+export const groupNameSchema = z.string().trim()
+  .min(1, "グループ名を入力してください")
+  .max(30, "グループ名は30文字以内で入力してください");
+
 function parseIsoDate(value: string): { year: number; month: number; day: number } | null {
   const match = datePattern.exec(value);
   if (!match) return null;
@@ -42,7 +46,7 @@ export function createOnboardingSchema(clock: () => Date = () => new Date()) {
   return z
     .object({
       nickname: z.string().trim().min(1, "ニックネームを入力してください").max(20, "ニックネームは20文字以内で入力してください"),
-      groupName: z.string().trim().min(1, "グループ名を入力してください").max(30, "グループ名は30文字以内で入力してください").optional(),
+      groupName: groupNameSchema.optional(),
       birthDate: z.string(),
       birthTimeKnown: z.boolean(),
       birthTime: z.string(),

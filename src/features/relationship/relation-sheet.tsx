@@ -1,7 +1,14 @@
+import { ButtonLink } from "@/components/ui/button";
 import type { EtoRelationshipResult } from "@/lib/eto/relationship";
 import type { DerivedEtoProfile } from "@/lib/eto/types";
 
-const LOCKED_LAYER_IDS = ["zodiac", "elements", "mbti", "together", "directions"] as const;
+const LOCKED_CHAPTERS = [
+  ["zodiac", "十二支の関係"],
+  ["elements", "五行と陰陽"],
+  ["mbti", "MBTIの4つの軸"],
+  ["together", "ふたりでいるとき"],
+  ["directions", "それぞれへのヒント"],
+] as const;
 const MBTI_AXES = [
   ["E / I", "energyJa"],
   ["S / N", "informationJa"],
@@ -16,6 +23,7 @@ interface RelationSheetProps {
   unlocked: boolean;
   checkoutHref: string;
   detailHref?: string;
+  compact?: boolean;
   onClose?: () => void;
 }
 
@@ -29,6 +37,16 @@ function hasUnavailableBoundaryDistribution(
   );
 }
 
+function CollapseRelationButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button type="button" onClick={onClick} aria-label="関係詳細を閉じる">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="m6.5 14.5 5.5-5 5.5 5" />
+      </svg>
+    </button>
+  );
+}
+
 export function RelationSheet({
   relationship,
   memberNames,
@@ -36,6 +54,7 @@ export function RelationSheet({
   unlocked,
   checkoutHref,
   detailHref,
+  compact = false,
   onClose,
 }: RelationSheetProps) {
   const boundaryDistributionUnavailable = hasUnavailableBoundaryDistribution(memberProfiles);
@@ -44,17 +63,57 @@ export function RelationSheet({
   );
   const mbtiInsight = relationship.mbtiInsight;
 
+  if (compact) {
+    return (
+      <section
+        className="relation-sheet relation-sheet--compact"
+        aria-labelledby="relation-sheet-title"
+        data-unlocked={unlocked}
+      >
+        <header className="relation-sheet__header">
+          <p>{memberNames[0]} × {memberNames[1]}</p>
+          {onClose ? (
+            <CollapseRelationButton onClick={onClose} />
+          ) : null}
+        </header>
+        <div className="relation-sheet__preview-heading">
+          <span>{unlocked ? "UNLOCKED" : "FREE PREVIEW"}</span>
+          <p className="relation-sheet__category">{relationship.categoryLabelJa}</p>
+        </div>
+        <h2 id="relation-sheet-title">{relationship.headlineJa}</h2>
+        <p className="relation-sheet__compact-copy">
+          {unlocked
+            ? "ふたりの関係レポートは解放済みです。詳しい読み解きを確認できます。"
+            : "ふたりの違い、心地よい距離、それぞれへの具体的なヒントまで読み解きます。"}
+        </p>
+        {unlocked && detailHref ? (
+          <ButtonLink href={detailHref}>詳しい関係レポートを見る</ButtonLink>
+        ) : (
+          <>
+            <ButtonLink href={checkoutHref}>この関係を詳しく見る 100円</ButtonLink>
+            <p className="relation-sheet__purchase-note">買い切り・追加料金なし・自動更新なし</p>
+          </>
+        )}
+      </section>
+    );
+  }
+
   return (
-    <section className="relation-sheet" aria-labelledby="relation-sheet-title">
+    <section
+      className="relation-sheet"
+      aria-labelledby="relation-sheet-title"
+      data-unlocked={unlocked}
+    >
       <header className="relation-sheet__header">
         <p>{memberNames[0]} × {memberNames[1]}</p>
         {onClose ? (
-          <button type="button" onClick={onClose} aria-label="関係詳細を閉じる">
-            閉じる
-          </button>
+          <CollapseRelationButton onClick={onClose} />
         ) : null}
       </header>
-      <p className="relation-sheet__category">{relationship.categoryLabelJa}</p>
+      <div className="relation-sheet__preview-heading">
+        <span>{unlocked ? "UNLOCKED REPORT" : "FREE PREVIEW"}</span>
+        <p className="relation-sheet__category">{relationship.categoryLabelJa}</p>
+      </div>
       <h2 id="relation-sheet-title">{relationship.headlineJa}</h2>
       {usesDateOnlyAnalysis ? (
         <p className="relation-sheet__note">出生時刻を使わない分析です</p>
@@ -122,28 +181,39 @@ export function RelationSheet({
         </div>
       ) : (
         <div className="relation-sheet__locked">
+          <section className="relation-sheet__offer" aria-labelledby="relation-offer-title">
+            <div>
+              <p>PAIR REPORT</p>
+              <h3 id="relation-offer-title">解放するとわかること</h3>
+            </div>
+            <ul>
+              <li>十二支・五行・陰陽・MBTIの読み解き</li>
+              <li>ふたりでいるときのヒント</li>
+              <li>それぞれに向けた関わり方</li>
+            </ul>
+            <p className="relation-sheet__offer-price">1組 100円</p>
+          </section>
           <div
             className="relation-sheet__skeletons"
             role="region"
             aria-label="ロック中の詳細"
           >
-            {LOCKED_LAYER_IDS.map((key, index) => (
+            {LOCKED_CHAPTERS.map(([key, title], index) => (
               <span
                 aria-hidden="true"
                 className="relation-sheet__skeleton"
                 data-length={index % 2 === 0 ? "long" : "short"}
                 key={key}
-              />
+              >
+                <strong>{title}</strong>
+                <small>LOCKED</small>
+              </span>
             ))}
           </div>
-          <a
-            className="ui-button"
-            data-size="lg"
-            data-variant="primary"
-            href={checkoutHref}
-          >
-            このふたりを300円で解放
-          </a>
+          <ButtonLink size="lg" href={checkoutHref}>
+            この関係を詳しく見る 100円
+          </ButtonLink>
+          <p className="relation-sheet__purchase-note">買い切り・追加料金なし・自動更新なし</p>
         </div>
       )}
       <p className="relation-sheet__disclaimer">

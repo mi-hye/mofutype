@@ -54,48 +54,334 @@ function colorToken(styles: string, name: string): string {
   return match[1];
 }
 
-describe("production source safety", () => {
-  it("defines the Kawaii Zine tokens and reduced-motion fallback", () => {
-    const globalStyles = readFileSync(path.join(sourceRoot, "app/globals.css"), "utf8");
+function designStyles(): string {
+  return ["design-system.css", "globals.css"]
+    .map((fileName) => readFileSync(path.join(sourceRoot, "app", fileName), "utf8"))
+    .join("\n");
+}
 
-    expect(globalStyles).toContain("--hot-pink:");
-    expect(globalStyles).toContain("--mint-pop:");
-    expect(globalStyles).toContain("--shadow-zine:");
+describe("production source safety", () => {
+  it("defines the warm Mofu design tokens and reduced-motion fallback", () => {
+    const globalStyles = designStyles();
+    const squiggleFilters = readFileSync(
+      path.join(sourceRoot, "components/ui/squiggle-filters.tsx"),
+      "utf8",
+    );
+
+    expect(globalStyles).toContain("--color-paper: #f7ecdc");
+    expect(globalStyles).toContain("--color-blush: #f1d1ca");
+    expect(globalStyles).toContain("--color-ink: #4f312b");
+    expect(globalStyles).toContain("--action-primary:");
+    expect(globalStyles).toContain("--border-subtle:");
+    expect(globalStyles).toContain("--shadow-pop:");
+    expect(globalStyles).toContain('background-image: none');
+    expect(globalStyles).toContain("--button-border-color: #4a2e2b");
+    expect(globalStyles).toContain(
+      "--button-background: radial-gradient(circle, #fff5f2 0%, #f7ede2 100%)",
+    );
+    expect(globalStyles).toContain(
+      "--button-background-hover: var(--button-background)",
+    );
+    expect(globalStyles).not.toContain("animation: squigglevision");
+    expect(globalStyles).not.toContain("@keyframes squigglevision");
+    expect(globalStyles).toMatch(/\.ui-button::before[^}]*animation:\s*none[^}]*filter:\s*none/);
+    for (const filterId of ["squiggle-1", "squiggle-2", "squiggle-3", "squiggle-4"]) {
+      expect(squiggleFilters).not.toContain(`id="${filterId}"`);
+    }
+    expect(squiggleFilters).toContain("[0, 1, 2, 3, 4].map((seed)");
+    expect(squiggleFilters).toContain("id={`text-squiggly-${seed}`}");
+    expect(squiggleFilters).toContain('baseFrequency="0.02"');
+    expect(squiggleFilters).toContain("scale={5}");
+    expect(globalStyles).toMatch(/\.hero h1[^}]*animation:\s*hero-squiggly 0\.3s infinite linear/);
+    expect(globalStyles).toContain("@keyframes hero-squiggly");
+    expect(globalStyles).toMatch(/@media \(prefers-reduced-motion: reduce\)[\s\S]*\.hero h1\s*\{[^}]*animation:\s*none !important[^}]*filter:\s*none/);
+    expect(squiggleFilters).not.toContain('id="wrinkle-effect"');
+    expect(squiggleFilters).not.toContain('id="node-wrinkle-effect"');
+    expect(globalStyles).toMatch(/\.ui-button\[data-variant="secondary"\]::before[^}]*filter:\s*none/);
+    expect(globalStyles).toMatch(/\.ui-button:not\(:disabled\):hover\s*\{[^}]*transform:\s*translateY\(-2px\)/);
     expect(globalStyles).toContain("@media (prefers-reduced-motion: reduce)");
     expect(globalStyles).toContain('.zodiac-avatar[data-selected="true"]');
     expect(globalStyles).toMatch(
-      /\.zodiac-avatar\[data-selected="true"\][^{]*\{[^}]*box-shadow:\s*[^;]*var\(--hot-pink\)/,
+      /\.zodiac-avatar\[data-selected="true"\][^{]*\{[^}]*box-shadow:\s*[^;]*var\(--accent-navy\)/,
+    );
+    expect(globalStyles).toMatch(
+      /\.group-graph__relationship-cards button:hover \.zodiac-avatar\s*\{[^}]*box-shadow:\s*none[^}]*transform:\s*none/,
+    );
+    expect(globalStyles).toMatch(
+      /\.relation-sheet__header p\s*\{[^}]*font-size:\s*clamp\(1\.05rem,[^)]*1\.25rem\)/,
+    );
+    expect(globalStyles).toMatch(
+      /\.relation-sheet__header button\s*\{[^}]*border:\s*0[^}]*background:\s*transparent/,
     );
     for (const variant of ["cream", "pink", "mint", "violet"]) {
       expect(globalStyles).toContain(`.ui-card[data-variant="${variant}"]`);
     }
     expect(globalStyles).toContain(
-      ".relationship-edge--incident.relationship-edge--locked",
+      ".relationship-edge--incident .react-flow__edge-path",
+    );
+  });
+
+  it("defines role-based editorial tokens and explicit responsive contracts", () => {
+    const globalStyles = designStyles();
+
+    for (const token of [
+      "--paper-warm:",
+      "--accent-coral:",
+      "--border-subtle:",
+      "--shadow-soft:",
+      "--content-wide:",
+    ]) {
+      expect(globalStyles).toContain(token);
+    }
+
+    expect(globalStyles).toContain("@media (max-width: 23rem)");
+    expect(globalStyles).toContain("@media (min-width: 64rem)");
+    expect(globalStyles).toContain("@media (forced-colors: active)");
+    expect(globalStyles).toMatch(
+      /html\s*\{[^}]*-webkit-text-size-adjust:\s*100%[^}]*text-size-adjust:\s*100%/,
+    );
+    expect(globalStyles).toMatch(
+      /\.group-member-header__topbar\s*\{[^}]*display:\s*flex[^}]*align-items:\s*center[^}]*justify-content:\s*space-between/,
+    );
+    expect(globalStyles).toMatch(
+      /\.group-member-header\s*\{[^}]*gap:\s*0\.25rem/,
+    );
+    expect(globalStyles).toMatch(
+      /\.group-member-header__identity h1\s*\{[^}]*margin-top:\s*0\.15rem/,
+    );
+    expect(globalStyles).toMatch(
+      /\.group-member-actions\s*\{[^}]*flex-wrap:\s*nowrap[^}]*justify-content:\s*flex-end[^}]*gap:\s*0/,
+    );
+    expect(globalStyles).toMatch(
+      /\.group-share-button\s*\{[^}]*width:\s*44px[^}]*min-width:\s*44px[^}]*min-height:\s*44px/,
+    );
+    expect(globalStyles).toMatch(
+      /\.group-refresh-button\s*\{[^}]*width:\s*44px[^}]*min-width:\s*44px[^}]*min-height:\s*44px/,
+    );
+    expect(globalStyles).not.toContain(".group-member-header:has(.group-share-feedback)");
+    expect(globalStyles).toMatch(
+      /\.group-share-toast\s*\{[^}]*position:\s*fixed[^}]*env\(safe-area-inset-bottom\)/,
+    );
+    expect(globalStyles).toMatch(
+      /\.group-share-backdrop\s*\{[^}]*height:\s*100dvh[^}]*env\(safe-area-inset-bottom\)/,
+    );
+    expect(globalStyles).toMatch(
+      /\.group-share-backdrop\s*\{[^}]*background:\s*transparent[^}]*backdrop-filter:\s*none/,
+    );
+    expect(globalStyles).toMatch(
+      /\.group-share-actions\s*\{[^}]*max-height:\s*calc\(100dvh/,
+    );
+  });
+
+  it("defines warm Mofu contracts for relationship and checkout surfaces", () => {
+    const globalStyles = designStyles();
+
+    for (const selector of [
+      ".relation-sheet {",
+      ".relation-sheet__locked {",
+      ".relation-sheet__details {",
+      ".relation-sheet__skeleton {",
+      ".checkout-panel {",
+      ".checkout-panel__notice {",
+      ".checkout-panel__price {",
+      ".checkout-panel fieldset {",
+      ".checkout-panel input[type=\"radio\"]",
+      ".my-result-card {",
+    ]) {
+      expect(globalStyles).toContain(selector);
+    }
+    expect(globalStyles).toContain(".group-graph__accessible:focus-within");
+    expect(globalStyles).toMatch(/\.my-result-card\s*\{[^}]*margin-top:/);
+    expect(globalStyles).toMatch(
+      /\.group-share-actions__close\s*\{[^}]*width:\s*1px[^}]*clip-path:\s*inset\(50%\)/,
+    );
+    expect(globalStyles).toMatch(
+      /\.relation-sheet__details section\s*\{[^}]*min-width:\s*0[^}]*border:\s*var\(--border-subtle\)[^}]*border-radius:[^}]*background:\s*var\(--surface\)[^}]*box-shadow:/,
+    );
+    expect(globalStyles).toMatch(
+      /\.relation-sheet__details p,\s*\.relation-sheet__details dd\s*\{[^}]*max-width:\s*100%[^}]*overflow-wrap:\s*anywhere/,
+    );
+    expect(globalStyles).toMatch(
+      /\.personal-detail-shell > \.group-share-controls\s*\{[^}]*justify-items:\s*center/,
+    );
+  });
+
+  it("lets mobile pages scroll vertically over the relationship graph", () => {
+    const globalStyles = designStyles();
+
+    expect(globalStyles).toMatch(
+      /\.group-graph__canvas \.react-flow__pane\s*\{[^}]*touch-action:\s*pan-y/,
+    );
+    expect(globalStyles).toMatch(
+      /\.group-graph__canvas\[data-member-count="1"\]\s*\{[^}]*height:\s*clamp\(20rem,\s*46svh,\s*26rem\)[^}]*min-height:\s*20rem/,
+    );
+  });
+
+  it("keeps the profile step compact without replacing native controls", () => {
+    const globalStyles = designStyles();
+
+    expect(globalStyles).toContain(".profile-step .ui-card {");
+    expect(globalStyles).toContain("max-width: 38rem;");
+    expect(globalStyles).toContain(
+      ".profile-step .unknown-toggle { min-height: 34px;",
     );
     expect(globalStyles).toContain(
-      ".relationship-edge--incident.relationship-edge--unlocked",
+      ".profile-step .unknown-toggle input { width: 1rem; height: 1rem; }",
+    );
+    expect(globalStyles).toContain(
+      ".profile-step .form-field { min-width: 0; max-width: 100%; }",
+    );
+    expect(globalStyles).toMatch(
+      /\.profile-step \.form-field input\[type="date"\], \.profile-step \.form-field input\[type="time"\][^}]*inline-size:\s*100%[^}]*min-inline-size:\s*0[^}]*max-inline-size:\s*100%[^}]*overflow:\s*hidden[^}]*-webkit-appearance:\s*none/,
+    );
+    expect(globalStyles).toContain(
+      ".profile-step .field-error { max-width: 100%; font-size: 0.75rem;",
+    );
+    expect(globalStyles).toContain("@media (min-width: 36rem)");
+    expect(globalStyles).toMatch(
+      /\.join-panel \.unknown-toggle\s*\{[^}]*min-height:\s*34px[^}]*margin-top:\s*-13px[^}]*border:\s*0[^}]*background:\s*transparent/,
+    );
+    expect(globalStyles).toMatch(
+      /@media \(max-width:\s*30rem\)[\s\S]*\.dev-locale-toggle > span\s*\{[^}]*display:\s*none/,
     );
   });
 
   it("keeps semantic selected-edge colors visible against cream", () => {
-    const globalStyles = readFileSync(path.join(sourceRoot, "app/globals.css"), "utf8");
+    const globalStyles = designStyles();
+    const graphSource = readFileSync(
+      path.join(sourceRoot, "features/group-graph/build-graph.ts"),
+      "utf8",
+    );
     const cream = colorToken(globalStyles, "--cream");
 
-    expect(contrastRatio(colorToken(globalStyles, "--edge-hot-pink"), cream))
-      .toBeGreaterThanOrEqual(3);
-    expect(contrastRatio(colorToken(globalStyles, "--edge-mint"), cream))
-      .toBeGreaterThanOrEqual(3);
-    expect(globalStyles).toContain("stroke: var(--edge-hot-pink)");
-    expect(globalStyles).toContain("stroke: var(--edge-mint)");
+    for (const relationshipColor of [
+      "--relationship-warm",
+      "--relationship-clear",
+      "--relationship-calm",
+    ]) {
+      expect(contrastRatio(colorToken(globalStyles, relationshipColor), cream))
+        .toBeGreaterThanOrEqual(3);
+      expect(graphSource).toContain(`var(${relationshipColor})`);
+    }
+    expect(graphSource).not.toContain("strokeDasharray");
   });
 
-  it("clips landing decorations locally without hiding document overflow", () => {
-    const globalStyles = readFileSync(path.join(sourceRoot, "app/globals.css"), "utf8");
+  it("keeps a mobile-first relationship preview without hiding document overflow", () => {
+    const globalStyles = designStyles();
+    const pageSource = readFileSync(path.join(sourceRoot, "app/page.tsx"), "utf8");
+    const previewSource = readFileSync(
+      path.join(sourceRoot, "features/landing/landing-relationship-preview.tsx"),
+      "utf8",
+    );
+    const commonGraphSource = readFileSync(
+      path.join(sourceRoot, "features/group-graph/group-graph.tsx"),
+      "utf8",
+    );
+    const startFormSource = readFileSync(
+      path.join(sourceRoot, "features/onboarding/start-group-form.tsx"),
+      "utf8",
+    );
+    const createProfileSource = readFileSync(
+      path.join(sourceRoot, "app/create/profile/page.tsx"),
+      "utf8",
+    );
+    const joinFormSource = readFileSync(
+      path.join(sourceRoot, "features/onboarding/join-group-form.tsx"),
+      "utf8",
+    );
 
     expect(globalStyles).not.toContain("min-width: 320px");
     expect(globalStyles).not.toContain("overflow-x: hidden");
-    expect(globalStyles).toMatch(/\.hero__decor\s*\{[^}]*overflow:\s*clip/);
-    expect(globalStyles).toMatch(/\.hero__stripe\s*\{[^}]*right:\s*0;/);
+    expect(globalStyles).toMatch(/\.hero__decor\s*\{[^}]*order:\s*3/);
+    expect(globalStyles).toMatch(/\.hero__decor \.group-graph__canvas\s*\{[^}]*height:\s*clamp\(20rem,\s*62vw,\s*30rem\)/);
+    expect(globalStyles).toMatch(/\.hero\s*\{[^}]*box-shadow:\s*none/);
+    expect(globalStyles).toMatch(/\.landing-nav[^}]*justify-content:\s*center/);
+    expect(globalStyles).toMatch(/\.start-group-form > \.ui-button[^}]*min-width:\s*5\.75rem[^}]*min-height:\s*44px[^}]*justify-self:\s*start/);
+    expect(globalStyles).not.toContain(".start-group-form > .ui-button::before");
+    expect(globalStyles).toMatch(/\.start-group-form \.field-error[^}]*border:\s*0[^}]*padding:\s*0[^}]*background:\s*transparent/);
+    expect(globalStyles).toMatch(/\.field-error, \.form-error, p\[role="alert"\][^}]*border:\s*0[^}]*padding:\s*0[^}]*background:\s*transparent[^}]*color:\s*var\(--text-error\)/);
+    expect(globalStyles).toMatch(/\.profile-step \.unknown-toggle[^}]*margin-top:\s*-13px/);
+    expect(globalStyles).toMatch(/\.hero\s*\{[^}]*margin:\s*calc\(2\.75rem - 12px\) auto 0/);
+    expect(startFormSource).not.toContain("start-group-form__note");
+    expect(startFormSource).not.toContain("グループはプロフィール入力のあとに作成されます。");
+    expect(pageSource).not.toContain("まずはグループ名から。次のページであなたのプロフィールを入力します。");
+    expect(pageSource).not.toContain("<StartGroupForm");
+    expect(pageSource).not.toContain('id="create"');
+    expect(pageSource).toContain('href="/create/profile"');
+    expect(createProfileSource).toContain("<CreateGroupForm />");
+    expect(createProfileSource).not.toContain("profileOnly");
+    expect(joinFormSource).toContain("<ProfileForm");
+    expect(joinFormSource).not.toContain('htmlFor="create-group-name"');
+    expect(pageSource).toContain("<LandingRelationshipPreview />");
+    expect(previewSource).toContain("<GroupGraph");
+    expect(previewSource).toContain('from "@/features/group-graph/group-graph"');
+    expect(previewSource).toContain('variant="minimal"');
+    expect(commonGraphSource).toContain('className="group-graph__canvas"');
+    expect(commonGraphSource).toContain("onNodeClick={handleNodeClick}");
+    expect(commonGraphSource).toContain('if (variant === "minimal") return []');
+    expect(globalStyles).not.toContain(".hero__connectors");
+    expect(pageSource).toContain("#12干支");
+    expect(globalStyles).toMatch(/\.hero__stickers[^}]*align-items:\s*center[^}]*margin:\s*-3px 0 0/);
+    expect(globalStyles).toMatch(/\.ui-capsule[^}]*display:\s*inline-flex[^}]*min-height:\s*2\.125rem[^}]*align-items:\s*center[^}]*line-height:\s*0\.9/);
+    expect(globalStyles).toMatch(/\.ui-button::before[^}]*border:\s*2\.5px solid var\(--button-border-color\)/);
+    expect(globalStyles).not.toContain(".hero__cta::before");
+    expect(pageSource).not.toContain("#動物うらない");
+    expect(pageSource).not.toContain("性格タイプ × 動物キャラクター");
+    for (const zodiacId of ['"tiger"', '"rat"', '"rabbit"']) {
+      expect(previewSource).toContain(zodiacId);
+    }
+    for (const token of [
+      "--animal-tiger-pastel",
+      "--animal-rat-pastel",
+      "--animal-rabbit-pastel",
+      "--animal-tiger-border",
+      "--animal-rat-border",
+      "--animal-rabbit-border",
+    ]) expect(globalStyles).toContain(token);
+    for (const token of [
+      "--relationship-calm: #e12d3f",
+      "--relationship-clear: #e75a00",
+      "--relationship-neutral: #b77900",
+      "--relationship-warm: #009b63",
+      "--relationship-careful: #1677ff",
+    ]) expect(globalStyles).toContain(token);
+    expect(globalStyles).toContain("@keyframes relationship-sonar-ping");
+    expect(globalStyles).toMatch(
+      /\.group-graph__filters button::after\s*\{[^}]*animation:\s*none/,
+    );
+    expect(globalStyles).toMatch(
+      /\.group-graph__filters button\[aria-pressed="true"\]::after\s*\{[^}]*animation:\s*relationship-sonar-ping 2s/,
+    );
+    expect(globalStyles).not.toContain("button:nth-child(5)::after");
+    expect(globalStyles).toMatch(/\.zodiac-graph-node__frame::before[^}]*border:\s*2px solid var\(--node-border\)[^}]*filter:\s*none/);
+    expect(globalStyles).toMatch(/\.zodiac-graph-node__type[^}]*top:\s*0\.72rem/);
+    expect(globalStyles).toMatch(/\.zodiac-graph-node__frame\[data-zodiac="tiger"\][^}]*--node-pastel:\s*var\(--animal-tiger-pastel\)/);
+    expect(globalStyles).toContain("--node-border: var(--animal-tiger-border)");
+    expect(globalStyles).toContain("--node-border: var(--animal-rat-border)");
+    expect(globalStyles).toContain("--node-border: var(--animal-rabbit-border)");
+    expect(globalStyles).toMatch(/\.zodiac-graph-node\[data-selected="true"\] \.zodiac-graph-node__frame::before[^}]*var\(--node-pastel\)/);
+    expect(globalStyles).toMatch(/\.ui-button::before[^}]*animation:\s*none/);
+    expect(globalStyles).toContain(".ui-button > span { position: relative; z-index: 1; }");
+    expect(globalStyles).toContain("@keyframes float-orbit");
+    expect(globalStyles).toContain("@keyframes rise-in");
+  });
+
+  it("shows a truthful paid-report preview before the conversion CTA", () => {
+    const globalStyles = designStyles();
+    const pageSource = readFileSync(path.join(sourceRoot, "app/page.tsx"), "utf8");
+
+    expect(pageSource).toContain('className="report-preview"');
+    expect(pageSource).toContain("気になるふたりを、100円で深掘り。");
+    expect(pageSource).toContain("ONE PAIR / ONE TIME");
+    expect(pageSource).toContain("気になる1組だけ、100円。");
+    expect(pageSource).not.toContain("急いで答えを出したいときほど");
+    expect(pageSource).toContain("このサンプルは表示イメージです。");
+    expect(pageSource).not.toMatch(/お客様の声|満足度|診断精度|当たる/);
+    expect(globalStyles).toContain(".report-preview__paper {");
+    expect(globalStyles).toContain(".report-preview__sample-label {");
+    expect(globalStyles).toMatch(
+      /\.report-preview__paper\s*\{[^}]*border:\s*var\(--border-panel\)[^}]*background:\s*var\(--surface-elevated\)/,
+    );
   });
 
   it("detects a forbidden animal symbol in supplied source", () => {

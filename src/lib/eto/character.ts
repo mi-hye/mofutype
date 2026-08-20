@@ -5,6 +5,8 @@ export interface CharacterCopy {
   titleJa: string;
   zodiacTraitsJa: readonly [string, string, string];
   mbtiModifierJa: string | null;
+  zodiacDescriptionJa: string;
+  mbtiDescriptionJa: string | null;
   descriptionJa: string;
 }
 
@@ -28,18 +30,18 @@ export const MBTI_MODIFIERS: Readonly<Record<MbtiType, string>> = Object.freeze(
 });
 
 const BASE_DESCRIPTIONS_JA: Readonly<Record<ZodiacId, string>> = Object.freeze({
-  rat: "機転と観察力を生かし、ひと工夫で毎日を楽しくできる人です。",
-  ox: "誠実さを大切に、安定した歩みを粘り強く続けられる人です。",
-  tiger: "勇気と情熱を胸に、自分で決めた道へ力強く進める人です。",
-  rabbit: "豊かな感性と気配りで、変化にもしなやかに寄り添える人です。",
-  dragon: "大きな理想を掲げ、その存在感で新しい景色へ飛躍できる人です。",
-  snake: "物事を深く見つめる洞察力と、ひとつに集中する強さを持つ人です。",
-  horse: "自由な心と軽やかな行動力で、爽快に一歩を踏み出せる人です。",
-  sheep: "穏やかな共感と調和を大切に、周りに安心を広げられる人です。",
-  monkey: "旺盛な好奇心と機知を生かし、どんな場にも柔軟に適応できる人です。",
-  rooster: "細部まで丁寧に整え、責任感を持って自分らしく表現できる人です。",
-  dog: "信頼と忠実さを大切に、まっすぐな正義感で仲間を支えられる人です。",
-  boar: "素直な心と温かな情熱を持ち、目標へまっすぐ進める人です。",
+  rat: "機転と観察力を生かし、ひと工夫で毎日を楽しくできる人です。小さな変化や好機をすばやく見つけ、周りが気づかない新しい道を軽やかに開けます。",
+  ox: "誠実さを大切に、安定した歩みを粘り強く続けられる人です。目の前のことを丁寧に積み重ね、時間をかけて周りからの信頼を確かな形にしていきます。",
+  tiger: "勇気と情熱を胸に、自分で決めた道へ力強く進める人です。迷いがある場面でも先頭に立ち、そのまっすぐな行動で周りに一歩踏み出す力を与えます。",
+  rabbit: "豊かな感性と気配りで、変化にもしなやかに寄り添える人です。相手の気持ちをそっと受け取り、やわらかな言葉と距離感で居心地のよい空気をつくります。",
+  dragon: "大きな理想を掲げ、その存在感で新しい景色へ飛躍できる人です。まだ形のない可能性を信じる強さがあり、周りの期待も力に変えて大胆な一歩を選べます。",
+  snake: "物事を深く見つめる洞察力と、ひとつに集中する強さを持つ人です。表面だけでは見えない本質を静かに読み取り、納得できる答えへ粘り強く近づいていきます。",
+  horse: "自由な心と軽やかな行動力で、爽快に一歩を踏み出せる人です。好奇心が向く場所へ素直に動き、その明るい勢いで周りの空気まで前向きに変えていきます。",
+  sheep: "穏やかな共感と調和を大切に、周りに安心を広げられる人です。誰かの小さな変化にもやさしく気づき、みんなが無理なく過ごせる温かな居場所を育てます。",
+  monkey: "旺盛な好奇心と機知を生かし、どんな場にも柔軟に適応できる人です。難しい状況にも遊び心のある工夫を見つけ、周りを笑顔にしながら流れを変えられます。",
+  rooster: "細部まで丁寧に整え、責任感を持って自分らしく表現できる人です。曖昧なままにせず一つずつ形にする力があり、誠実な仕事ぶりで周りの信頼に応えます。",
+  dog: "信頼と忠実さを大切に、まっすぐな正義感で仲間を支えられる人です。大切な人の変化によく気づき、必要なときには迷わずそばに立てる強さがあります。",
+  boar: "素直な心と温かな情熱を持ち、目標へまっすぐ進める人です。決めたことには迷いなく力を注ぎ、その飾らない誠実さで周りの心も自然に動かしていきます。",
 });
 
 const MBTI_CONTRIBUTIONS_JA: Readonly<Record<MbtiType, string>> = Object.freeze({
@@ -76,14 +78,18 @@ export function createCharacterCopy(
   }
 
   const modifier = mbti === null ? null : MBTI_MODIFIERS[mbti];
+  const zodiacDescriptionJa = BASE_DESCRIPTIONS_JA[zodiacId];
+  const mbtiDescriptionJa = mbti === null ? null : MBTI_CONTRIBUTIONS_JA[mbti];
   const descriptionJa = mbti === null
-    ? BASE_DESCRIPTIONS_JA[zodiacId]
-    : `${BASE_DESCRIPTIONS_JA[zodiacId]}${MBTI_CONTRIBUTIONS_JA[mbti]}`;
+    ? zodiacDescriptionJa
+    : `${zodiacDescriptionJa}${mbtiDescriptionJa}`;
 
   return Object.freeze({
     titleJa: modifier === null ? `${zodiac.nameJa}タイプ` : `${modifier}${zodiac.nameJa}`,
     zodiacTraitsJa: zodiac.keywordsJa,
     mbtiModifierJa: modifier,
+    zodiacDescriptionJa,
+    mbtiDescriptionJa,
     descriptionJa,
   });
 }

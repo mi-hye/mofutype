@@ -11,18 +11,15 @@ test("a 30-member mobile graph renders 435 relationships without horizontal over
   await expect(page.getByText("メンバー 30人")).toBeVisible({ timeout: 15_000 });
   await expect(page.locator(".react-flow__node")).toHaveCount(30, { timeout: 15_000 });
   await expect(page.locator(".react-flow__edge")).toHaveCount(435, { timeout: 15_000 });
-  await expect(page.getByTestId("zodiac-avatar")).toHaveCount(30);
-  await expect(page.getByTestId("zodiac-avatar").first()).toHaveAttribute("data-size", "sm");
+  await expect(page.locator(".zodiac-graph-node__frame")).toHaveCount(30);
+  await expect(page.locator(".zodiac-graph-node__frame").first()).toHaveAttribute("data-size", "sm");
 
-  await page.getByRole("button", { name: "オーナーを選択" }).click();
+  await page.getByRole("button", { name: "オーナーを選択" }).focus();
+  await page.keyboard.press("Enter");
   await expect(page.locator(".relationship-edge--incident")).toHaveCount(29);
   await expect(page.getByRole("status", { name: "選択中のメンバー" })).toContainText("関係 29本");
 
-  const viewport = page.locator(".react-flow__viewport");
-  const transformBeforeZoom = await viewport.getAttribute("style");
-  await page.locator(".pointer-flow-controls button").first().click({ force: true });
-  await expect.poll(async () => await viewport.getAttribute("style"))
-    .not.toBe(transformBeforeZoom);
+  await expect(page.locator(".pointer-flow-controls")).toHaveCount(0);
 
   for (const size of [
     { width: 320, height: 568 },

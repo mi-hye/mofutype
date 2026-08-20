@@ -2,10 +2,13 @@
 
 import { Handle, Position } from "@xyflow/react";
 
-import { ZodiacAvatar } from "@/components/zodiac-avatar";
+import { ZODIACS } from "@/lib/eto/zodiac";
 import type { ZodiacNodeData } from "./build-graph";
 
 export function ZodiacNode({ data }: { data: ZodiacNodeData }) {
+  const zodiac = ZODIACS[data.member.zodiacId];
+  const frameCenter = { sm: "2rem", md: "2.375rem", lg: "3.125rem" }[data.size];
+
   return (
     <div
       className="zodiac-graph-node"
@@ -16,23 +19,21 @@ export function ZodiacNode({ data }: { data: ZodiacNodeData }) {
         type="target"
         position={Position.Top}
         className="zodiac-graph-node__handle"
+        style={{ left: "50%", top: frameCenter, transform: "translate(-50%, -50%)" }}
       />
-      <ZodiacAvatar
-        zodiacId={data.member.zodiacId}
-        nickname={data.member.nickname}
-        size={data.size}
-        selected={data.selected}
-      />
-      {data.selected ? (
-        <span
-          className="zodiac-graph-node__selected-sticker"
-          aria-hidden="true"
-        >
-          SELECTED
+      <span
+        className="zodiac-graph-node__frame"
+        data-size={data.size}
+        data-zodiac={data.member.zodiacId}
+        aria-hidden="true"
+      >
+        <span className="zodiac-graph-node__type">{data.member.mbti ?? "—"}</span>
+        {/* The catalog owns trusted local PNG paths. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={zodiac.assetPath} alt="" />
+        <span className="zodiac-graph-node__nickname">
+          {data.member.nickname}
         </span>
-      ) : null}
-      <span className="zodiac-graph-node__nickname">
-        {data.member.nickname}
       </span>
       <span className="zodiac-graph-node__character-title">
         {data.characterTitleJa}
@@ -44,8 +45,9 @@ export function ZodiacNode({ data }: { data: ZodiacNodeData }) {
       ) : null}
       <Handle
         type="source"
-        position={Position.Bottom}
+        position={Position.Top}
         className="zodiac-graph-node__handle"
+        style={{ left: "50%", top: frameCenter, transform: "translate(-50%, -50%)" }}
       />
     </div>
   );

@@ -1,4 +1,5 @@
 import { act, render, screen, waitFor, within } from "@testing-library/react";
+import type { ReactNode } from "react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
@@ -6,10 +7,12 @@ import type { GroupAggregate, GroupSubscriptionCallbacks } from "@/lib/supabase/
 import type { GroupMember, RelationUnlock } from "@/lib/supabase/models";
 
 vi.mock("./group-graph", () => ({
-  GroupGraph: ({ members, unlocks, onPairSelect }: {
+  GroupGraph: ({ members, unlocks, onPairSelect, interstitialContent, relationshipDetail }: {
     members: GroupMember[];
     unlocks: RelationUnlock[];
     onPairSelect(selection: unknown): void;
+    interstitialContent?: ReactNode;
+    relationshipDetail?: ReactNode;
   }) => (
     <div data-testid="graph-state">
       members:{members.map((member) => `${member.id}:${member.nickname}`).join(",")};
@@ -46,6 +49,8 @@ vi.mock("./group-graph", () => ({
           },
         })}>aとbの関係を選択</button>
       ) : null}
+      <div data-testid="mock-graph-interstitial">{interstitialContent}</div>
+      <div data-testid="mock-relationship-panel">{relationshipDetail}</div>
     </div>
   ),
 }));
@@ -121,6 +126,80 @@ function repository(initial: GroupAggregate) {
 }
 
 describe("GroupScreen", () => {
+  it("keeps the group capsule and share actions in one aligned top row", () => {
+    const initial = aggregate();
+    const repo = repository(initial);
+
+    render(<GroupScreen initialAggregate={initial} repository={repo.api} inviteToken="token-a" />);
+
+    const topbar = screen.getByText("MofuType グループ").closest(".group-member-header__topbar");
+    expect(topbar).not.toBeNull();
+    expect(topbar?.querySelector(".group-member-actions")).not.toBeNull();
+    expect(topbar).toContainElement(screen.getByRole("button", { name: "最新の情報に更新" }));
+  });
+
+  it("shows a concise personal preview while relationship choice stays in the graph", () => {
+    const initial = aggregate("g1", [
+      member("a", "わたし"),
+      { ...member("b", "ともだち"), mbti: "ENTJ",
+        profile: { ...member("b").profile, mbti: "ENTJ" } },
+    ]);
+    const repo = repository(initial);
+
+    render(<GroupScreen initialAggregate={initial} repository={repo.api} currentUserId="u-b" inviteToken={"a".repeat(64)} />);
+
+    expect(screen.getByText("わたしの四柱推命")).toBeInTheDocument();
+    expect(screen.queryByText("MY PROFILE")).not.toBeInTheDocument();
+    expect(screen.getByText("大胆に道を切り開くうさぎ")).toBeInTheDocument();
+    expect(screen.getByText("FREE PREVIEW")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "うさぎの気質" })).toBeInTheDocument();
+    expect(screen.getByText(/豊かな感性と気配り/)).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "ENTJの思考と行動" })).not.toBeInTheDocument();
+    expect(screen.getByRole("list", { name: "診断結果の詳細" })).toHaveTextContent("ENTJ火・陽出生時刻を反映");
+    expect(screen.getByRole("link", { name: "わたしの詳細を見る" })).toHaveAttribute(
+      "href",
+      `/g/${"a".repeat(64)}/profile`,
+    );
+    expect(screen.queryByRole("combobox", { name: "関係を見る相手を選ぶ" }))
+      .not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "aとbの関係を選択" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "共有する" })).toBeInTheDocument();
+    expect(screen.queryByText("たつタイプとして")).not.toBeInTheDocument();
+  });
+
+  it("places the personal result below the graph and before the relationship offer", async () => {
+    const user = userEvent.setup();
+    const initial = aggregate("g1", [member("a", "わたし"), member("b", "ともだち")]);
+    const repo = repository(initial);
+    render(<GroupScreen initialAggregate={initial} repository={repo.api} currentUserId="u-a" inviteToken="token-a" />);
+
+    await user.click(screen.getByRole("button", { name: "aとbの関係を選択" }));
+    const relationSheet = screen.getByRole("heading", { name: /関係です$/ }).closest(".relation-sheet");
+    const relationshipPanel = screen.getByTestId("mock-relationship-panel");
+    const graphInterstitial = screen.getByTestId("mock-graph-interstitial");
+    const personalResult = screen.getByText("わたしの四柱推命").closest(".my-result-card");
+
+    expect(relationSheet).not.toBeNull();
+    expect(relationSheet && relationshipPanel.contains(relationSheet)).toBe(true);
+    expect(personalResult).not.toBeNull();
+    expect(personalResult && graphInterstitial.contains(personalResult)).toBe(true);
+    const documentOrder = relationSheet && personalResult
+      ? personalResult.compareDocumentPosition(relationSheet)
+      : 0;
+    expect(documentOrder & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("keeps the personal preview neutral when MBTI is unknown", () => {
+    const initial = aggregate("g1", [member("a", "わたし")]);
+    const repo = repository(initial);
+
+    render(<GroupScreen initialAggregate={initial} repository={repo.api} currentUserId="u-a" />);
+
+    expect(screen.getByRole("heading", { name: "たつの気質" })).toBeInTheDocument();
+    expect(screen.queryByText(/MBTIの思考と行動/)).not.toBeInTheDocument();
+    expect(screen.getByText("MBTI未設定")).toBeInTheDocument();
+  });
+
   it("subscribes once with the group filter, refreshes initial data, and cleans up", async () => {
     const initial = aggregate();
     const repo = repository(initial);
@@ -176,11 +255,11 @@ describe("GroupScreen", () => {
     const sessionB = within(screen.getByRole("region", { name: "セッションB" }));
     await user.click(sessionA.getByRole("button", { name: "aとbの関係を選択" }));
     await user.click(sessionB.getByRole("button", { name: "aとbの関係を選択" }));
-    expect(sessionA.getByRole("link", { name: "このふたりを300円で解放" })).toHaveAttribute(
+    expect(sessionA.getByRole("link", { name: "この関係を詳しく見る 100円" })).toHaveAttribute(
       "href",
       "/checkout/a%3Ab?invite=token-a",
     );
-    expect(sessionB.getByRole("link", { name: "このふたりを300円で解放" })).toBeInTheDocument();
+    expect(sessionB.getByRole("link", { name: "この関係を詳しく見る 100円" })).toBeInTheDocument();
 
     const sharedUnlock = unlock("shared", "unlocked");
     act(() => {
@@ -188,10 +267,10 @@ describe("GroupScreen", () => {
       secondRepository.callbacks()?.onUnlockChange?.({ eventType: "INSERT", new: sharedUnlock });
     });
 
-    expect(sessionA.getByText("解放済み")).toBeInTheDocument();
-    expect(sessionB.getByText("解放済み")).toBeInTheDocument();
-    expect(sessionA.queryByRole("link", { name: "このふたりを300円で解放" })).not.toBeInTheDocument();
-    expect(sessionB.getByText("言葉を交わしながら互いに心地よい進み方を見つけていける組み合わせです。")).toBeInTheDocument();
+    expect(sessionA.getByText("UNLOCKED")).toBeInTheDocument();
+    expect(sessionB.getByText("UNLOCKED")).toBeInTheDocument();
+    expect(sessionA.queryByRole("link", { name: "この関係を詳しく見る 100円" })).not.toBeInTheDocument();
+    expect(sessionB.getByRole("link", { name: "詳しい関係レポートを見る" })).toBeInTheDocument();
   });
 
   it("recomputes an open relationship from the latest realtime member profiles", async () => {
@@ -210,9 +289,8 @@ describe("GroupScreen", () => {
     expect(screen.getByRole("heading", {
       name: "たつととりは、自然にかみ合う関係です",
     })).toBeInTheDocument();
-    expect(screen.getByText("互いの持ち味が無理なくかみ合い、自然な連携を育てやすい組み合わせです。")).toBeInTheDocument();
-    expect(screen.getByText("木の視点を穏やかに伝え、相手の土の選択肢を広げましょう。")).toBeInTheDocument();
-    expect(screen.getByText("節入りの境界に近いため、五行と陰陽の分布は表示していません。")).toBeInTheDocument();
+    expect(screen.getByText("自然にかみ合う関係")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "詳しい関係レポートを見る" })).toBeInTheDocument();
     expect(screen.queryByText("十二支の本文")).not.toBeInTheDocument();
   });
 
@@ -222,9 +300,9 @@ describe("GroupScreen", () => {
     const repo = repository(initial);
     render(<GroupScreen initialAggregate={initial} repository={repo.api} />);
 
-    expect(screen.getByRole("status")).toHaveTextContent("接続中");
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
     act(() => repo.callbacks()?.onConnectionStatus?.("SUBSCRIBED"));
-    expect(screen.getByRole("status")).toHaveTextContent("接続完了");
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
     act(() => repo.callbacks()?.onConnectionStatus?.("TIMED_OUT"));
     expect(screen.getByRole("alert")).toHaveTextContent("オフライン");
     await user.click(screen.getByRole("button", { name: "接続を再試行" }));

@@ -5,9 +5,9 @@ import { describe, expect, it, vi } from "vitest";
 import { SupabaseConfigurationError } from "@/lib/supabase/browser";
 import type { GroupAggregate, GroupInvitePreview } from "@/lib/supabase/group-repository";
 
-const groupScreenProps = vi.hoisted(() => ({ current: null as null | { initialAggregate: GroupAggregate; repository: unknown } }));
+const groupScreenProps = vi.hoisted(() => ({ current: null as null | { initialAggregate: GroupAggregate; repository?: unknown; currentUserId?: string } }));
 vi.mock("@/features/group-graph/group-screen", () => ({
-  GroupScreen: (props: { initialAggregate: GroupAggregate; repository: unknown }) => {
+  GroupScreen: (props: { initialAggregate: GroupAggregate; repository?: unknown; currentUserId?: string }) => {
     groupScreenProps.current = props;
     return <main data-testid="group-screen"><h1>{props.initialAggregate.group.name}</h1><p>メンバー {props.initialAggregate.members.length}人</p></main>;
   },
@@ -26,6 +26,23 @@ const preview = {
 } satisfies GroupInvitePreview;
 
 describe("GroupGate", () => {
+  it("renders the server-provided group and current member before the browser repository is ready", () => {
+    render(
+      <GroupGate
+        inviteToken={token}
+        initialAggregate={aggregate}
+        currentUserId="server-user"
+        repositoryFactory={() => ({
+          previewGroupInvite: vi.fn(() => new Promise(() => undefined)),
+          findJoinedGroupByInviteToken: vi.fn(),
+        } as never)}
+      />,
+    );
+
+    expect(screen.getByRole("heading", { name: "なかまたち" })).toBeInTheDocument();
+    expect(groupScreenProps.current?.currentUserId).toBe("server-user");
+  });
+
   it.each(["ABC", "a".repeat(63), "A".repeat(64), "../secret"])(
     "rejects malformed tokens before repository/network access: %s",
     async (invalidToken) => {
@@ -60,6 +77,20 @@ describe("GroupGate", () => {
     expect(screen.getByText("なかまたち")).toBeInTheDocument();
     expect(screen.getByText("メンバー 2 / 30人")).toBeInTheDocument();
     expect(screen.getByLabelText("生年月日")).toBeInTheDocument();
+  });
+
+  it("shows the join preview on an insecure LAN origin without Web Crypto", async () => {
+    vi.stubGlobal("crypto", undefined);
+    const previewGroupInvite = vi.fn(async () => preview);
+    const findJoinedGroupByInviteToken = vi.fn(async () => aggregate);
+    try {
+      render(<GroupGate inviteToken={token} repositoryFactory={() => ({ previewGroupInvite, findJoinedGroupByInviteToken } as never)} />);
+
+      expect(await screen.findByRole("heading", { name: "グループに招待されています" })).toBeInTheDocument();
+      expect(findJoinedGroupByInviteToken).not.toHaveBeenCalled();
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it("shows invalid/deleted before profile fields when a well-formed token has no preview", async () => {

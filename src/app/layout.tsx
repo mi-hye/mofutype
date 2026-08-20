@@ -1,6 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import "@xyflow/react/dist/style.css";
 
+import { DevLocaleToggle } from "@/components/dev-locale-toggle";
+import { SquiggleFilters } from "@/components/ui/squiggle-filters";
+
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -14,13 +17,17 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#fff8e8",
+  themeColor: "#f7ecdc",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="ja">
-      <body>{children}</body>
+      <body>
+        <SquiggleFilters />
+        {children}
+        <DevLocaleToggle />
+      </body>
     </html>
   );
 }

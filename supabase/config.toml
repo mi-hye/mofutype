@@ -382,8 +382,14 @@ inspector_port = 8083
 # The Deno major version to use.
 deno_version = 2
 
-[functions.payment-webhook]
+[functions.eximbay-payment-session]
+verify_jwt = true
+
+[functions.eximbay-payment-status]
 verify_jwt = false
+
+[functions.local-mock-payment-confirm]
+verify_jwt = true
 
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"

@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 
 import { Button } from "@/components/ui/button";
 import {
   createGroupSharePayload,
   createInviteUrl,
-  createXIntent,
   type GroupSharePayload,
 } from "@/lib/share/x-intent";
 
@@ -17,6 +17,50 @@ const subscribeToNoopStore = () => () => undefined;
 const browserOriginSnapshot = () => window.location.origin;
 const serverOriginSnapshot = () => "";
 
+function copyWithSelection(text: string) {
+  const textarea = document.createElement("textarea");
+  const activeElement = document.activeElement instanceof HTMLElement
+    ? document.activeElement
+    : null;
+  textarea.value = text;
+  textarea.readOnly = true;
+  textarea.tabIndex = -1;
+  textarea.setAttribute("aria-hidden", "true");
+  Object.assign(textarea.style, {
+    position: "fixed",
+    inset: "0 auto auto 0",
+    width: "1px",
+    height: "1px",
+    opacity: "0",
+    fontSize: "16px",
+    pointerEvents: "none",
+  });
+  document.body.append(textarea);
+  textarea.focus({ preventScroll: true });
+  textarea.select();
+  textarea.setSelectionRange(0, text.length);
+  const copied = document.execCommand("copy");
+  textarea.remove();
+  activeElement?.focus({ preventScroll: true });
+  if (!copied) throw new Error("copy unavailable");
+}
+
+async function writeBrowserClipboard(text: string) {
+  try {
+    if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+  } catch {
+    // Safari on a LAN HTTP origin rejects the secure Clipboard API.
+  }
+
+  if (typeof document === "undefined" || typeof document.execCommand !== "function") {
+    throw new Error("copy unavailable");
+  }
+  copyWithSelection(text);
+}
+
 interface GroupShareControlsProps {
   groupName: string;
   memberCount: number;
@@ -24,6 +68,7 @@ interface GroupShareControlsProps {
   origin?: string;
   shareApi?: ShareApi | null;
   writeClipboard?: ClipboardApi | null;
+  triggerLabel?: string;
 }
 
 export function GroupShareControls({
@@ -33,10 +78,17 @@ export function GroupShareControls({
   origin,
   shareApi,
   writeClipboard,
+  triggerLabel,
 }: GroupShareControlsProps) {
   const [message, setMessage] = useState<"shared" | "copied" | "error" | null>(null);
   const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
   const mounted = useRef(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const firstActionRef = useRef<HTMLButtonElement>(null);
+  const controlId = useId();
+  const actionsId = `${controlId}-group-share-actions`;
+  const titleId = `${controlId}-group-share-title`;
   const browserOrigin = useSyncExternalStore(
     subscribeToNoopStore,
     browserOriginSnapshot,
@@ -48,6 +100,24 @@ export function GroupShareControls({
     mounted.current = true;
     return () => { mounted.current = false; };
   }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    firstActionRef.current?.focus();
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setOpen(false);
+      triggerRef.current?.focus();
+    };
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [open]);
+
+  useEffect(() => {
+    if (!message) return;
+    const timer = window.setTimeout(() => setMessage(null), 2400);
+    return () => window.clearTimeout(timer);
+  }, [message]);
 
   const payload = useMemo(() => {
     try {
@@ -62,8 +132,8 @@ export function GroupShareControls({
   }, [groupName, inviteToken, memberCount, resolvedOrigin]);
 
   if (!payload) {
-    if (!resolvedOrigin) return <p role="status">共有リンクを準備しています</p>;
-    return <p role="alert">共有リンクを作成できません。</p>;
+    if (!resolvedOrigin) return <p className="group-share-feedback" role="status">共有リンクを準備しています</p>;
+    return <p className="group-share-feedback" role="alert">共有リンクを作成できません。</p>;
   }
 
   const browserShare: ShareApi | null = shareApi === undefined
@@ -72,20 +142,27 @@ export function GroupShareControls({
       : null)
     : shareApi;
   const browserClipboard: ClipboardApi | null = writeClipboard === undefined
-    ? (typeof navigator !== "undefined" && navigator.clipboard
-      ? (text) => navigator.clipboard.writeText(text)
-      : null)
+    ? (typeof document !== "undefined" ? writeBrowserClipboard : null)
     : writeClipboard;
+  const toastCopy = message === "shared"
+    ? "共有しました"
+    : message === "copied"
+      ? "招待リンクをコピーしました"
+      : message === "error"
+        ? "共有できませんでした。もう一度お試しください。"
+        : null;
 
-  async function share() {
+  async function runAction(action: "share" | "copy") {
     if (loading) return;
     setLoading(true);
     setMessage(null);
+    setOpen(false);
+    triggerRef.current?.focus();
     try {
-      if (browserShare) {
+      if (action === "share" && browserShare) {
         await browserShare(payload!);
         if (mounted.current) setMessage("shared");
-      } else if (browserClipboard) {
+      } else if (action === "copy" && browserClipboard) {
         await browserClipboard(payload!.url);
         if (mounted.current) setMessage("copied");
       } else {
@@ -99,24 +176,78 @@ export function GroupShareControls({
   }
 
   return (
-    <div className="group-share-controls">
-      <Button type="button" variant="secondary" loading={loading} onClick={() => void share()}>
-        招待リンクを共有
-      </Button>
-      <a
-        className="ui-button"
-        data-size="sm"
-        data-variant="ghost"
-        href={createXIntent(payload.text, payload.url)}
-        rel="noopener noreferrer"
-        target="_blank"
+    <div className="group-share-controls" data-trigger={triggerLabel ? "text" : "icon"}>
+      <Button
+        ref={triggerRef}
+        type="button"
+        className={triggerLabel ? "my-result-card__share-button" : "group-share-button"}
+        variant="secondary"
+        size={triggerLabel ? "md" : "sm"}
+        loading={loading}
+        aria-label={triggerLabel ?? "招待リンクを共有"}
+        aria-controls={actionsId}
+        aria-expanded={open}
+        title="招待リンクを共有"
+        onClick={() => {
+          setMessage(null);
+          setOpen((value) => !value);
+        }}
       >
-        Xで共有
-      </a>
-      {message === "shared" ? <p role="status">共有しました</p> : null}
-      {message === "copied" ? <p role="status">招待リンクをコピーしました</p> : null}
-      {message === "error" ? (
-        <p role="alert">共有できませんでした。もう一度お試しください。</p>
+        {triggerLabel ? (
+          <>
+            <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24">
+              <path d="M12 3v12m0-12 4 4m-4-4L8 7M5 11v8h14v-8" />
+            </svg>
+            <span>{triggerLabel}</span>
+          </>
+        ) : (
+          <svg data-testid="share-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24">
+            <path d="M12 3v12m0-12 4 4m-4-4L8 7M5 11v8h14v-8" />
+          </svg>
+        )}
+      </Button>
+      {open && typeof document !== "undefined" ? createPortal(
+        <div className="group-share-backdrop" onMouseDown={(event) => {
+          if (event.target !== event.currentTarget) return;
+          setOpen(false);
+          triggerRef.current?.focus();
+        }}>
+          <section id={actionsId} className="group-share-actions"
+            role="dialog" aria-modal="true" aria-labelledby={titleId}>
+            <header>
+              <h2 id={titleId}>共有方法</h2>
+              <button type="button" className="group-share-actions__close"
+                aria-label="共有メニューを閉じる" onClick={() => {
+                  setOpen(false);
+                  triggerRef.current?.focus();
+                }}>
+                <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24">
+                  <path d="m6 6 12 12M18 6 6 18" />
+                </svg>
+              </button>
+            </header>
+            <Button ref={firstActionRef} type="button" variant="ghost" size="sm"
+              onClick={() => void runAction("copy")}>
+              リンクをコピー
+            </Button>
+            {browserShare ? (
+              <Button type="button" variant="ghost" size="sm" onClick={() => void runAction("share")}>
+                アプリで共有
+              </Button>
+            ) : null}
+          </section>
+        </div>,
+        document.body,
+      ) : null}
+      {toastCopy && typeof document !== "undefined" ? createPortal(
+        <p
+          className="group-share-toast"
+          data-tone={message === "error" ? "danger" : "success"}
+          role={message === "error" ? "alert" : "status"}
+        >
+          {toastCopy}
+        </p>,
+        document.body,
       ) : null}
     </div>
   );

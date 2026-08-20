@@ -66,7 +66,7 @@ export interface PaymentOrder {
   groupId: string;
   memberLowId: string;
   memberHighId: string;
-  amountJpy: 300;
+  amountJpy: 100;
   currency: "JPY";
   method: PaymentMethod;
   status: "pending" | "paid";
@@ -377,7 +377,7 @@ export function mapPaymentOrder(value: unknown): PaymentOrder {
       providerReference !== null && providerReference !== "" &&
       paidAt !== null && paidAt !== "";
     if (
-      row.amount_jpy !== 300 ||
+      row.amount_jpy !== 100 ||
       row.currency !== "JPY" ||
       !isOneOf(method, PAYMENT_METHODS) ||
       (status !== "pending" && status !== "paid") ||
@@ -392,7 +392,7 @@ export function mapPaymentOrder(value: unknown): PaymentOrder {
       groupId: stringField(row, "group_id"),
       memberLowId,
       memberHighId,
-      amountJpy: 300,
+      amountJpy: 100,
       currency: "JPY",
       method,
       status,
