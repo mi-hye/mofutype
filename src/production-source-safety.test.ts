@@ -104,6 +104,9 @@ describe("production source safety", () => {
     expect(globalStyles).toMatch(
       /\.zodiac-avatar\[data-selected="true"\][^{]*\{[^}]*box-shadow:\s*[^;]*var\(--accent-navy\)/,
     );
+    expect(globalStyles).toMatch(
+      /\.group-graph__relationship-cards button:hover \.zodiac-avatar\s*\{[^}]*box-shadow:\s*none[^}]*transform:\s*none/,
+    );
     for (const variant of ["cream", "pink", "mint", "violet"]) {
       expect(globalStyles).toContain(`.ui-card[data-variant="${variant}"]`);
     }
