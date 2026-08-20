@@ -132,6 +132,10 @@ describe("GroupGraph", () => {
     expect(within(relationshipCards).getByRole("button", {
       name: /べにとちゃの関係カードを開く/,
     })).toBeInTheDocument();
+    expect(within(relationshipCards).getAllByRole("img")).toHaveLength(2);
+    expect(within(relationshipCards).queryByText("FREE PREVIEW")).not.toBeInTheDocument();
+    expect(relationshipCards.querySelector(".group-graph__relationship-card-copy"))
+      .not.toBeInTheDocument();
     await user.click(screen.getByTestId("canvas-pane"));
     expect((flowProps.current?.edges as MockEdge[]).every((edge) => edge.label === undefined))
       .toBe(true);

@@ -265,12 +265,6 @@ function GroupGraphComponent({
                         onClick={() => onPairSelect(selection)}
                       >
                         <ZodiacAvatar zodiacId={other.zodiacId} nickname={other.nickname} size="sm" />
-                        <span className="group-graph__relationship-card-copy">
-                          <strong>{other.nickname}</strong>
-                          <span>{selection.relationship.categoryLabelJa}</span>
-                          <small>{selection.unlocked ? "解放済み" : "FREE PREVIEW"}</small>
-                        </span>
-                        <span className="group-graph__relationship-card-arrow" aria-hidden="true">→</span>
                       </button>
                     </li>
                   );

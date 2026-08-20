@@ -346,22 +346,16 @@ body:has(.group-share-backdrop) { overflow: hidden; }
 .group-graph__relationship-cards h2 { margin: 0; color: var(--accent-navy); font-size: 1rem; line-height: 1.35; }
 .group-graph__relationship-cards > header > span { flex: 0 0 auto; border-radius: 999px; padding: 0.2rem 0.55rem; background: var(--butter); color: var(--ink); font-size: 0.68rem; font-weight: 750; }
 .group-graph__relationship-cards > p { margin: 0; color: var(--text-muted); font-size: 0.72rem; }
-.group-graph__relationship-cards > ul { display: grid; min-width: 0; overflow-x: auto; grid-auto-columns: minmax(13rem, 16rem); grid-auto-flow: column; gap: 0.6rem; margin: 0.25rem -0.9rem -0.15rem; padding: 0.15rem 0.9rem 0.75rem; list-style: none; scroll-padding-inline: 0.9rem; scroll-snap-type: x proximity; overscroll-behavior-inline: contain; -webkit-overflow-scrolling: touch; }
+.group-graph__relationship-cards > ul { display: grid; min-width: 0; overflow-x: auto; grid-auto-columns: 4rem; grid-auto-flow: column; gap: 0.6rem; margin: 0.25rem -0.9rem -0.15rem; padding: 0.15rem 0.9rem 0.75rem; list-style: none; scroll-padding-inline: 0.9rem; scroll-snap-type: x proximity; overscroll-behavior-inline: contain; -webkit-overflow-scrolling: touch; }
 .group-graph__relationship-cards li { min-width: 0; scroll-snap-align: start; }
-.group-graph__relationship-cards li > button { --relationship-card-color: var(--ink); display: grid; width: 100%; min-height: 5.25rem; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 0.65rem; border: 1.5px solid rgb(var(--ink-rgb) / 18%); border-top: 5px solid var(--relationship-card-color); border-radius: 1.05rem; padding: 0.65rem; background: var(--surface); color: var(--ink); text-align: left; box-shadow: 0 4px 0 color-mix(in srgb, var(--relationship-card-color) 20%, transparent); cursor: pointer; }
+.group-graph__relationship-cards li > button { --relationship-card-color: var(--ink); display: grid; width: 4rem; height: 4rem; place-items: center; border: 3px solid var(--relationship-card-color); border-radius: 50%; padding: 0.25rem; background: var(--surface); color: var(--ink); box-shadow: 0 4px 0 color-mix(in srgb, var(--relationship-card-color) 24%, transparent); cursor: pointer; }
 .group-graph__relationship-cards li > button[data-line-color="calm"] { --relationship-card-color: var(--relationship-calm); }
 .group-graph__relationship-cards li > button[data-line-color="clear"] { --relationship-card-color: var(--relationship-clear); }
 .group-graph__relationship-cards li > button[data-line-color="neutral"] { --relationship-card-color: var(--relationship-neutral); }
 .group-graph__relationship-cards li > button[data-line-color="warm"] { --relationship-card-color: var(--relationship-warm); }
 .group-graph__relationship-cards li > button[data-line-color="careful"] { --relationship-card-color: var(--relationship-careful); }
 .group-graph__relationship-cards li > button:focus-visible { outline: 3px solid var(--relationship-card-color); outline-offset: 2px; }
-.group-graph__relationship-cards .zodiac-avatar { width: 2.8rem; height: 2.8rem; }
-.group-graph__relationship-card-copy { display: grid; min-width: 0; gap: 0.12rem; }
-.group-graph__relationship-card-copy strong, .group-graph__relationship-card-copy > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.group-graph__relationship-card-copy strong { font-size: 0.82rem; }
-.group-graph__relationship-card-copy > span { color: var(--text-muted); font-size: 0.68rem; font-weight: 700; }
-.group-graph__relationship-card-copy small { width: fit-content; color: var(--relationship-card-color); font-size: 0.56rem; font-weight: 850; letter-spacing: 0.08em; }
-.group-graph__relationship-card-arrow { color: var(--relationship-card-color); font-size: 1.1rem; font-weight: 800; }
+.group-graph__relationship-cards .zodiac-avatar { width: 3rem; height: 3rem; border: 0; box-shadow: none; }
 .group-graph__relationship-detail { min-width: 0; margin-top: 0.45rem; border-top: 1.5px solid rgb(var(--ink-rgb) / 28%); padding-top: 0.45rem; }
 .group-graph__relationship-detail:first-child { margin-top: 0; border-top: 0; padding-top: 0; }
 .group-graph__relationship-detail > .relation-sheet { width: 100%; margin: 0; border: 0; border-radius: 0; outline: 0; padding: 0.8rem 0 0; background: transparent; box-shadow: none; }
