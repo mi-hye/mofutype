@@ -364,7 +364,7 @@ body:has(.group-share-backdrop) { overflow: hidden; }
 .my-result-card__preview { display: grid; gap: 0.3rem; border-top: var(--border-subtle); padding-top: 0.95rem; }
 .my-result-card__preview > p:first-child { width: fit-content; margin: 0; color: var(--accent-vermilion); font-size: 0.6rem; font-weight: 850; letter-spacing: 0.13em; line-height: 1; }
 .my-result-card__preview h2 { margin: 0.2rem 0 0; color: var(--accent-navy); font-size: 1rem; line-height: 1.35; }
-.my-result-card__preview > p:last-child { max-width: 48rem; margin: 0; color: var(--text-muted); font-size: 0.82rem; line-height: 1.72; }
+.my-result-card__preview > p:last-child { max-width: 28em; margin: 0; color: var(--text-muted); font-size: 0.82rem; line-height: 1.72; }
 .my-result-card__actions { display: flex; min-width: 0; align-items: center; flex-wrap: wrap; gap: 0.65rem; }
 .my-result-card__actions > .ui-button { min-width: min(100%, 12rem); text-decoration: none; }
 .my-result-card__actions > .group-share-controls { justify-items: start; }
