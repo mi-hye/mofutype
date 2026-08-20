@@ -390,13 +390,6 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken, curren
         </p>
       ) : null}
 
-      <GroupGraph
-        anchorId="relationship-map"
-        members={aggregate.members}
-        unlocks={aggregate.unlocks}
-        onPairSelect={setSelectedPair}
-        relationshipDetail={relationshipDetail}
-      />
       {currentMember ? (
         <PersonalReadingSummary
           member={currentMember}
@@ -405,6 +398,13 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken, curren
           inviteToken={inviteToken}
         />
       ) : null}
+      <GroupGraph
+        anchorId="relationship-map"
+        members={aggregate.members}
+        unlocks={aggregate.unlocks}
+        onPairSelect={setSelectedPair}
+        relationshipDetail={relationshipDetail}
+      />
     </main>
   );
 }

@@ -165,7 +165,7 @@ describe("GroupScreen", () => {
     expect(screen.queryByText("たつタイプとして")).not.toBeInTheDocument();
   });
 
-  it("places the selected relationship offer before the personal result", async () => {
+  it("places the personal result before the relationship graph and offer", async () => {
     const user = userEvent.setup();
     const initial = aggregate("g1", [member("a", "わたし"), member("b", "ともだち")]);
     const repo = repository(initial);
@@ -180,7 +180,7 @@ describe("GroupScreen", () => {
     expect(relationSheet && relationshipPanel.contains(relationSheet)).toBe(true);
     expect(personalResult).not.toBeNull();
     const documentOrder = relationSheet && personalResult
-      ? relationSheet.compareDocumentPosition(personalResult)
+      ? personalResult.compareDocumentPosition(relationSheet)
       : 0;
     expect(documentOrder & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
