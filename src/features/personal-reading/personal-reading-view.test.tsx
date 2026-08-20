@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import type { GroupMember } from "@/lib/supabase/models";
@@ -77,28 +77,34 @@ describe("personal reading conversion flow", () => {
     expect(screen.getByRole("button", { name: "この結果を共有する" })).toBeInTheDocument();
   });
 
-  it("offers a direct detail link for each relationship in a larger group", () => {
+  it("uses a compact person picker instead of expanding every relationship", () => {
+    const relationshipLinks = Array.from({ length: 29 }, (_, index) => ({
+      memberId: `member-${index + 1}`,
+      nickname: `メンバー${index + 1}`,
+      href: `/relation/a-${index + 1}`,
+    }));
+
     render(
       <PersonalReadingSummary
         member={member}
         groupName="なかよし"
         memberCount={3}
         inviteToken={"a".repeat(64)}
-        relationshipLinks={[
-          { memberId: "member-b", nickname: "もも", href: "/relation/a-b" },
-          { memberId: "member-c", nickname: "しろ", href: "/relation/a-c" },
-        ]}
+        relationshipLinks={relationshipLinks}
       />,
     );
 
-    expect(screen.getByText("このグループで、誰と相性がいい？")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "ももさんとの関係を見る" })).toHaveAttribute(
+    const picker = screen.getByRole("combobox", { name: "関係を見る相手を選ぶ" });
+    expect(picker).toHaveValue("");
+    expect(screen.getAllByRole("option")).toHaveLength(30);
+    expect(screen.queryByRole("link", { name: "メンバー29さんとの関係を見る" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "この関係を見る" })).toBeDisabled();
+
+    fireEvent.change(picker, { target: { value: "/relation/a-29" } });
+
+    expect(screen.getByRole("link", { name: "メンバー29さんとの関係を見る" })).toHaveAttribute(
       "href",
-      "/relation/a-b",
-    );
-    expect(screen.getByRole("link", { name: "しろさんとの関係を見る" })).toHaveAttribute(
-      "href",
-      "/relation/a-c",
+      "/relation/a-29",
     );
   });
 });

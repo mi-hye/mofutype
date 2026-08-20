@@ -6,6 +6,7 @@ import { createCharacterCopy } from "@/lib/eto/character";
 import { createPersonalReading } from "@/lib/eto/personal-reading";
 import type { GroupMember } from "@/lib/supabase/models";
 import type { RelationshipDetailLink } from "./relationship-detail-links";
+import { RelationshipDetailPicker } from "./relationship-detail-picker";
 
 const ELEMENT_LABELS = { WOOD: "木", FIRE: "火", EARTH: "土", METAL: "金", WATER: "水" } as const;
 const POLARITY_LABELS = { YIN: "陰", YANG: "陽" } as const;
@@ -20,38 +21,6 @@ interface PersonalReadingProps {
 
 interface PersonalReadingSummaryProps extends Omit<PersonalReadingProps, "inviteToken"> {
   inviteToken?: string;
-}
-
-function RelationshipDetailCta({
-  links = [],
-}: {
-  links?: readonly RelationshipDetailLink[];
-}) {
-  if (links.length === 0) return null;
-  if (links.length === 1) {
-    return (
-      <ButtonLink href={links[0].href} variant="secondary">
-        このグループで、誰と相性がいい？
-      </ButtonLink>
-    );
-  }
-
-  return (
-    <details className="relationship-detail-picker">
-      <summary className="ui-button" data-size="md" data-variant="secondary">
-        <span>このグループで、誰と相性がいい？</span>
-      </summary>
-      <ul aria-label="関係を詳しく見る相手を選ぶ">
-        {links.map((link) => (
-          <li key={link.memberId}>
-            <ButtonLink href={link.href} size="sm" variant="secondary">
-              {link.nickname}さんとの関係を見る
-            </ButtonLink>
-          </li>
-        ))}
-      </ul>
-    </details>
-  );
 }
 
 function Identity({ member }: { member: GroupMember }) {
@@ -99,7 +68,7 @@ export function PersonalReadingSummary({
       </div>
       <div className="my-result-card__actions">
         {detailHref ? <ButtonLink href={detailHref}>わたしの詳細を見る</ButtonLink> : null}
-        <RelationshipDetailCta links={relationshipLinks} />
+        <RelationshipDetailPicker links={relationshipLinks} />
         {inviteToken ? (
           <GroupShareControls
             groupName={groupName}

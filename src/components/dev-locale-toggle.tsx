@@ -146,6 +146,10 @@ const KO_COPY: Readonly<Record<string, string>> = {
   "MBTIの4つの視点": "MBTI의 네 가지 관점",
   "十二支・MBTI・五行と陰陽を重ねた、自己理解のための読み解きです。": "십이지·MBTI·오행과 음양을 함께 살펴보는 자기 이해를 위한 해석입니다.",
   "メンバー": "멤버",
+  "このグループで、誰との関係を見る？": "이 그룹에서 누구와의 관계를 볼까요?",
+  "関係を見る相手を選ぶ": "관계를 볼 상대 선택",
+  "相手を選ぶ": "상대 선택",
+  "この関係を見る": "이 관계 보기",
   "招待リンクを共有": "초대 링크 공유",
   "共有方法": "공유 방법",
   "共有メニューを閉じる": "공유 메뉴 닫기",
@@ -257,6 +261,10 @@ function koreanCopy(value: string): string {
 
   const memberCount = content.match(/^メンバー\s*(\d+)人$/);
   if (memberCount) return `${leading}멤버 ${memberCount[1]}명${trailing}`;
+  const relationshipTarget = content.match(/^(.+)さんとの関係を見る$/);
+  if (relationshipTarget) {
+    return `${leading}${relationshipTarget[1]}님과의 관계 보기${trailing}`;
+  }
   const zodiacTendency = content.match(/^(.+)タイプとして、生年月日から導いた傾向です。$/);
   if (zodiacTendency) {
     const zodiac = devKo.zodiacNames[zodiacTendency[1] as keyof typeof devKo.zodiacNames]
