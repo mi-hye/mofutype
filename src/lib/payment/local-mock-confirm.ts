@@ -32,7 +32,10 @@ export async function handleLocalMockConfirm(
   try { base = new URL(environment.supabaseUrl); } catch {
     return json({ error: "NOT_AVAILABLE" }, 404);
   }
-  if (!["127.0.0.1", "localhost"].includes(base.hostname) ||
+  const localSupabase =
+    (["127.0.0.1", "localhost"].includes(base.hostname) && base.protocol === "http:") ||
+    (base.hostname === "kong" && base.protocol === "http:");
+  if (!localSupabase ||
       !environment.serviceRoleKey || !environment.supabasePublishableKey) {
     return json({ error: "NOT_AVAILABLE" }, 404);
   }
