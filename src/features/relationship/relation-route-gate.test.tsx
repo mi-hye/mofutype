@@ -106,7 +106,7 @@ describe("RelationRouteGate", () => {
     );
 
     expect(await screen.findByRole("heading", { name: /お互いのペースを学ぶ関係です/ })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "この関係を詳しく見る 300円" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "この関係を詳しく見る 100円" })).toHaveAttribute(
       "href",
       `/checkout/a%3Ab?invite=${token}`,
     );
@@ -152,7 +152,7 @@ describe("RelationRouteGate", () => {
         repositoryFactory={() => repo.api as never}
       />,
     );
-    await screen.findByRole("link", { name: "この関係を詳しく見る 300円" });
+    await screen.findByRole("link", { name: "この関係を詳しく見る 100円" });
     await waitFor(() => expect(repo.callbacks()).toBeDefined());
 
     act(() => repo.callbacks()?.onUnlockChange?.({ eventType: "INSERT", new: unlocked() }));
@@ -216,7 +216,7 @@ describe("RelationRouteGate", () => {
     await act(async () => resolveFresh(aggregate()));
 
     expect(screen.getByText("解放済み")).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "この関係を詳しく見る 300円" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "この関係を詳しく見る 100円" })).not.toBeInTheDocument();
   });
 
   it("does not let a fresh load overwrite a member update received in the subscribe/load gap", async () => {

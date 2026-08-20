@@ -107,11 +107,11 @@ export function CheckoutPanel({
       <p className="checkout-panel__notice">
         {mode === "mock"
           ? "これはモック決済です。実際の請求は発生しません。"
-          : "1組300円の買い切りです。追加料金や自動更新はありません。"}
+          : "1組100円の買い切りです。追加料金や自動更新はありません。"}
       </p>
       <h1 id="checkout-title">関係レポートを解放</h1>
       <p>{pairNames[0]} × {pairNames[1]}</p>
-      <p className="checkout-panel__price">300円</p>
+      <p className="checkout-panel__price">100円</p>
 
       <section className="checkout-panel__summary" aria-labelledby="checkout-summary-title">
         <h2 id="checkout-summary-title">解放される内容</h2>
@@ -148,7 +148,7 @@ export function CheckoutPanel({
       <div className="checkout-panel__total">
         <div>
           <span>今回のお支払い</span>
-          <strong>合計 300円</strong>
+          <strong>合計 100円</strong>
         </div>
         <p>定期課金や自動更新はありません</p>
       </div>
@@ -190,7 +190,7 @@ export function CheckoutPanel({
           disabled={mode === "live" && !buyerEmail}
           onClick={() => void submit()}
         >
-          {failure ? "もう一度試す" : mode === "mock" ? "モック決済を完了" : "300円で解放する"}
+          {failure ? "もう一度試す" : mode === "mock" ? "モック決済を完了" : "100円で解放する"}
         </Button>
       )}
       <Link href="/tokushoho">特定商取引法に基づく表記</Link>

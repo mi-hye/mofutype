@@ -178,7 +178,7 @@ select * from public.create_payment_order(
 reset role;
 
 select is((select count(*) from created_order), 1::bigint, 'one pending order is returned');
-select is((select amount_jpy from created_order), 300, 'server fixes the price at 300 JPY');
+select is((select amount_jpy from created_order), 100, 'server fixes the price at 100 JPY');
 select is((select currency from created_order), 'JPY', 'server fixes the currency to JPY');
 select is((select method from created_order), 'paypay', 'selected payment method is stored');
 select is((select status::text from created_order), 'pending', 'new orders are pending');
@@ -208,7 +208,7 @@ select throws_ok(
   format(
     $sql$insert into public.payment_orders(
       group_id, member_low_id, member_high_id, amount_jpy, method, created_by
-    ) values (%L, least(%L::uuid,%L::uuid), greatest(%L::uuid,%L::uuid), 301, 'paypay', %L)$sql$,
+    ) values (%L, least(%L::uuid,%L::uuid), greatest(%L::uuid,%L::uuid), 101, 'paypay', %L)$sql$,
     (select group_id from payment_group),
     (select member_id from payment_group), (select member_id from payment_member),
     (select member_id from payment_group), (select member_id from payment_member),

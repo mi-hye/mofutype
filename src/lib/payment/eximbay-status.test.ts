@@ -15,7 +15,7 @@ const validBody = new URLSearchParams({
   transaction_type: "PAYMENT",
   mid: "merchant-1",
   currency: "JPY",
-  amount: "300",
+  amount: "100",
   order_id: orderId,
   param1: orderId,
   transaction_id: "tx-123",

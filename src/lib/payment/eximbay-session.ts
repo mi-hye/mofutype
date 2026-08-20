@@ -129,7 +129,7 @@ export async function handleEximbaySession(
   try { orders = await orderResponse.json(); } catch { orders = null; }
   if (!Array.isArray(orders) || orders.length !== 1) return json({ error: "ORDER_NOT_FOUND" }, 404);
   const order = orders[0] as Record<string, unknown>;
-  if (order.id !== input.orderId || order.amount_jpy !== 300 || order.currency !== "JPY" ||
+  if (order.id !== input.orderId || order.amount_jpy !== 100 || order.currency !== "JPY" ||
       !["paypay", "card"].includes(String(order.method)) || order.status !== "pending") {
     return json({ error: "INVALID_ORDER" }, 409);
   }
@@ -140,7 +140,7 @@ export async function handleEximbaySession(
     // order in signed param1 and create a fresh provider attempt ID each time.
     order_id: crypto.randomUUID(),
     currency: "JPY" as const,
-    amount: "300" as const,
+    amount: "100" as const,
     lang: "JP" as const,
     payment_method: order.method === "paypay" ? "P354" as const : "P000" as const,
   };

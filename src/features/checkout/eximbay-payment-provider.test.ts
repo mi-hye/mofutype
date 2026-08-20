@@ -9,7 +9,7 @@ const session = {
     fgkey: "fg",
     payment: {
       transaction_type: "PAYMENT", order_id: "order-1", currency: "JPY",
-      amount: "300", lang: "JP", payment_method: "P354",
+      amount: "100", lang: "JP", payment_method: "P354",
     },
     merchant: { mid: "mid" },
     buyer: { name: "A", email: "a@example.jp" },

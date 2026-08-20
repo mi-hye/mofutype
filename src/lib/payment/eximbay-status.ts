@@ -45,7 +45,7 @@ export async function handleEximbayStatus(
   if (
     params.get("rescode") !== "0000" || params.get("transaction_type") !== "PAYMENT" ||
     params.get("mid") !== environment.mid || params.get("currency") !== "JPY" ||
-    params.get("amount") !== "300" || !/^[0-9a-f-]{36}$/i.test(orderId) ||
+    params.get("amount") !== "100" || !/^[0-9a-f-]{36}$/i.test(orderId) ||
     !/^[0-9a-f-]{36}$/i.test(providerOrderId) ||
     transactionId.length < 1 || transactionId.length > 200
   ) return text("rescode=0400&resmsg=Invalid+payment", 400);

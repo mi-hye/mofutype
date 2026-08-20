@@ -76,7 +76,7 @@ export function RelationSheet({
           <ButtonLink href={detailHref}>詳しい関係レポートを見る</ButtonLink>
         ) : (
           <>
-            <ButtonLink href={checkoutHref}>この関係を詳しく見る 300円</ButtonLink>
+            <ButtonLink href={checkoutHref}>この関係を詳しく見る 100円</ButtonLink>
             <p className="relation-sheet__purchase-note">買い切り・追加料金なし・自動更新なし</p>
           </>
         )}
@@ -175,7 +175,7 @@ export function RelationSheet({
               <li>ふたりでいるときのヒント</li>
               <li>それぞれに向けた関わり方</li>
             </ul>
-            <p className="relation-sheet__offer-price">1組 300円</p>
+            <p className="relation-sheet__offer-price">1組 100円</p>
           </section>
           <div
             className="relation-sheet__skeletons"
@@ -195,7 +195,7 @@ export function RelationSheet({
             ))}
           </div>
           <ButtonLink size="lg" href={checkoutHref}>
-            この関係を詳しく見る 300円
+            この関係を詳しく見る 100円
           </ButtonLink>
           <p className="relation-sheet__purchase-note">買い切り・追加料金なし・自動更新なし</p>
         </div>

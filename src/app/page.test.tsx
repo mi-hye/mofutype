@@ -94,7 +94,7 @@ describe("Home", () => {
     ).not.toBeInTheDocument();
     expect(screen.queryByText("0円")).not.toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: "気になるふたりを、300円で深掘り。" }),
+      screen.getByRole("heading", { name: "気になるふたりを、100円で深掘り。" }),
     ).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "十二支・五行・陰陽" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "MBTIの4つの軸" })).toBeInTheDocument();

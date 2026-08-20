@@ -53,9 +53,9 @@ test("three independent members share one unlocked relationship", async ({ brows
       path: testInfo.outputPath("locked-relation.png"),
       fullPage: true,
     });
-    await pageA.getByRole("link", { name: "このふたりを300円で解放" }).click();
+    await pageA.getByRole("link", { name: "このふたりを100円で解放" }).click();
     await expect(pageA.getByText("これはモック決済です。実際の請求は発生しません。")).toBeVisible();
-    await expect(pageA.getByText("合計 300円", { exact: true })).toBeVisible();
+    await expect(pageA.getByText("合計 100円", { exact: true })).toBeVisible();
     await expect(pageA.getByText("定期課金や自動更新はありません", { exact: true })).toBeVisible();
     await expect(pageA.getByText(
       "決済完了後、このふたりの関係レポートをすぐに表示します",

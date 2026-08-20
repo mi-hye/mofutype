@@ -71,7 +71,7 @@ describe("personal reading conversion flow", () => {
 
     expect(screen.getByRole("heading", { name: "ISFJの思考と行動" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "この性格が、あの人との間でどう表れる？" })).toBeInTheDocument();
-    expect(screen.getByText("1組 300円")).toBeInTheDocument();
+    expect(screen.getByText("1組 100円")).toBeInTheDocument();
     expect(screen.getByText("買い切り・自動更新なし")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "このグループで、誰と相性がいい？" })).toHaveAttribute(
       "href",

@@ -106,7 +106,7 @@ export default function Home() {
               <span className="report-preview__sample-label">買い切り</span>
               <div>
                 <p>ONE PAIR / ONE TIME</p>
-                <h2 id="report-preview-title">気になるふたりを、300円で深掘り。</h2>
+                <h2 id="report-preview-title">気になるふたりを、100円で深掘り。</h2>
               </div>
             </header>
 
@@ -122,7 +122,7 @@ export default function Home() {
                 <p>この先に、すれ違う理由と仲よくなるコツ。</p>
               </div>
 
-              <div className="report-preview__layers" aria-label="300円でわかる3つのポイント">
+              <div className="report-preview__layers" aria-label="100円でわかる3つのポイント">
                 <section>
                   <span>01</span>
                   <h4>十二支・五行・陰陽</h4>
@@ -141,7 +141,7 @@ export default function Home() {
               </div>
 
               <p className="report-preview__purchase-note">
-                <strong>気になる1組だけ、300円。</strong>
+                <strong>気になる1組だけ、100円。</strong>
                 追加料金なし。自動更新なし。
               </p>
             </div>

@@ -24,7 +24,7 @@ describe("handleEximbaySession", () => {
   it("loads the server-priced order and prepares an exact PayPay session", async () => {
     const fetcher = vi.fn()
       .mockResolvedValueOnce(Response.json([{
-        id: orderId, amount_jpy: 300, currency: "JPY", method: "paypay", status: "pending",
+        id: orderId, amount_jpy: 100, currency: "JPY", method: "paypay", status: "pending",
       }]))
       .mockResolvedValueOnce(Response.json({ rescode: "0000", fgkey: "signed-fgkey" }));
     const response = await handleEximbaySession(request({
@@ -42,7 +42,7 @@ describe("handleEximbaySession", () => {
         fgkey: "signed-fgkey",
         payment: {
           transaction_type: "PAYMENT", order_id: expect.stringMatching(/^[0-9a-f-]{36}$/), currency: "JPY",
-          amount: "300", lang: "JP", payment_method: "P354",
+          amount: "100", lang: "JP", payment_method: "P354",
         },
         merchant: { mid: "merchant-1" },
         buyer: { name: "Aさん", email: "buyer@example.jp" },
@@ -57,7 +57,7 @@ describe("handleEximbaySession", () => {
       authorization: "Bearer user-token", apikey: "publishable-key",
     });
     const ready = JSON.parse(String(fetcher.mock.calls[1][1].body));
-    expect(ready.payment.amount).toBe("300");
+    expect(ready.payment.amount).toBe("100");
     expect(ready.payment.order_id).not.toBe(orderId);
     expect(ready.other_param).toEqual({ param1: orderId });
     expect(JSON.stringify(session)).not.toContain("private-api-key");

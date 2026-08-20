@@ -171,7 +171,7 @@ export function PersonalReadingDetail({
           <li>ふたりでいるときの空気と、それぞれへのヒント</li>
         </ul>
         <div className="personal-detail-offer__purchase">
-          <strong>1組 300円</strong>
+          <strong>1組 100円</strong>
           <span>買い切り・自動更新なし</span>
         </div>
         <RelationshipDetailCta links={relationshipLinks} />

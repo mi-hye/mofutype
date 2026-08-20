@@ -4,7 +4,7 @@ export interface EximbayPaymentRequest {
     transaction_type: "PAYMENT";
     order_id: string;
     currency: "JPY";
-    amount: "300";
+    amount: "100";
     lang: "JP";
     payment_method: "P354" | "P000";
   };

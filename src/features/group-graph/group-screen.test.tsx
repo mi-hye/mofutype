@@ -247,11 +247,11 @@ describe("GroupScreen", () => {
     const sessionB = within(screen.getByRole("region", { name: "セッションB" }));
     await user.click(sessionA.getByRole("button", { name: "aとbの関係を選択" }));
     await user.click(sessionB.getByRole("button", { name: "aとbの関係を選択" }));
-    expect(sessionA.getByRole("link", { name: "この関係を詳しく見る 300円" })).toHaveAttribute(
+    expect(sessionA.getByRole("link", { name: "この関係を詳しく見る 100円" })).toHaveAttribute(
       "href",
       "/checkout/a%3Ab?invite=token-a",
     );
-    expect(sessionB.getByRole("link", { name: "この関係を詳しく見る 300円" })).toBeInTheDocument();
+    expect(sessionB.getByRole("link", { name: "この関係を詳しく見る 100円" })).toBeInTheDocument();
 
     const sharedUnlock = unlock("shared", "unlocked");
     act(() => {
@@ -261,7 +261,7 @@ describe("GroupScreen", () => {
 
     expect(sessionA.getByText("UNLOCKED")).toBeInTheDocument();
     expect(sessionB.getByText("UNLOCKED")).toBeInTheDocument();
-    expect(sessionA.queryByRole("link", { name: "この関係を詳しく見る 300円" })).not.toBeInTheDocument();
+    expect(sessionA.queryByRole("link", { name: "この関係を詳しく見る 100円" })).not.toBeInTheDocument();
     expect(sessionB.getByRole("link", { name: "詳しい関係レポートを見る" })).toBeInTheDocument();
   });
 

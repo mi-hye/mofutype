@@ -90,7 +90,7 @@ const paymentOrderRow = {
   group_id: "group-1",
   member_low_id: "member-1",
   member_high_id: "member-2",
-  amount_jpy: 300,
+  amount_jpy: 100,
   currency: "JPY",
   method: "paypay",
   status: "pending",
@@ -831,7 +831,7 @@ describe("group repository", () => {
       groupId: "group-1",
       memberLowId: "member-1",
       memberHighId: "member-2",
-      amountJpy: 300,
+      amountJpy: 100,
       currency: "JPY",
       method: "paypay",
       status: "pending",
@@ -867,7 +867,7 @@ describe("group repository", () => {
 
     await expect(createGroupRepository(client).createPaymentOrder(
       "group-1", "member-2", "member-1", "paypay",
-    )).resolves.toMatchObject({ id: "order-1", amountJpy: 300, status: "pending" });
+    )).resolves.toMatchObject({ id: "order-1", amountJpy: 100, status: "pending" });
     expect(client.rpcCalls[0]).toEqual({
       name: "create_payment_order",
       args: {
