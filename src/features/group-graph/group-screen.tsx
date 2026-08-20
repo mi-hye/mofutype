@@ -321,6 +321,22 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken, curren
         memberB: { id: selectedMembers[1].id, profile: selectedMembers[1].profile },
       })
     : null;
+  const relationshipDetail = selectedPair && selectedMembers && selectedRelationship ? (
+    <RelationSheet
+      relationship={selectedRelationship}
+      memberNames={[selectedMembers[0].nickname, selectedMembers[1].nickname]}
+      memberProfiles={[selectedMembers[0].profile, selectedMembers[1].profile]}
+      unlocked={isPairUnlocked(aggregate.unlocks, selectedPair.memberIds)}
+      checkoutHref={inviteToken
+        ? `/checkout/${encodeURIComponent(selectedPair.pairKey)}?invite=${encodeURIComponent(inviteToken)}`
+        : "#"}
+      detailHref={inviteToken
+        ? `/g/${encodeURIComponent(inviteToken)}/relation/${encodeURIComponent(selectedPair.pairKey)}`
+        : undefined}
+      compact
+      onClose={() => setSelectedPair(null)}
+    />
+  ) : null;
 
   return (
     <main className="group-member-shell">
@@ -379,23 +395,8 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken, curren
         members={aggregate.members}
         unlocks={aggregate.unlocks}
         onPairSelect={setSelectedPair}
+        relationshipDetail={relationshipDetail}
       />
-      {selectedPair && selectedMembers && selectedRelationship ? (
-        <RelationSheet
-          relationship={selectedRelationship}
-          memberNames={[selectedMembers[0].nickname, selectedMembers[1].nickname]}
-          memberProfiles={[selectedMembers[0].profile, selectedMembers[1].profile]}
-          unlocked={isPairUnlocked(aggregate.unlocks, selectedPair.memberIds)}
-          checkoutHref={inviteToken
-            ? `/checkout/${encodeURIComponent(selectedPair.pairKey)}?invite=${encodeURIComponent(inviteToken)}`
-            : "#"}
-          detailHref={inviteToken
-            ? `/g/${encodeURIComponent(inviteToken)}/relation/${encodeURIComponent(selectedPair.pairKey)}`
-            : undefined}
-          compact
-          onClose={() => setSelectedPair(null)}
-        />
-      ) : null}
       {currentMember ? (
         <PersonalReadingSummary
           member={currentMember}

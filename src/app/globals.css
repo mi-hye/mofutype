@@ -362,6 +362,9 @@ body:has(.group-share-backdrop) { overflow: hidden; }
 .group-graph__relationship-card-copy > span { color: var(--text-muted); font-size: 0.68rem; font-weight: 700; }
 .group-graph__relationship-card-copy small { width: fit-content; color: var(--relationship-card-color); font-size: 0.56rem; font-weight: 850; letter-spacing: 0.08em; }
 .group-graph__relationship-card-arrow { color: var(--relationship-card-color); font-size: 1.1rem; font-weight: 800; }
+.group-graph__relationship-detail { min-width: 0; margin-top: 0.45rem; border-top: 1.5px solid rgb(var(--ink-rgb) / 28%); padding-top: 0.45rem; }
+.group-graph__relationship-detail:first-child { margin-top: 0; border-top: 0; padding-top: 0; }
+.group-graph__relationship-detail > .relation-sheet { width: 100%; margin: 0; border: 0; border-radius: 0; outline: 0; padding: 0.8rem 0 0; background: transparent; box-shadow: none; }
 .group-graph__selection { position: absolute; width: 1px; height: 1px; overflow: hidden; margin: -1px; border: 0; padding: 0; clip-path: inset(50%); white-space: nowrap; }
 .group-pair-selection { width: fit-content; margin: 0; border: var(--border-subtle); border-radius: 999px; padding: 0.4rem 0.72rem; background: var(--surface-mint); color: var(--ink); font-size: 0.82rem; font-weight: 700; }
 .group-graph__accessible { position: absolute; width: 1px; height: 1px; overflow: hidden; margin: -1px; border: 0; padding: 0; clip-path: inset(50%); white-space: nowrap; }

@@ -161,6 +161,21 @@ describe("GroupGraph", () => {
     expect(onPairSelect).toHaveBeenCalledWith(expect.objectContaining({ pairKey: "a:b" }));
   });
 
+  it("merges the selected relationship detail into the connection panel", () => {
+    render(
+      <GroupGraph
+        members={[member("a", "あお"), member("b", "べに")]}
+        unlocks={[]}
+        onPairSelect={vi.fn()}
+        relationshipDetail={<article data-testid="selected-relationship-detail">詳細</article>}
+      />,
+    );
+
+    const detail = screen.getByTestId("selected-relationship-detail");
+    expect(detail.closest(".group-graph__relationship-cards")).not.toBeNull();
+    expect(detail.parentElement).toHaveClass("group-graph__relationship-detail");
+  });
+
   it("keeps all three minimal preview lines without filters or labels", () => {
     render(
       <GroupGraph

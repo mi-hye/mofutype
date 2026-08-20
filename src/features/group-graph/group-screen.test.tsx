@@ -1,4 +1,5 @@
 import { act, render, screen, waitFor, within } from "@testing-library/react";
+import type { ReactNode } from "react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
@@ -6,10 +7,11 @@ import type { GroupAggregate, GroupSubscriptionCallbacks } from "@/lib/supabase/
 import type { GroupMember, RelationUnlock } from "@/lib/supabase/models";
 
 vi.mock("./group-graph", () => ({
-  GroupGraph: ({ members, unlocks, onPairSelect }: {
+  GroupGraph: ({ members, unlocks, onPairSelect, relationshipDetail }: {
     members: GroupMember[];
     unlocks: RelationUnlock[];
     onPairSelect(selection: unknown): void;
+    relationshipDetail?: ReactNode;
   }) => (
     <div data-testid="graph-state">
       members:{members.map((member) => `${member.id}:${member.nickname}`).join(",")};
@@ -46,6 +48,7 @@ vi.mock("./group-graph", () => ({
           },
         })}>aとbの関係を選択</button>
       ) : null}
+      <div data-testid="mock-relationship-panel">{relationshipDetail}</div>
     </div>
   ),
 }));
@@ -170,9 +173,11 @@ describe("GroupScreen", () => {
 
     await user.click(screen.getByRole("button", { name: "aとbの関係を選択" }));
     const relationSheet = screen.getByRole("heading", { name: /関係です$/ }).closest(".relation-sheet");
+    const relationshipPanel = screen.getByTestId("mock-relationship-panel");
     const personalResult = screen.getByText("わたしの四柱推命").closest(".my-result-card");
 
     expect(relationSheet).not.toBeNull();
+    expect(relationSheet && relationshipPanel.contains(relationSheet)).toBe(true);
     expect(personalResult).not.toBeNull();
     const documentOrder = relationSheet && personalResult
       ? relationSheet.compareDocumentPosition(personalResult)
