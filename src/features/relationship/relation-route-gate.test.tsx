@@ -261,6 +261,7 @@ describe("RelationRouteGate", () => {
     const user = userEvent.setup();
     const repo = repository();
     const navigate = vi.fn();
+    const confirm = vi.fn(async () => undefined);
     render(
       <RelationRouteGate
         inviteToken={token}
@@ -268,12 +269,13 @@ describe("RelationRouteGate", () => {
         mode="checkout"
         repositoryFactory={() => repo.api as never}
         navigate={navigate}
+        mockConfirmationClient={{ confirm }}
       />,
     );
 
     await user.click(await screen.findByRole("button", { name: "モック決済を完了" }));
     expect(repo.api.createPaymentOrder).toHaveBeenCalledWith("g1", "a", "b", "paypay");
-    expect(repo.api.unlockPair).toHaveBeenCalledWith("g1", "a", "b");
+    expect(confirm).toHaveBeenCalledWith("order-1");
     expect(navigate).toHaveBeenCalledWith(`/g/${token}/relation/a%3Ab`);
   });
 

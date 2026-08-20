@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 
 import { CheckoutPanel } from "@/features/checkout/checkout-panel";
+import { EximbayPaymentProvider } from "@/features/checkout/eximbay-payment-provider";
 import { MockPaymentProvider } from "@/features/checkout/mock-payment-provider";
+import type { MockConfirmationClient } from "@/features/checkout/mock-payment-provider";
 import { createEtoRelationship } from "@/lib/eto/relationship";
 import { canonicalPairKey } from "@/lib/relationship/pair-key";
 import { createBrowserGroupRepository } from "@/lib/supabase/group-repository";
@@ -34,6 +36,7 @@ interface RelationRouteGateProps {
   mode: "detail" | "checkout";
   repositoryFactory?: () => RelationRepository;
   navigate?: (path: string) => void;
+  mockConfirmationClient?: MockConfirmationClient;
 }
 
 function findPair(
@@ -114,6 +117,7 @@ function RelationRouteGateForPair({
   mode,
   repositoryFactory = createBrowserGroupRepository,
   navigate = (path) => window.location.assign(path),
+  mockConfirmationClient,
 }: RelationRouteGateProps) {
   const validInvite = INVITE_TOKEN_PATTERN.test(inviteToken);
   const normalizedPairKey = normalizeRoutePairKey(pairKey);
@@ -236,12 +240,16 @@ function RelationRouteGateForPair({
   const detailHref = `/g/${encodedInvite}/relation/${encodedPairKey}`;
 
   if (mode === "checkout" && !unlocked) {
+    const livePayment = process.env.NEXT_PUBLIC_PAYMENT_PROVIDER === "eximbay";
     return (
       <main className="group-gate-shell">
         <CheckoutPanel
           pairNames={[memberA.nickname, memberB.nickname]}
           input={{ groupId: pair.groupId, memberA: memberA.id, memberB: memberB.id }}
-          provider={new MockPaymentProvider(repository)}
+          mode={livePayment ? "live" : "mock"}
+          provider={livePayment
+            ? new EximbayPaymentProvider(repository, detailHref)
+            : new MockPaymentProvider(repository, mockConfirmationClient)}
           onSuccess={() => navigate(detailHref)}
           returnHref={detailHref}
         />

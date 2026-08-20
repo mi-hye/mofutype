@@ -18,6 +18,7 @@ interface CheckoutPanelProps {
   onSuccess(): void;
   onRedirect?(checkoutUrl: string): void;
   returnHref?: string;
+  mode?: "mock" | "live";
 }
 
 function safeCheckoutUrl(result: PaymentStartResult): string | null {
@@ -38,11 +39,13 @@ export function CheckoutPanel({
   onSuccess,
   onRedirect = (checkoutUrl) => window.location.assign(checkoutUrl),
   returnHref,
+  mode = "mock",
 }: CheckoutPanelProps) {
   const [method, setMethod] = useState<PaymentMethod>("paypay");
   const [loading, setLoading] = useState(false);
   const [failure, setFailure] = useState(false);
   const [returnFailure, setReturnFailure] = useState(false);
+  const [buyerEmail, setBuyerEmail] = useState("");
   const mounted = useRef(false);
   const generation = useRef(0);
 
@@ -61,7 +64,11 @@ export function CheckoutPanel({
     setReturnFailure(false);
     const submission = ++generation.current;
     try {
-      const result = await provider.start({ ...input, method });
+      const result = await provider.start({
+        ...input,
+        method,
+        ...(mode === "live" ? { buyerName: pairNames[0], buyerEmail } : {}),
+      });
       if (
         !mounted.current ||
         generation.current !== submission
@@ -72,6 +79,7 @@ export function CheckoutPanel({
         onRedirect(checkoutUrl);
         return;
       }
+      if (result.status === "launched") return;
       if (result.status !== "confirmed") throw new Error("invalid payment result");
     } catch {
       if (mounted.current && generation.current === submission) {
@@ -97,7 +105,9 @@ export function CheckoutPanel({
         </Link>
       ) : null}
       <p className="checkout-panel__notice">
-        これはモック決済です。実際の請求は発生しません。
+        {mode === "mock"
+          ? "これはモック決済です。実際の請求は発生しません。"
+          : "1組300円の買い切りです。追加料金や自動更新はありません。"}
       </p>
       <h1 id="checkout-title">関係レポートを解放</h1>
       <p>{pairNames[0]} × {pairNames[1]}</p>
@@ -118,20 +128,20 @@ export function CheckoutPanel({
         <label>
           <input
             checked={method === "paypay"}
-            name="mock-payment-method"
+            name="payment-method"
             onChange={() => setMethod("paypay")}
             type="radio"
           />
-          PayPay（モック）
+          {mode === "mock" ? "PayPay（モック）" : "PayPay"}
         </label>
         <label>
           <input
             checked={method === "card"}
-            name="mock-payment-method"
+            name="payment-method"
             onChange={() => setMethod("card")}
             type="radio"
           />
-          カード（モック）
+          {mode === "mock" ? "カード（モック）" : "カード"}
         </label>
       </fieldset>
 
@@ -147,6 +157,22 @@ export function CheckoutPanel({
         決済完了後、このふたりの関係レポートをすぐに表示します
       </p>
 
+      {mode === "live" ? (
+        <label>
+          決済確認メール
+          <input
+            autoComplete="email"
+            disabled={loading}
+            inputMode="email"
+            maxLength={254}
+            onChange={(event) => setBuyerEmail(event.target.value)}
+            required
+            type="email"
+            value={buyerEmail}
+          />
+        </label>
+      ) : null}
+
       {failure ? (
         <p role="alert">
           解放できませんでした。通信環境を確認して、もう一度お試しください。
@@ -157,8 +183,14 @@ export function CheckoutPanel({
           解放は完了しました。グループの関係ページを開き直してください。
         </p>
       ) : (
-        <Button type="button" size="lg" loading={loading} onClick={() => void submit()}>
-          {failure ? "もう一度試す" : "モック決済を完了"}
+        <Button
+          type="button"
+          size="lg"
+          loading={loading}
+          disabled={mode === "live" && !buyerEmail}
+          onClick={() => void submit()}
+        >
+          {failure ? "もう一度試す" : mode === "mock" ? "モック決済を完了" : "300円で解放する"}
         </Button>
       )}
       <Link href="/tokushoho">特定商取引法に基づく表記</Link>

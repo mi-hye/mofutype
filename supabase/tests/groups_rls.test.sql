@@ -84,7 +84,7 @@ select ok(has_function_privilege('service_role', 'public._eto_profile_is_valid(t
 select ok(has_function_privilege('authenticated', 'public.get_group_invite_preview(text)', 'EXECUTE'), 'authenticated can execute invite preview');
 select ok(not has_function_privilege('anon', 'public.get_group_invite_preview(text)', 'EXECUTE'), 'anon cannot execute invite preview');
 select ok(not has_function_privilege('public', 'public.get_group_invite_preview(text)', 'EXECUTE'), 'public cannot execute invite preview');
-select ok(has_function_privilege('authenticated', 'public.unlock_relation_mock(uuid,uuid,uuid)', 'EXECUTE'), 'authenticated can execute unlock RPC');
+select ok(not has_function_privilege('authenticated', 'public.unlock_relation_mock(uuid,uuid,uuid)', 'EXECUTE'), 'authenticated cannot bypass payment through mock unlock RPC');
 select ok(not has_function_privilege('anon', 'public.unlock_relation_mock(uuid,uuid,uuid)', 'EXECUTE'), 'anon cannot execute unlock RPC');
 select ok(not has_function_privilege('public', 'public.unlock_relation_mock(uuid,uuid,uuid)', 'EXECUTE'), 'public cannot execute unlock RPC');
 select ok(has_table_privilege('service_role', 'public.groups', 'SELECT'), 'service role keeps groups select for local E2E');
@@ -280,6 +280,7 @@ delete from public.group_members where user_id='00000000-0000-0000-0000-00000000
 
 create temporary table joined_group(group_id uuid, member_id uuid);
 grant select, insert on joined_group to authenticated;
+grant select on joined_group to service_role;
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000002', true);
 insert into joined_group select * from public.join_group((select invite_token from created_group),'  Joiner  ','ox','ENTJ','{"version":1,"zodiacId":"ox","mbti":"ENTJ","dayMaster":{"element":"FIRE","polarity":"YIN"},"fiveElements":{"WOOD":2,"FIRE":2,"EARTH":1,"METAL":2,"WATER":1},"yinYang":{"YIN":4,"YANG":4},"calculationMode":"date-time","boundaryState":"exact","engineVersion":"mofu-eto-four-pillars-v1"}'::jsonb);
@@ -340,12 +341,13 @@ select is((select count(*) from public.group_members where group_id=(select grou
 
 create temporary table unlock_result(id uuid,group_id uuid,member_low_id uuid,member_high_id uuid,status public.unlock_status,payment_provider text,payment_reference text,unlocked_by uuid,unlocked_at timestamptz);
 grant select, insert on unlock_result to authenticated;
-set local role authenticated;
+grant select, insert on unlock_result to service_role;
+set local role service_role;
 select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000001',true);
 insert into unlock_result select * from public.unlock_relation_mock((select group_id from created_group),(select member_id from created_group),(select member_id from joined_group limit 1));
 insert into unlock_result select * from public.unlock_relation_mock((select group_id from created_group),(select member_id from joined_group limit 1),(select member_id from created_group));
 reset role;
-set local role authenticated;
+set local role service_role;
 select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000002',true);
 insert into unlock_result select * from public.unlock_relation_mock((select group_id from created_group),(select member_id from joined_group limit 1),(select member_id from created_group));
 reset role;
@@ -367,12 +369,12 @@ select throws_ok(format($sql$insert into public.relation_unlocks(group_id,member
 set local role authenticated;
 select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000001',true);
 select is((select count(*) from public.relation_unlocks),1::bigint,'member can select their group unlock');
-select throws_ok(format($sql$select * from public.unlock_relation_mock(%L,%L,%L)$sql$,(select group_id from created_group),(select member_id from created_group),(select member_id from other_group)), 'P0001', 'INVALID_PAIR', 'cross-group unlock returns stable INVALID_PAIR');
+select throws_ok(format($sql$select * from public.unlock_relation_mock(%L,%L,%L)$sql$,(select group_id from created_group),(select member_id from created_group),(select member_id from other_group)), '42501', 'permission denied for function unlock_relation_mock', 'members cannot bypass payment with the mock unlock RPC');
 reset role;
 set local role authenticated;
 select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000003',true);
 select is((select count(*) from public.relation_unlocks),0::bigint,'nonmember cannot select unlock rows');
-select throws_ok(format($sql$select * from public.unlock_relation_mock(%L,%L,%L)$sql$,(select group_id from created_group),(select member_id from created_group),(select member_id from joined_group limit 1)), 'P0001', 'FORBIDDEN', 'nonmember unlock returns stable FORBIDDEN');
+select throws_ok(format($sql$select * from public.unlock_relation_mock(%L,%L,%L)$sql$,(select group_id from created_group),(select member_id from created_group),(select member_id from joined_group limit 1)), '42501', 'permission denied for function unlock_relation_mock', 'nonmembers cannot bypass payment with the mock unlock RPC');
 reset role;
 
 select ok(exists(select 1 from pg_publication_tables where pubname='supabase_realtime' and schemaname='public' and tablename='group_members'),'group_members remains in realtime');

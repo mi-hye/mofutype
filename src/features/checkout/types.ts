@@ -10,10 +10,13 @@ export interface PaymentInput {
 
 export interface PaymentRequest extends PaymentInput {
   method: PaymentMethod;
+  buyerName?: string;
+  buyerEmail?: string;
 }
 
 export type PaymentStartResult =
   | { status: "confirmed" }
+  | { status: "launched" }
   | { status: "redirect"; checkoutUrl: string };
 
 export interface PaymentProvider {

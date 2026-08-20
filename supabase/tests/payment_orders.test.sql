@@ -327,6 +327,7 @@ reset role;
 create temporary table mock_payment_group(group_id uuid, member_id uuid, invite_token text);
 create temporary table mock_payment_member(group_id uuid, member_id uuid);
 grant select, insert on mock_payment_group, mock_payment_member to authenticated;
+grant select on mock_payment_group, mock_payment_member to service_role;
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '20000000-0000-0000-0000-000000000001', true);
@@ -358,6 +359,9 @@ select lives_ok(
   ),
   'mock checkout first creates the same server-priced order'
 );
+reset role;
+set local role service_role;
+select set_config('request.jwt.claim.sub', '20000000-0000-0000-0000-000000000001', true);
 select lives_ok(
   format(
     'select * from public.unlock_relation_mock(%L,%L,%L)',
