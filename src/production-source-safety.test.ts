@@ -187,7 +187,10 @@ describe("production source safety", () => {
       /\.group-share-actions__close\s*\{[^}]*width:\s*1px[^}]*clip-path:\s*inset\(50%\)/,
     );
     expect(globalStyles).toMatch(
-      /\.relation-sheet__details section\s*\{[^}]*border:\s*0[^}]*border-bottom:\s*1px solid[^}]*background:\s*transparent[^}]*box-shadow:\s*none/,
+      /\.relation-sheet__details section\s*\{[^}]*min-width:\s*0[^}]*border:\s*var\(--border-subtle\)[^}]*border-radius:[^}]*background:\s*var\(--surface\)[^}]*box-shadow:/,
+    );
+    expect(globalStyles).toMatch(
+      /\.relation-sheet__details p,\s*\.relation-sheet__details dd\s*\{[^}]*max-width:\s*100%[^}]*overflow-wrap:\s*anywhere/,
     );
   });
 

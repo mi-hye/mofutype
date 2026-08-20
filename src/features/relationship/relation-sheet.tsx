@@ -55,7 +55,11 @@ export function RelationSheet({
 
   if (compact) {
     return (
-      <section className="relation-sheet relation-sheet--compact" aria-labelledby="relation-sheet-title">
+      <section
+        className="relation-sheet relation-sheet--compact"
+        aria-labelledby="relation-sheet-title"
+        data-unlocked={unlocked}
+      >
         <header className="relation-sheet__header">
           <p>{memberNames[0]} × {memberNames[1]}</p>
           {onClose ? (
@@ -85,7 +89,11 @@ export function RelationSheet({
   }
 
   return (
-    <section className="relation-sheet" aria-labelledby="relation-sheet-title">
+    <section
+      className="relation-sheet"
+      aria-labelledby="relation-sheet-title"
+      data-unlocked={unlocked}
+    >
       <header className="relation-sheet__header">
         <p>{memberNames[0]} × {memberNames[1]}</p>
         {onClose ? (
@@ -95,7 +103,7 @@ export function RelationSheet({
         ) : null}
       </header>
       <div className="relation-sheet__preview-heading">
-        <span>FREE PREVIEW</span>
+        <span>{unlocked ? "UNLOCKED REPORT" : "FREE PREVIEW"}</span>
         <p className="relation-sheet__category">{relationship.categoryLabelJa}</p>
       </div>
       <h2 id="relation-sheet-title">{relationship.headlineJa}</h2>

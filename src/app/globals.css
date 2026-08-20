@@ -422,14 +422,15 @@ body:has(.group-share-backdrop) { overflow: hidden; }
 .relation-sheet__skeleton strong { min-width: 0; font-size: 0.78rem; line-height: 1.35; }
 .relation-sheet__skeleton small { flex: 0 0 auto; color: rgb(var(--ink-rgb) / 48%); font-size: 0.56rem; font-weight: 800; letter-spacing: 0.12em; line-height: 1; }
 .relation-sheet__locked .ui-button { width: min(100%, 25rem); justify-self: start; text-align: center; text-decoration: none; }
-.relation-sheet__details { display: grid; min-width: 0; gap: 0; margin-top: 1.5rem; border-top: 1.5px solid rgb(var(--ink-rgb) / 34%); }
-.relation-sheet__status { width: fit-content; margin: 1rem 0 0.2rem; border-radius: 999px; padding: 0.25rem 0.65rem; background: var(--surface-mint); color: var(--status-success); font-size: 0.78rem; font-weight: 700; }
-.relation-sheet__details section { border: 0; border-bottom: 1px solid rgb(var(--ink-rgb) / 24%); border-radius: 0; padding: 1.15rem 0; background: transparent; box-shadow: none; }
+.relation-sheet__details { display: grid; min-width: 0; gap: 0.85rem; margin-top: 1.35rem; }
+.relation-sheet__status { width: fit-content; margin: 0 0 0.1rem; border-radius: 999px; padding: 0.3rem 0.72rem; background: var(--surface-mint); color: var(--status-success); font-size: 0.78rem; font-weight: 750; }
+.relation-sheet__details section { min-width: 0; border: var(--border-subtle); border-radius: 1.15rem 1rem 1.25rem 0.95rem; padding: clamp(1rem, 3.5vw, 1.35rem); background: var(--surface); box-shadow: 2px 3px 0 rgb(var(--ink-rgb) / 7%); }
 .relation-sheet__details h3 { margin: 0 0 0.55rem; color: var(--accent-vermilion); font-size: 0.76rem; font-weight: 800; letter-spacing: 0.04em; }
-.relation-sheet__details p { margin: 0; color: var(--text-muted); }
+.relation-sheet__details h3, .relation-sheet__details h4 { max-width: 100%; overflow-wrap: anywhere; }
+.relation-sheet__details p, .relation-sheet__details dd { min-width: 0; max-width: 100%; overflow-wrap: anywhere; word-break: normal; }
+.relation-sheet__details p { margin: 0; color: var(--text-muted); font-size: 0.9rem; line-height: 1.8; }
 .relation-sheet__category { width: fit-content; margin: 0; border-radius: 999px; padding: 0.2rem 0.62rem; background: var(--surface-mint); color: var(--status-success); font-size: 0.78rem; font-weight: 700; }
 .relation-sheet__purchase-note { margin: -0.6rem 0 0; color: var(--text-muted); font-size: 0.72rem; font-weight: 650; }
-.relation-sheet__layer, .relation-sheet__tip { border: 0; border-bottom: 1px solid rgb(var(--ink-rgb) / 24%); border-radius: 0; padding: 1.15rem 0; background: transparent; box-shadow: none; }
 .relation-sheet__layer h3, .relation-sheet__tip h3 { margin: 0 0 0.55rem; font-size: 1rem; }
 .relation-sheet__layer h4 { margin: 0.85rem 0 0.4rem; font-size: 0.92rem; }
 .relation-sheet__axes { display: grid; gap: 0.55rem; margin: 0; }
@@ -437,7 +438,7 @@ body:has(.group-share-backdrop) { overflow: hidden; }
 .relation-sheet__axes dt { font-weight: 750; }
 .relation-sheet__axes dd { margin: 0; color: var(--text-muted); }
 .relation-sheet__note { margin: 0.7rem 0 0 !important; color: var(--text-muted); font-size: 0.8rem; }
-.relation-sheet__directional-tips { display: grid; min-width: 0; gap: 0; }
+.relation-sheet__directional-tips { display: grid; min-width: 0; gap: 0.85rem; }
 .relation-sheet__disclaimer { margin-top: 1rem !important; border-top: var(--border-subtle); padding-top: 0.8rem; color: var(--text-muted); font-size: 0.76rem; }
 .relation-sheet--compact { display: grid; gap: 0.75rem; }
 .relation-sheet--compact .relation-sheet__preview-heading { margin-top: 0; }
@@ -553,6 +554,9 @@ body:has(.group-share-backdrop) { overflow: hidden; }
   .relation-sheet__header { align-items: flex-start; }
   .relation-sheet__header p { max-width: calc(100% - 4.5rem); }
   .relation-sheet > h2 { overflow-wrap: anywhere; }
+  .relation-sheet__preview-heading { align-items: flex-start; }
+  .relation-sheet__category { max-width: 100%; overflow-wrap: anywhere; }
+  .relation-sheet__axes > div { grid-template-columns: 1fr; gap: 0.2rem; }
   .relation-sheet__locked .ui-button { width: 100%; }
   .relation-sheet__skeletons, .checkout-panel fieldset { padding: 0.75rem; }
   .checkout-panel__notice { max-width: 100%; }

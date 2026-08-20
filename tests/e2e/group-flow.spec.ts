@@ -18,15 +18,15 @@ test("three independent members share one unlocked relationship", async ({ brows
       await expect(page.getByText("メンバー 3人")).toBeVisible({ timeout: 15_000 });
       await expect(page.locator(".react-flow__node")).toHaveCount(3, { timeout: 15_000 });
       await expect(page.locator(".react-flow__edge")).toHaveCount(3, { timeout: 15_000 });
-      await expect(page.locator(".react-flow__edge-text")).toHaveCount(3, { timeout: 15_000 });
+      await expect(page.getByRole("group", { name: "関係線を色で絞り込む" })).toBeVisible();
       await expect(page.locator(".zodiac-graph-node__frame")).toHaveCount(3, { timeout: 15_000 });
     }
     await expect(pageA.locator(".zodiac-graph-node__character-title", {
       hasText: "好奇心のまま駆け出すいのしし",
-    })).toBeVisible();
+    })).toHaveCount(1);
     await expect(pageA.locator(".zodiac-graph-node__character-title", {
       hasText: "さるタイプ",
-    })).toBeVisible();
+    })).toHaveCount(1);
     await pageA.screenshot({
       path: testInfo.outputPath("group-graph.png"),
       fullPage: true,
@@ -39,21 +39,13 @@ test("three independent members share one unlocked relationship", async ({ brows
     });
     await pageA.getByRole("button", { name: /^AさんとBさんの関係を見る/ }).focus();
     await pageA.keyboard.press("Enter");
-    await expect(pageA.getByRole("heading", { name: "解放するとわかること" })).toBeVisible();
-    for (const chapter of [
-      "十二支の関係",
-      "五行と陰陽",
-      "MBTIの4つの軸",
-      "ふたりでいるとき",
-      "それぞれへのヒント",
-    ]) {
-      await expect(pageA.getByText(chapter, { exact: true })).toBeVisible();
-    }
+    await expect(pageA.locator(".relation-sheet").getByText("FREE PREVIEW", { exact: true })).toBeVisible();
+    await expect(pageA.getByRole("heading", { name: /関係です$/ })).toBeVisible();
     await pageA.screenshot({
       path: testInfo.outputPath("locked-relation.png"),
       fullPage: true,
     });
-    await pageA.getByRole("link", { name: "このふたりを100円で解放" }).click();
+    await pageA.getByRole("link", { name: "この関係を詳しく見る 100円" }).click();
     await expect(pageA.getByText("これはモック決済です。実際の請求は発生しません。")).toBeVisible();
     await expect(pageA.getByText("合計 100円", { exact: true })).toBeVisible();
     await expect(pageA.getByText("定期課金や自動更新はありません", { exact: true })).toBeVisible();
@@ -68,6 +60,8 @@ test("three independent members share one unlocked relationship", async ({ brows
     });
     await pageA.getByRole("button", { name: "モック決済を完了" }).click();
     await expect(pageA.getByText("解放済み")).toBeVisible();
+    await expect(pageA.locator(".relation-sheet").getByText("UNLOCKED REPORT", { exact: true })).toBeVisible();
+    await expect(pageA.locator(".relation-sheet").getByText("FREE PREVIEW", { exact: true })).toHaveCount(0);
     for (const heading of [
       "十二支の関係",
       "五行と陰陽",
@@ -79,6 +73,19 @@ test("three independent members share one unlocked relationship", async ({ brows
     await expect(pageA.getByText(
       "MBTIが未入力のため、この層は表示していません。十二支と五行の分析には影響しません。",
     )).toBeVisible();
+    const mobileReportLayout = await pageA.locator(".relation-sheet").evaluate((sheet) => {
+      const bounds = sheet.getBoundingClientRect();
+      const textBlocks = [...sheet.querySelectorAll(".relation-sheet__details p, .relation-sheet__details dd")];
+      return {
+        fitsViewport: bounds.left >= 0 && bounds.right <= window.innerWidth,
+        textFitsCards: textBlocks.every((block) => block.scrollWidth <= block.clientWidth),
+      };
+    });
+    expect(mobileReportLayout).toEqual({ fitsViewport: true, textFitsCards: true });
+    await pageA.screenshot({
+      path: testInfo.outputPath("unlocked-relation.png"),
+      fullPage: true,
+    });
 
     for (const page of [pageB, pageC]) {
       await page.getByRole("button", { name: "Aさんを選択" }).focus();

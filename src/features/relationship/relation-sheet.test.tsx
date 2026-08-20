@@ -113,6 +113,8 @@ describe("RelationSheet", () => {
     );
 
     expect(screen.getByText("解放済み")).toBeInTheDocument();
+    expect(screen.getByText("UNLOCKED REPORT")).toBeInTheDocument();
+    expect(screen.queryByText("FREE PREVIEW")).not.toBeInTheDocument();
     expect(screen.getByText(disclaimer)).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "この関係を詳しく見る 100円" })).not.toBeInTheDocument();
     for (const heading of ["十二支の関係", "五行と陰陽", "MBTIの4つの軸", "ふたりでいるとき"]) {
@@ -131,6 +133,10 @@ describe("RelationSheet", () => {
     expect(screen.getByText(relationship.tips.forPersonAJa)).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "ももさんへのヒント" })).toBeInTheDocument();
     expect(screen.getByText(relationship.tips.forPersonBJa)).toBeInTheDocument();
+    expect(screen.getByText("UNLOCKED REPORT").closest(".relation-sheet")).toHaveAttribute(
+      "data-unlocked",
+      "true",
+    );
   });
 
   it("treats missing MBTI as neutral unavailable information", () => {
