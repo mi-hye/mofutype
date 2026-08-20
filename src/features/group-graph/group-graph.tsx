@@ -11,6 +11,7 @@ import {
   createEtoRelationship,
   type EtoRelationshipResult,
 } from "@/lib/eto/relationship";
+import { ZodiacAvatar } from "@/components/zodiac-avatar";
 import type { RelationUnlock } from "@/lib/supabase/models";
 import { ZodiacNode } from "./zodiac-node";
 import {
@@ -212,6 +213,50 @@ function GroupGraphComponent({
           </button>
         ))}
         </div>
+      ) : null}
+
+      {variant === "default" && selectedMember ? (
+        <section
+          className="group-graph__relationship-cards"
+          role="region"
+          aria-label={`${selectedMember.nickname}のつながり`}
+        >
+          <header>
+            <div>
+              <p>SELECT A CONNECTION</p>
+              <h2>{selectedMember.nickname}のつながり</h2>
+            </div>
+            <span>{incidentEdges.length}件</span>
+          </header>
+          <p>気になる相手を選ぶと、ふたりの関係が開きます。</p>
+          <ul>
+            {incidentEdges.map((edge) => {
+              const selection = selectionFromEdge(edge);
+              if (!selection) return null;
+              const otherId = selection.memberIds.find((id) => id !== selectedMember.id);
+              const other = members.find((member) => member.id === otherId);
+              if (!other) return null;
+              return (
+                <li key={edge.id}>
+                  <button
+                    type="button"
+                    data-line-color={edge.data.lineColor}
+                    aria-label={`${selectedMember.nickname}と${other.nickname}の関係カードを開く：${selection.relationship.categoryLabelJa}${selection.unlocked ? "（解放済み）" : ""}`}
+                    onClick={() => onPairSelect(selection)}
+                  >
+                    <ZodiacAvatar zodiacId={other.zodiacId} nickname={other.nickname} size="sm" />
+                    <span className="group-graph__relationship-card-copy">
+                      <strong>{other.nickname}</strong>
+                      <span>{selection.relationship.categoryLabelJa}</span>
+                      <small>{selection.unlocked ? "解放済み" : "FREE PREVIEW"}</small>
+                    </span>
+                    <span className="group-graph__relationship-card-arrow" aria-hidden="true">→</span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
       ) : null}
 
       {selectedMember ? (

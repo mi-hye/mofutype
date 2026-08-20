@@ -133,7 +133,7 @@ describe("GroupScreen", () => {
     expect(topbar).toContainElement(screen.getByRole("button", { name: "最新の情報に更新" }));
   });
 
-  it("shows a concise personal preview with a dedicated detail CTA below the graph", () => {
+  it("shows a concise personal preview while relationship choice stays in the graph", () => {
     const initial = aggregate("g1", [
       member("a", "わたし"),
       { ...member("b", "ともだち"), mbti: "ENTJ",
@@ -155,10 +155,9 @@ describe("GroupScreen", () => {
       "href",
       `/g/${"a".repeat(64)}/profile`,
     );
-    expect(screen.getByRole("link", { name: "このグループで、誰と相性がいい？" })).toHaveAttribute(
-      "href",
-      `/g/${"a".repeat(64)}/relation/a%3Ab`,
-    );
+    expect(screen.queryByRole("combobox", { name: "関係を見る相手を選ぶ" }))
+      .not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "aとbの関係を選択" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "共有する" })).toBeInTheDocument();
     expect(screen.queryByText("たつタイプとして")).not.toBeInTheDocument();
   });

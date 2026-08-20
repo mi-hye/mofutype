@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import type { GroupMember } from "@/lib/supabase/models";
@@ -33,11 +33,6 @@ describe("personal reading conversion flow", () => {
         groupName="なかよし"
         memberCount={3}
         inviteToken={"a".repeat(64)}
-        relationshipLinks={[{
-          memberId: "member-b",
-          nickname: "もも",
-          href: `/g/${"a".repeat(64)}/relation/member-a%3Amember-b`,
-        }]}
       />,
     );
 
@@ -48,10 +43,8 @@ describe("personal reading conversion flow", () => {
       "href",
       `/g/${"a".repeat(64)}/profile`,
     );
-    expect(screen.getByRole("link", { name: "このグループで、誰と相性がいい？" })).toHaveAttribute(
-      "href",
-      `/g/${"a".repeat(64)}/relation/member-a%3Amember-b`,
-    );
+    expect(screen.queryByRole("combobox", { name: "関係を見る相手を選ぶ" }))
+      .not.toBeInTheDocument();
   });
 
   it("shows the full personal reading without a paid relationship offer", () => {
@@ -61,11 +54,6 @@ describe("personal reading conversion flow", () => {
         groupName="なかよし"
         memberCount={3}
         inviteToken={"a".repeat(64)}
-        relationshipLinks={[{
-          memberId: "member-b",
-          nickname: "もも",
-          href: `/g/${"a".repeat(64)}/relation/member-a%3Amember-b`,
-        }]}
       />,
     );
 
@@ -77,34 +65,4 @@ describe("personal reading conversion flow", () => {
     expect(screen.getByRole("button", { name: "この結果を共有する" })).toBeInTheDocument();
   });
 
-  it("uses a compact person picker instead of expanding every relationship", () => {
-    const relationshipLinks = Array.from({ length: 29 }, (_, index) => ({
-      memberId: `member-${index + 1}`,
-      nickname: `メンバー${index + 1}`,
-      href: `/relation/a-${index + 1}`,
-    }));
-
-    render(
-      <PersonalReadingSummary
-        member={member}
-        groupName="なかよし"
-        memberCount={3}
-        inviteToken={"a".repeat(64)}
-        relationshipLinks={relationshipLinks}
-      />,
-    );
-
-    const picker = screen.getByRole("combobox", { name: "関係を見る相手を選ぶ" });
-    expect(picker).toHaveValue("");
-    expect(screen.getAllByRole("option")).toHaveLength(30);
-    expect(screen.queryByRole("link", { name: "メンバー29さんとの関係を見る" })).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "この関係を見る" })).toBeDisabled();
-
-    fireEvent.change(picker, { target: { value: "/relation/a-29" } });
-
-    expect(screen.getByRole("link", { name: "メンバー29さんとの関係を見る" })).toHaveAttribute(
-      "href",
-      "/relation/a-29",
-    );
-  });
 });

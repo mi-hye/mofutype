@@ -124,10 +124,41 @@ describe("GroupGraph", () => {
     expect(screen.getByRole("status", { name: "選択中のメンバー" })).toHaveTextContent("2本");
     expect(screen.getByRole("region", { name: "メンバー関係性グラフ" }))
       .toHaveAttribute("data-has-selection", "true");
+    const relationshipCards = screen.getByRole("region", { name: "べにのつながり" });
+    expect(within(relationshipCards).getAllByRole("listitem")).toHaveLength(2);
+    expect(within(relationshipCards).getByRole("button", {
+      name: /べにとあおの関係カードを開く/,
+    })).toBeInTheDocument();
+    expect(within(relationshipCards).getByRole("button", {
+      name: /べにとちゃの関係カードを開く/,
+    })).toBeInTheDocument();
     await user.click(screen.getByTestId("canvas-pane"));
     expect((flowProps.current?.edges as MockEdge[]).every((edge) => edge.label === undefined))
       .toBe(true);
     expect(screen.queryByRole("status", { name: "選択中のメンバー" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "べにのつながり" })).not.toBeInTheDocument();
+  });
+
+  it("opens a relationship from the selected node card", async () => {
+    const user = userEvent.setup();
+    const onPairSelect = vi.fn();
+    render(
+      <GroupGraph
+        members={[member("a", "あお"), member("b", "べに"), member("c", "ちゃ")]}
+        unlocks={[unlock("a", "b")]}
+        onPairSelect={onPairSelect}
+      />,
+    );
+
+    await user.click(screen.getByTestId("canvas-node-a"));
+    const cards = screen.getByRole("region", { name: "あおのつながり" });
+    const unlockedCard = within(cards).getByRole("button", {
+      name: /あおとべにの関係カードを開く.*解放済み/,
+    });
+    expect(unlockedCard).toHaveAttribute("data-line-color");
+
+    await user.click(unlockedCard);
+    expect(onPairSelect).toHaveBeenCalledWith(expect.objectContaining({ pairKey: "a:b" }));
   });
 
   it("keeps all three minimal preview lines without filters or labels", () => {

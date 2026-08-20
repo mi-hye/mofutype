@@ -5,8 +5,6 @@ import { GroupShareControls } from "@/features/share/group-share-controls";
 import { createCharacterCopy } from "@/lib/eto/character";
 import { createPersonalReading } from "@/lib/eto/personal-reading";
 import type { GroupMember } from "@/lib/supabase/models";
-import type { RelationshipDetailLink } from "./relationship-detail-links";
-import { RelationshipDetailPicker } from "./relationship-detail-picker";
 
 const ELEMENT_LABELS = { WOOD: "木", FIRE: "火", EARTH: "土", METAL: "金", WATER: "水" } as const;
 const POLARITY_LABELS = { YIN: "陰", YANG: "陽" } as const;
@@ -16,7 +14,6 @@ interface PersonalReadingProps {
   groupName: string;
   memberCount: number;
   inviteToken: string;
-  relationshipLinks?: readonly RelationshipDetailLink[];
 }
 
 interface PersonalReadingSummaryProps extends Omit<PersonalReadingProps, "inviteToken"> {
@@ -53,7 +50,6 @@ export function PersonalReadingSummary({
   groupName,
   memberCount,
   inviteToken,
-  relationshipLinks,
 }: PersonalReadingSummaryProps) {
   const reading = createPersonalReading(member.profile);
   const detailHref = inviteToken ? `/g/${encodeURIComponent(inviteToken)}/profile` : null;
@@ -68,7 +64,6 @@ export function PersonalReadingSummary({
       </div>
       <div className="my-result-card__actions">
         {detailHref ? <ButtonLink href={detailHref}>わたしの詳細を見る</ButtonLink> : null}
-        <RelationshipDetailPicker links={relationshipLinks} />
         {inviteToken ? (
           <GroupShareControls
             groupName={groupName}

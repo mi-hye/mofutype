@@ -339,6 +339,29 @@ body:has(.group-share-backdrop) { overflow: hidden; }
 .group-graph__filters button[aria-pressed="true"] { opacity: 1; }
 .group-graph__filters button[aria-pressed="true"]::after { animation: relationship-sonar-ping 2s cubic-bezier(0.2, 0.72, 0.3, 1) infinite; }
 .group-graph__filters button:focus-visible { outline: 2px solid var(--accent-navy); outline-offset: 3px; }
+.group-graph__relationship-cards { display: grid; min-width: 0; gap: 0.45rem; margin-top: 0.7rem; border: var(--border-subtle); border-radius: 1.5rem; padding: 0.9rem; background: var(--surface-elevated); box-shadow: 2px 3px 0 rgb(var(--ink-rgb) / 7%); animation: rise-in 220ms ease-out both; }
+.group-graph__relationship-cards > header { display: flex; min-width: 0; align-items: end; justify-content: space-between; gap: 0.8rem; }
+.group-graph__relationship-cards > header > div { display: grid; min-width: 0; gap: 0.12rem; }
+.group-graph__relationship-cards > header p { margin: 0; color: var(--accent-vermilion); font-size: 0.56rem; font-weight: 850; letter-spacing: 0.13em; }
+.group-graph__relationship-cards h2 { margin: 0; color: var(--accent-navy); font-size: 1rem; line-height: 1.35; }
+.group-graph__relationship-cards > header > span { flex: 0 0 auto; border-radius: 999px; padding: 0.2rem 0.55rem; background: var(--butter); color: var(--ink); font-size: 0.68rem; font-weight: 750; }
+.group-graph__relationship-cards > p { margin: 0; color: var(--text-muted); font-size: 0.72rem; }
+.group-graph__relationship-cards > ul { display: grid; min-width: 0; overflow-x: auto; grid-auto-columns: minmax(13rem, 16rem); grid-auto-flow: column; gap: 0.6rem; margin: 0.25rem -0.9rem -0.15rem; padding: 0.15rem 0.9rem 0.75rem; list-style: none; scroll-padding-inline: 0.9rem; scroll-snap-type: x proximity; overscroll-behavior-inline: contain; -webkit-overflow-scrolling: touch; }
+.group-graph__relationship-cards li { min-width: 0; scroll-snap-align: start; }
+.group-graph__relationship-cards li > button { --relationship-card-color: var(--ink); display: grid; width: 100%; min-height: 5.25rem; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 0.65rem; border: 1.5px solid rgb(var(--ink-rgb) / 18%); border-top: 5px solid var(--relationship-card-color); border-radius: 1.05rem; padding: 0.65rem; background: var(--surface); color: var(--ink); text-align: left; box-shadow: 0 4px 0 color-mix(in srgb, var(--relationship-card-color) 20%, transparent); cursor: pointer; }
+.group-graph__relationship-cards li > button[data-line-color="calm"] { --relationship-card-color: var(--relationship-calm); }
+.group-graph__relationship-cards li > button[data-line-color="clear"] { --relationship-card-color: var(--relationship-clear); }
+.group-graph__relationship-cards li > button[data-line-color="neutral"] { --relationship-card-color: var(--relationship-neutral); }
+.group-graph__relationship-cards li > button[data-line-color="warm"] { --relationship-card-color: var(--relationship-warm); }
+.group-graph__relationship-cards li > button[data-line-color="careful"] { --relationship-card-color: var(--relationship-careful); }
+.group-graph__relationship-cards li > button:focus-visible { outline: 3px solid var(--relationship-card-color); outline-offset: 2px; }
+.group-graph__relationship-cards .zodiac-avatar { width: 2.8rem; height: 2.8rem; }
+.group-graph__relationship-card-copy { display: grid; min-width: 0; gap: 0.12rem; }
+.group-graph__relationship-card-copy strong, .group-graph__relationship-card-copy > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.group-graph__relationship-card-copy strong { font-size: 0.82rem; }
+.group-graph__relationship-card-copy > span { color: var(--text-muted); font-size: 0.68rem; font-weight: 700; }
+.group-graph__relationship-card-copy small { width: fit-content; color: var(--relationship-card-color); font-size: 0.56rem; font-weight: 850; letter-spacing: 0.08em; }
+.group-graph__relationship-card-arrow { color: var(--relationship-card-color); font-size: 1.1rem; font-weight: 800; }
 .group-graph__selection { position: absolute; width: 1px; height: 1px; overflow: hidden; margin: -1px; border: 0; padding: 0; clip-path: inset(50%); white-space: nowrap; }
 .group-pair-selection { width: fit-content; margin: 0; border: var(--border-subtle); border-radius: 999px; padding: 0.4rem 0.72rem; background: var(--surface-mint); color: var(--ink); font-size: 0.82rem; font-weight: 700; }
 .group-graph__accessible { position: absolute; width: 1px; height: 1px; overflow: hidden; margin: -1px; border: 0; padding: 0; clip-path: inset(50%); white-space: nowrap; }
@@ -369,13 +392,6 @@ body:has(.group-share-backdrop) { overflow: hidden; }
 .my-result-card__actions > .ui-button { min-width: min(100%, 12rem); text-decoration: none; }
 .my-result-card__actions > .group-share-controls { justify-items: start; }
 .my-result-card__actions .my-result-card__share-button { width: auto; min-width: 8.5rem; }
-.relationship-detail-picker { display: grid; width: min(100%, 29rem); min-width: 0; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 0.55rem; }
-.relationship-detail-picker > label { display: grid; min-width: 0; gap: 0.3rem; }
-.relationship-detail-picker > label > span { color: var(--text-muted); font-size: 0.7rem; font-weight: 750; }
-.relationship-detail-picker select { width: 100%; min-width: 0; min-height: 48px; appearance: auto; border: var(--border-subtle); border-radius: 999px; padding: 0.55rem 0.85rem; background: var(--surface); color: var(--ink); font: inherit; font-size: 0.84rem; font-weight: 700; }
-.relationship-detail-picker select:focus-visible { outline: 3px solid rgb(var(--ink-rgb) / 22%); outline-offset: 2px; }
-.relationship-detail-picker > .ui-button { min-width: 9.5rem; text-align: center; text-decoration: none; }
-.relationship-detail-picker > .ui-button:disabled { opacity: 0.48; cursor: not-allowed; }
 .my-result-card__reading-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.8rem; border-top: var(--border-subtle); padding-top: 1rem; }
 .my-result-card__reading { min-width: 0; border: var(--border-subtle); border-radius: 1.1rem; padding: 0.85rem; background: var(--surface); }
 .my-result-card__reading--mbti { grid-column: 1 / -1; }
@@ -397,8 +413,6 @@ body:has(.group-share-backdrop) { overflow: hidden; }
   .my-result-card__reading-grid, .my-result-card__axes { grid-template-columns: 1fr; }
   .my-result-card__actions { align-items: stretch; flex-direction: column; }
   .my-result-card__actions > .ui-button, .my-result-card__actions > .group-share-controls, .my-result-card__actions .my-result-card__share-button { width: 100%; }
-  .my-result-card__actions > .relationship-detail-picker { width: 100%; grid-template-columns: 1fr; }
-  .relationship-detail-picker > .ui-button { width: 100%; }
 }
 
 .relation-sheet { position: relative; width: min(100%, 58rem); min-width: 0; overflow: hidden; margin: 2rem auto 0; border: var(--border-panel); border-radius: 2.4rem 2.15rem 2.55rem 2rem / 2.2rem 2.5rem 2.05rem 2.4rem; outline: 1px solid rgb(var(--ink-rgb) / 12%); outline-offset: -5px; padding: clamp(1.1rem, 4vw, 2.25rem); background: var(--surface-elevated); box-shadow: 3px 4px 0 rgb(var(--ink-rgb) / 6%), var(--shadow-pop), inset 0 0 0 4px rgb(255 255 255 / 42%); animation: rise-in 420ms ease-out both; }
