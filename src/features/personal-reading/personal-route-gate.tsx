@@ -8,6 +8,7 @@ import {
   type GroupAggregate,
 } from "@/lib/supabase/group-repository";
 import { PersonalReadingDetail } from "./personal-reading-view";
+import { createRelationshipDetailLinks } from "./relationship-detail-links";
 
 type BrowserRepository = ReturnType<typeof createBrowserGroupRepository>;
 type PersonalRepository = Pick<
@@ -75,6 +76,11 @@ export function PersonalRouteGate({
       groupName={result.aggregate.group.name}
       memberCount={result.aggregate.members.length}
       inviteToken={inviteToken}
+      relationshipLinks={createRelationshipDetailLinks(
+        member,
+        result.aggregate.members,
+        inviteToken,
+      )}
     />
   );
 }

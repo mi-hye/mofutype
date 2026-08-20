@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { PersonalReadingSummary } from "@/features/personal-reading/personal-reading-view";
+import { createRelationshipDetailLinks } from "@/features/personal-reading/relationship-detail-links";
 import { StatusBanner, type ConnectionStatus } from "@/components/ui/status-banner";
 import { RelationSheet } from "@/features/relationship/relation-sheet";
 import { GroupShareControls } from "@/features/share/group-share-controls";
@@ -312,6 +313,9 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken, curren
   const currentMember = activeUserId
     ? aggregate.members.find((member) => member.userId === activeUserId) ?? null
     : null;
+  const relationshipLinks = currentMember && inviteToken
+    ? createRelationshipDetailLinks(currentMember, aggregate.members, inviteToken)
+    : [];
 
   const selectedMembers = selectedPair
     ? findSelectedMembers(aggregate.members, selectedPair.memberIds)
@@ -403,6 +407,7 @@ function GroupScreenForGroup({ initialAggregate, repository, inviteToken, curren
           groupName={aggregate.group.name}
           memberCount={aggregate.members.length}
           inviteToken={inviteToken}
+          relationshipLinks={relationshipLinks}
         />
       ) : null}
     </main>

@@ -33,6 +33,11 @@ describe("personal reading conversion flow", () => {
         groupName="なかよし"
         memberCount={3}
         inviteToken={"a".repeat(64)}
+        relationshipLinks={[{
+          memberId: "member-b",
+          nickname: "もも",
+          href: `/g/${"a".repeat(64)}/relation/member-a%3Amember-b`,
+        }]}
       />,
     );
 
@@ -45,7 +50,7 @@ describe("personal reading conversion flow", () => {
     );
     expect(screen.getByRole("link", { name: "このグループで、誰と相性がいい？" })).toHaveAttribute(
       "href",
-      "#relationship-map",
+      `/g/${"a".repeat(64)}/relation/member-a%3Amember-b`,
     );
   });
 
@@ -56,6 +61,11 @@ describe("personal reading conversion flow", () => {
         groupName="なかよし"
         memberCount={3}
         inviteToken={"a".repeat(64)}
+        relationshipLinks={[{
+          memberId: "member-b",
+          nickname: "もも",
+          href: `/g/${"a".repeat(64)}/relation/member-a%3Amember-b`,
+        }]}
       />,
     );
 
@@ -65,7 +75,32 @@ describe("personal reading conversion flow", () => {
     expect(screen.getByText("買い切り・自動更新なし")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "このグループで、誰と相性がいい？" })).toHaveAttribute(
       "href",
-      `/g/${"a".repeat(64)}#relationship-map`,
+      `/g/${"a".repeat(64)}/relation/member-a%3Amember-b`,
+    );
+  });
+
+  it("offers a direct detail link for each relationship in a larger group", () => {
+    render(
+      <PersonalReadingSummary
+        member={member}
+        groupName="なかよし"
+        memberCount={3}
+        inviteToken={"a".repeat(64)}
+        relationshipLinks={[
+          { memberId: "member-b", nickname: "もも", href: "/relation/a-b" },
+          { memberId: "member-c", nickname: "しろ", href: "/relation/a-c" },
+        ]}
+      />,
+    );
+
+    expect(screen.getByText("このグループで、誰と相性がいい？")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "ももさんとの関係を見る" })).toHaveAttribute(
+      "href",
+      "/relation/a-b",
+    );
+    expect(screen.getByRole("link", { name: "しろさんとの関係を見る" })).toHaveAttribute(
+      "href",
+      "/relation/a-c",
     );
   });
 });

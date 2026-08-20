@@ -155,6 +155,10 @@ describe("GroupScreen", () => {
       "href",
       `/g/${"a".repeat(64)}/profile`,
     );
+    expect(screen.getByRole("link", { name: "このグループで、誰と相性がいい？" })).toHaveAttribute(
+      "href",
+      `/g/${"a".repeat(64)}/relation/a%3Ab`,
+    );
     expect(screen.getByRole("button", { name: "共有する" })).toBeInTheDocument();
     expect(screen.queryByText("たつタイプとして")).not.toBeInTheDocument();
   });
